@@ -2538,6 +2538,10 @@ h2 span {
     background: #25a37f;
 }
 
+.provider-logo.revenuecat {
+    background: #f05a7e;
+}
+
 .provider-row strong,
 .provider-row small {
     display: block;
@@ -2575,6 +2579,90 @@ h2 span {
     margin-top: 22px;
     color: #41a988;
     font-size: 10px;
+}
+
+.payment-activity-panel {
+    overflow: hidden;
+}
+
+.payment-activity-table {
+    min-width: 920px;
+    margin-top: 26px;
+    overflow-x: auto;
+}
+
+.payment-activity-head,
+.payment-activity-row {
+    display: grid;
+    grid-template-columns: minmax(155px, 1.35fr) 110px 90px 145px 100px minmax(135px, 1fr) 100px;
+    align-items: center;
+    gap: 14px;
+}
+
+.payment-activity-head {
+    padding: 0 0 11px;
+    color: #a0a9b0;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.payment-activity-row {
+    min-height: 62px;
+    border-top: 1px solid #edf0f2;
+    color: #65727c;
+    font-size: 10px;
+}
+
+.payment-activity-row>div:first-child,
+.payment-activity-row>span,
+.payment-activity-row>time {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.payment-activity-row strong,
+.payment-activity-row small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.payment-activity-row strong {
+    color: #36414b;
+    font-size: 10px;
+}
+
+.payment-activity-row small {
+    margin-top: 4px;
+    color: #a0a9b0;
+    font-size: 9px;
+}
+
+.payment-activity-row time {
+    color: #8d989f;
+    font-size: 9px;
+}
+
+.payment-status {
+    color: #41a988;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.payment-status.refunded,
+.payment-status.failed,
+.payment-status.cancelled {
+    color: #d26464;
+}
+
+.payment-customer {
+    color: #687681;
 }
 
 .admin-login-page {
@@ -4916,5 +5004,1603 @@ h2 span {
     .user-table-header,
     .user-table-row {
         min-width: 650px;
+    }
+}
+
+/* Admin visual refresh */
+:root {
+    --admin-ink: #152033;
+    --admin-muted: #718096;
+    --admin-soft: #9aa7b7;
+    --admin-line: #e8edf3;
+    --admin-surface: #ffffff;
+    --admin-canvas: #f5f7fb;
+    --admin-blue: #2563eb;
+    --admin-blue-soft: #eff5ff;
+    --admin-green: #159a77;
+    --admin-violet: #7656d8;
+    --admin-yellow: #b98316;
+    --admin-sidebar: #101a2b;
+}
+
+.admin-app {
+    min-height: 100vh;
+    background: var(--admin-canvas);
+    color: var(--admin-ink);
+    font-family: var(--font-hanken-grotesk), "Hanken Grotesk", sans-serif;
+    letter-spacing: -.01em;
+}
+
+.admin-sidebar {
+    width: 256px;
+    flex-basis: 256px;
+    padding: 28px 14px 18px;
+    border-right: 1px solid #ffffff08;
+    background: var(--admin-sidebar);
+}
+
+.admin-brand {
+    gap: 10px;
+    padding: 0 13px 30px;
+    font-size: 21px;
+    letter-spacing: -.7px;
+}
+
+.admin-brand img {
+    width: 34px;
+    height: 34px;
+}
+
+.admin-brand b {
+    margin-left: 4px;
+    border-radius: 999px;
+    color: #102033;
+    background: #c9f15d;
+    font-size: 8px;
+    letter-spacing: .9px;
+}
+
+.admin-workspace {
+    margin: 0 2px 34px;
+    padding: 11px 12px;
+    border: 1px solid #ffffff12;
+    border-radius: 13px;
+    background: #ffffff08;
+}
+
+.workspace-avatar,
+.admin-user-avatar {
+    background: #c9f15d;
+}
+
+.admin-nav {
+    gap: 7px;
+}
+
+.admin-nav p {
+    margin: 0 14px 8px;
+    color: #69788e;
+    font-size: 9px;
+    letter-spacing: 1.7px;
+}
+
+.admin-nav button {
+    min-height: 44px;
+    gap: 13px;
+    padding: 0 14px;
+    border-radius: 11px;
+    color: #aeb9c8;
+    font-size: 14px;
+    font-weight: 600;
+    transition: color .18s ease, background .18s ease, transform .18s ease;
+}
+
+.admin-nav button:hover {
+    color: #fff;
+    background: #ffffff0d;
+    transform: translateX(2px);
+}
+
+.admin-nav button.active {
+    color: #fff;
+    background: var(--admin-blue);
+    box-shadow: 0 10px 24px #1554c94d;
+}
+
+.admin-nav-secondary {
+    margin-top: 42px;
+}
+
+.sidebar-bottom {
+    padding: 18px 10px 0;
+    border-top-color: #ffffff12;
+}
+
+.admin-user strong {
+    font-size: 11px;
+}
+
+.admin-user small {
+    color: #8190a4;
+    font-size: 10px;
+}
+
+.admin-main {
+    width: calc(100% - 256px);
+    max-width: 1600px;
+    padding: 40px clamp(28px, 4vw, 68px) 80px;
+}
+
+.admin-header {
+    align-items: center;
+    margin-bottom: 34px;
+}
+
+.admin-breadcrumb {
+    color: var(--admin-soft);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.admin-breadcrumb b {
+    color: var(--admin-blue);
+}
+
+.admin-header h1 {
+    margin-top: 12px;
+    color: var(--admin-ink);
+    font-size: clamp(28px, 3vw, 38px);
+    font-weight: 750;
+    letter-spacing: -1.5px;
+}
+
+.admin-header p {
+    margin-top: 9px;
+    color: var(--admin-muted);
+    font-size: 15px;
+}
+
+.admin-header-actions {
+    gap: 9px;
+    padding-top: 12px;
+}
+
+.icon-button,
+.admin-refresh {
+    border-color: var(--admin-line);
+    border-radius: 11px;
+    color: #7a8798;
+    background: var(--admin-surface);
+    box-shadow: 0 3px 9px #22324a08;
+    transition: color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.icon-button {
+    width: 40px;
+    height: 40px;
+}
+
+.icon-button:hover,
+.admin-refresh:hover {
+    color: var(--admin-blue);
+    border-color: #b9d2ff;
+    box-shadow: 0 6px 16px #2563eb14;
+    transform: translateY(-1px);
+}
+
+.admin-refresh {
+    height: 40px;
+    padding: 0 15px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-alert {
+    margin: -10px 0 24px;
+    padding: 13px 15px;
+    border-radius: 12px;
+    font-size: 12px;
+}
+
+.stat-grid {
+    gap: 16px;
+}
+
+.admin-stat-card {
+    min-height: 152px;
+    padding: 22px;
+    border: 1px solid var(--admin-line);
+    border-radius: 17px;
+    background: var(--admin-surface);
+    box-shadow: 0 10px 28px #243a5a08;
+    transition: box-shadow .2s ease, transform .2s ease;
+}
+
+.admin-stat-card:hover {
+    box-shadow: 0 14px 34px #243a5a12;
+    transform: translateY(-2px);
+}
+
+.stat-card-top {
+    color: var(--admin-muted);
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.stat-icon {
+    width: 37px;
+    height: 37px;
+    border-radius: 11px;
+    color: var(--admin-blue);
+    background: var(--admin-blue-soft);
+}
+
+.admin-stat-card strong {
+    margin-top: 18px;
+    color: var(--admin-ink);
+    font-size: clamp(27px, 2.3vw, 34px);
+    font-weight: 750;
+    letter-spacing: -1.5px;
+}
+
+.admin-stat-card small {
+    margin-top: 9px;
+    color: var(--admin-green);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.admin-stat-card.green .stat-icon {
+    color: var(--admin-green);
+    background: #e9f9f3;
+}
+
+.admin-stat-card.violet .stat-icon {
+    color: var(--admin-violet);
+    background: #f1edff;
+}
+
+.admin-stat-card.yellow .stat-icon {
+    color: var(--admin-yellow);
+    background: #fff6df;
+}
+
+.admin-stat-card.yellow small {
+    color: var(--admin-yellow);
+}
+
+.admin-two-column {
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.admin-panel {
+    padding: 27px 28px;
+    border: 1px solid var(--admin-line);
+    border-radius: 17px;
+    background: var(--admin-surface);
+    box-shadow: 0 10px 28px #243a5a08;
+}
+
+.panel-heading>div>span {
+    color: var(--admin-soft);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+}
+
+.panel-heading h2 {
+    margin-top: 8px;
+    color: var(--admin-ink);
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -.5px;
+}
+
+.panel-link {
+    color: var(--admin-blue);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.period-switch {
+    padding: 4px;
+    border-radius: 10px;
+    background: #f2f5f9;
+}
+
+.period-switch button {
+    padding: 7px 10px;
+    border-radius: 7px;
+    color: #8995a5;
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.period-switch button.selected {
+    color: var(--admin-blue);
+    box-shadow: 0 3px 8px #263b570d;
+}
+
+.big-chart-stat {
+    margin-top: 28px;
+}
+
+.big-chart-stat strong {
+    color: var(--admin-ink);
+    font-size: 34px;
+    font-weight: 750;
+}
+
+.big-chart-stat span {
+    color: var(--admin-muted);
+    font-size: 12px;
+}
+
+.admin-chart-wrap {
+    margin-top: 25px;
+}
+
+.chart-labels {
+    color: var(--admin-soft);
+    font-size: 10px;
+}
+
+.language-list {
+    gap: 21px;
+    margin-top: 31px;
+}
+
+.language-label {
+    color: var(--admin-muted);
+    font-size: 12px;
+}
+
+.language-label b {
+    color: var(--admin-ink);
+    font-size: 11px;
+}
+
+.language-bar {
+    height: 7px;
+    margin-top: 9px;
+    background: #edf2f7;
+}
+
+.full-panel {
+    margin-top: 16px;
+}
+
+.empty-state {
+    padding: 46px 0;
+    color: var(--admin-soft);
+    font-size: 12px;
+}
+
+.user-table,
+.payment-activity-table {
+    margin-top: 26px;
+}
+
+.user-table-header,
+.payment-activity-head {
+    color: var(--admin-soft);
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+
+.user-table-row {
+    min-height: 68px;
+    border-bottom-color: #edf1f5;
+    color: var(--admin-muted);
+    font-size: 12px;
+}
+
+.user-table-row:hover,
+.user-table-row.selected {
+    background: #f7faff;
+}
+
+.table-avatar {
+    width: 34px;
+    height: 34px;
+    color: var(--admin-blue);
+    background: var(--admin-blue-soft);
+}
+
+.table-user strong {
+    color: var(--admin-ink);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.table-user small {
+    margin-top: 4px;
+    color: var(--admin-soft);
+    font-size: 10px;
+}
+
+.revenue-bars {
+    min-height: 260px;
+    margin-top: 32px;
+    border-bottom-color: var(--admin-line);
+}
+
+.revenue-bar-column {
+    height: 240px;
+}
+
+.revenue-bar {
+    width: min(36px, 80%);
+    border-radius: 10px 10px 3px 3px;
+    background: linear-gradient(180deg, #4d8fff, #82d9d2);
+}
+
+.revenue-bar-value,
+.revenue-bar-column>span {
+    color: var(--admin-soft);
+    font-size: 10px;
+}
+
+.provider-list {
+    gap: 16px;
+    margin-top: 31px;
+}
+
+.provider-row {
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom-color: #edf1f5;
+}
+
+.provider-logo {
+    width: 35px;
+    height: 35px;
+    border-radius: 11px;
+}
+
+.provider-row strong {
+    color: var(--admin-ink);
+    font-size: 12px;
+}
+
+.provider-row small {
+    margin-top: 4px;
+    color: var(--admin-soft);
+    font-size: 10px;
+}
+
+.provider-row>b {
+    color: var(--admin-ink);
+    font-size: 12px;
+}
+
+.finance-note p {
+    max-width: 390px;
+    margin-top: 30px;
+    color: var(--admin-muted);
+    font-size: 12px;
+    line-height: 1.75;
+}
+
+.finance-note>span {
+    margin-top: 26px;
+    color: var(--admin-green);
+    font-size: 11px;
+    font-weight: 650;
+}
+
+.payment-activity-table {
+    min-width: 920px;
+}
+
+.payment-activity-row {
+    min-height: 70px;
+    border-top-color: #edf1f5;
+    color: var(--admin-muted);
+    font-size: 11px;
+}
+
+.payment-activity-row strong {
+    color: var(--admin-ink);
+    font-size: 11px;
+}
+
+.payment-activity-row small,
+.payment-activity-row time {
+    color: var(--admin-soft);
+    font-size: 10px;
+}
+
+.payment-status {
+    font-size: 10px;
+}
+
+.system-health-grid {
+    border-color: var(--admin-line);
+    border-radius: 12px;
+}
+
+.system-health-grid div,
+.pulse-grid div {
+    background: #f9fbfd;
+}
+
+.system-health-grid strong {
+    color: var(--admin-ink);
+    font-size: 14px;
+}
+
+.audit-row {
+    min-height: 59px;
+    border-bottom-color: #edf1f5;
+}
+
+.audit-row strong {
+    color: var(--admin-ink);
+    font-size: 11px;
+}
+
+.audit-row small,
+.audit-row time {
+    color: var(--admin-soft);
+    font-size: 10px;
+}
+
+.admin-login-page {
+    background: #f5f7fb;
+    font-family: var(--font-hanken-grotesk), "Hanken Grotesk", sans-serif;
+}
+
+.admin-login-card {
+    width: min(430px, calc(100% - 32px));
+    padding: 42px;
+    border: 1px solid var(--admin-line);
+    border-radius: 24px;
+    background: #fff;
+    box-shadow: 0 24px 70px #1a315314;
+}
+
+.admin-login-brand span {
+    color: var(--admin-ink);
+    font-size: 25px;
+}
+
+.admin-login-kicker,
+.admin-login-card label {
+    color: var(--admin-blue);
+    font-size: 10px;
+    letter-spacing: 1.2px;
+}
+
+.admin-login-card h1 {
+    color: var(--admin-ink);
+    font-size: 42px;
+    letter-spacing: -1.8px;
+}
+
+.admin-login-card>p {
+    color: var(--admin-muted);
+    font-size: 14px;
+}
+
+.admin-login-card input {
+    height: 48px;
+    border-color: #dfe6ef;
+    border-radius: 11px;
+    background: #fbfcfe;
+    font-size: 14px;
+}
+
+.login-button {
+    height: 49px;
+    border-radius: 11px;
+    background: var(--admin-blue);
+    font-size: 13px;
+}
+
+.login-button:hover {
+    background: #1d4ed8;
+}
+
+.login-footnote {
+    color: var(--admin-soft);
+    font-size: 10px;
+}
+
+@media (max-width: 1050px) {
+    .admin-sidebar {
+        width: 220px;
+        flex-basis: 220px;
+    }
+
+    .admin-main {
+        width: calc(100% - 220px);
+        padding-right: 28px;
+        padding-left: 28px;
+    }
+}
+
+@media (max-width: 700px) {
+    .admin-sidebar {
+        width: 68px;
+        flex-basis: 68px;
+        padding: 22px 9px;
+    }
+
+    .admin-main {
+        width: calc(100% - 68px);
+        padding: 25px 16px 50px;
+    }
+
+    .admin-header h1 {
+        font-size: 29px;
+    }
+
+    .admin-header p {
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .admin-header-actions {
+        padding-top: 19px;
+    }
+
+    .admin-stat-card {
+        min-height: 132px;
+        padding: 18px;
+    }
+
+    .admin-panel {
+        padding: 21px 18px;
+        border-radius: 15px;
+    }
+
+    .panel-heading h2 {
+        font-size: 17px;
+    }
+
+    .admin-login-card {
+        padding: 30px 24px;
+    }
+}
+
+/* Readable type scale */
+body {
+    font-size: 16px;
+}
+
+.promo-site {
+    font-size: 16px;
+}
+
+.promo-site .site-nav {
+    min-height: 96px;
+}
+
+.promo-site .brand {
+    font-size: 23px;
+}
+
+.promo-site .nav-links {
+    font-size: 17px;
+}
+
+.promo-site .nav-cta {
+    padding: 14px 19px;
+    font-size: 15px;
+}
+
+.promo-site .eyebrow,
+.promo-site .section-kicker {
+    font-size: 11px;
+}
+
+.promo-site .hero-text {
+    max-width: 470px;
+    font-size: 19px;
+    line-height: 1.6;
+}
+
+.promo-site .button {
+    padding: 17px 23px;
+    font-size: 15px;
+}
+
+.promo-site .hero-note {
+    font-size: 13px;
+}
+
+.promo-site .marquee-content {
+    font-size: 11px;
+}
+
+.promo-site .intro-side p,
+.promo-site .section-heading>p {
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+.promo-site .text-link {
+    font-size: 17px;
+}
+
+.promo-site .feature-number {
+    font-size: 11px;
+}
+
+.promo-site .feature-card h3 {
+    font-size: 25px;
+}
+
+.promo-site .feature-card p {
+    font-size: 17px;
+    line-height: 1.6;
+}
+
+.promo-site .showcase-copy>p,
+.promo-site .download-copy p {
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+.promo-site .check-list {
+    font-size: 17px;
+}
+
+.promo-site .translation-card small,
+.promo-site .translation-card span {
+    font-size: 12px;
+}
+
+.promo-site .site-footer {
+    font-size: 13px;
+}
+
+.admin-app {
+    font-size: 15px;
+}
+
+.admin-nav button {
+    font-size: 15px;
+}
+
+.admin-workspace strong {
+    font-size: 12px;
+}
+
+.admin-workspace small {
+    font-size: 10px;
+}
+
+.admin-header p {
+    font-size: 16px;
+}
+
+.stat-card-top {
+    font-size: 13px;
+}
+
+.admin-stat-card small {
+    font-size: 12px;
+}
+
+.panel-heading>div>span {
+    font-size: 11px;
+}
+
+.panel-heading h2 {
+    font-size: 20px;
+}
+
+.panel-link {
+    font-size: 13px;
+}
+
+.period-switch button {
+    font-size: 12px;
+}
+
+.chart-labels,
+.language-label,
+.user-table-row,
+.payment-activity-row {
+    font-size: 12px;
+}
+
+.language-label b,
+.user-table-row>b {
+    font-size: 12px;
+}
+
+.pulse-grid span,
+.panel-note,
+.finance-note>span {
+    font-size: 12px;
+}
+
+.admin-alert,
+.empty-state {
+    font-size: 13px;
+}
+
+@media (max-width: 700px) {
+    .promo-site .nav-links {
+        font-size: 18px;
+    }
+
+    .promo-site .hero-text {
+        font-size: 18px;
+    }
+
+    .promo-site .button {
+        font-size: 14px;
+    }
+
+    .admin-header p {
+        font-size: 14px;
+    }
+
+    .panel-heading h2 {
+        font-size: 18px;
+    }
+}
+
+/* Large admin accessibility scale */
+.admin-app {
+    font-size: 18px;
+}
+
+.admin-nav p {
+    font-size: 14px;
+}
+
+.admin-nav button {
+    min-height: 50px;
+    font-size: 20px;
+}
+
+.admin-workspace strong {
+    font-size: 16px;
+}
+
+.admin-workspace small,
+.admin-user small {
+    font-size: 14px;
+}
+
+.admin-breadcrumb {
+    font-size: 15px;
+}
+
+.admin-header h1 {
+    font-size: clamp(36px, 4vw, 48px);
+    letter-spacing: -2px;
+}
+
+.admin-header p {
+    font-size: 20px;
+}
+
+.admin-refresh {
+    height: 46px;
+    padding: 0 18px;
+    font-size: 16px;
+}
+
+.icon-button {
+    width: 46px;
+    height: 46px;
+}
+
+.admin-alert,
+.admin-alert button,
+.admin-alert small {
+    font-size: 16px;
+}
+
+.admin-stat-card {
+    min-height: 178px;
+    padding: 26px;
+}
+
+.stat-card-top {
+    font-size: 17px;
+}
+
+.stat-icon {
+    width: 44px;
+    height: 44px;
+}
+
+.admin-stat-card strong {
+    margin-top: 22px;
+    font-size: clamp(38px, 3.5vw, 48px);
+}
+
+.admin-stat-card small {
+    margin-top: 12px;
+    font-size: 15px;
+}
+
+.admin-panel {
+    padding: 32px;
+}
+
+.panel-heading>div>span {
+    font-size: 14px;
+}
+
+.panel-heading h2 {
+    font-size: 28px;
+    letter-spacing: -.8px;
+}
+
+.panel-link,
+.period-switch button {
+    font-size: 16px;
+}
+
+.big-chart-stat strong {
+    font-size: 44px;
+}
+
+.big-chart-stat span,
+.chart-labels,
+.language-label,
+.pulse-grid span,
+.panel-note,
+.finance-note>span {
+    font-size: 16px;
+}
+
+.language-label b,
+.user-table-row>b {
+    font-size: 16px;
+}
+
+.language-bar {
+    height: 9px;
+}
+
+.user-table-header,
+.payment-activity-head,
+.waitlist-table-head {
+    font-size: 15px;
+}
+
+.user-table-row,
+.payment-activity-row,
+.waitlist-table-row {
+    min-height: 82px;
+    font-size: 16px;
+}
+
+.table-avatar {
+    width: 42px;
+    height: 42px;
+}
+
+.table-user strong,
+.payment-activity-row strong,
+.provider-row strong,
+.audit-row strong {
+    font-size: 17px;
+}
+
+.table-user small,
+.payment-activity-row small,
+.payment-activity-row time,
+.provider-row small,
+.audit-row small {
+    font-size: 14px;
+}
+
+.provider-logo {
+    width: 44px;
+    height: 44px;
+}
+
+.provider-row>b,
+.payment-status {
+    font-size: 16px;
+}
+
+.provider-row {
+    min-height: 65px;
+}
+
+.pulse-grid strong,
+.health-summary strong {
+    font-size: 28px;
+}
+
+.health-summary span,
+.funnel-label,
+.feature-usage-row span,
+.feature-usage-row b,
+.system-health-grid strong {
+    font-size: 16px;
+}
+
+.admin-utility-modal,
+.user-details-modal,
+.account-confirm-modal,
+.waitlist-modal {
+    font-size: 18px;
+}
+
+.admin-utility-modal h2,
+.user-details-modal h2,
+.account-confirm-modal h3,
+.waitlist-modal h2 {
+    font-size: 34px;
+}
+
+.admin-utility-modal input,
+.admin-login-card input,
+.waitlist-form input,
+.waitlist-form select,
+.account-confirm-label input {
+    min-height: 54px;
+    font-size: 19px;
+}
+
+.admin-login-card label,
+.waitlist-form label,
+.account-confirm-label {
+    font-size: 16px;
+}
+
+@media (max-width: 700px) {
+    .admin-main {
+        padding: 25px 18px 55px;
+    }
+
+    .admin-header h1 {
+        font-size: 36px;
+    }
+
+    .admin-header p {
+        font-size: 17px;
+    }
+
+    .admin-stat-card {
+        min-height: 155px;
+        padding: 21px;
+    }
+
+    .admin-stat-card strong {
+        font-size: 36px;
+    }
+
+    .admin-panel {
+        padding: 25px 21px;
+    }
+
+    .panel-heading h2 {
+        font-size: 23px;
+    }
+
+    .admin-nav button {
+        min-height: 44px;
+    }
+}
+
+/* Large, readable user details modal */
+.user-details-modal {
+    width: min(100%, 820px);
+    padding: 42px 46px 38px;
+}
+
+.admin-modal-close {
+    top: 22px;
+    right: 22px;
+    width: 42px;
+    height: 42px;
+}
+
+.user-details-modal .user-detail-top {
+    gap: 16px;
+    padding-right: 44px;
+}
+
+.user-detail-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 17px;
+    font-size: 24px;
+}
+
+.user-details-modal .detail-kicker {
+    font-size: 13px;
+    letter-spacing: 1.5px;
+}
+
+.user-details-modal .user-detail-top h2 {
+    margin-top: 7px;
+    font-size: 30px;
+    letter-spacing: -1px;
+}
+
+.user-details-modal .user-detail-top p {
+    margin-top: 5px;
+    font-size: 16px;
+}
+
+.user-details-modal .user-status {
+    padding: 8px 11px;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.user-details-modal .user-detail-id {
+    margin-top: 24px;
+    padding: 14px 15px;
+    border-radius: 10px;
+    font-size: 15px;
+}
+
+.user-details-modal .user-detail-id code {
+    margin-top: 7px;
+    font-size: 14px;
+}
+
+.user-details-modal .detail-stat-grid {
+    gap: 2px;
+    margin-top: 24px;
+    border-radius: 12px;
+}
+
+.user-details-modal .detail-stat-grid div {
+    min-height: 104px;
+    padding: 19px 17px;
+}
+
+.user-details-modal .detail-stat-grid span {
+    font-size: 14px;
+}
+
+.user-details-modal .detail-stat-grid strong {
+    margin-top: 10px;
+    font-size: 27px;
+}
+
+.user-details-modal .detail-section {
+    margin-top: 30px;
+    padding-top: 23px;
+}
+
+.user-details-modal .detail-row {
+    gap: 24px;
+    padding-top: 13px;
+    font-size: 16px;
+}
+
+.user-details-modal .detail-row b {
+    max-width: 65%;
+    font-size: 16px;
+}
+
+.user-details-modal .modal-action-footer {
+    gap: 14px;
+    margin-top: 32px;
+    padding-top: 24px;
+}
+
+.user-details-modal .modal-action-footer button {
+    min-height: 52px;
+    font-size: 16px;
+}
+
+.account-confirm-modal {
+    width: min(100%, 500px);
+    padding: 36px 38px 32px;
+}
+
+.account-confirm-modal h3 {
+    font-size: 30px;
+}
+
+.account-confirm-modal>p {
+    font-size: 16px;
+    line-height: 1.7;
+}
+
+.account-confirm-user {
+    gap: 13px;
+    padding: 14px;
+}
+
+.account-confirm-user strong {
+    font-size: 16px;
+}
+
+.account-confirm-user small {
+    margin-top: 4px;
+    font-size: 14px;
+}
+
+.account-confirm-label {
+    gap: 9px;
+    font-size: 16px;
+}
+
+.account-confirm-label input {
+    height: 52px;
+    font-size: 18px;
+}
+
+.account-confirm-actions {
+    gap: 12px;
+    margin-top: 30px;
+}
+
+.account-confirm-actions button {
+    min-height: 50px;
+    font-size: 15px;
+}
+
+@media (max-width: 620px) {
+    .user-details-modal {
+        padding: 32px 22px 26px;
+    }
+
+    .user-details-modal .user-detail-top h2 {
+        font-size: 25px;
+    }
+
+    .user-details-modal .user-status {
+        font-size: 12px;
+    }
+
+    .user-details-modal .detail-stat-grid span,
+    .user-details-modal .detail-row,
+    .user-details-modal .detail-row b {
+        font-size: 15px;
+    }
+
+    .user-details-modal .detail-stat-grid strong {
+        font-size: 24px;
+    }
+
+    .account-confirm-modal {
+        padding: 30px 24px 26px;
+    }
+}
+
+.admin-email-panel {
+    margin-top: 18px;
+}
+
+.admin-email-intro {
+    max-width: 720px;
+    margin: 14px 0 24px;
+    color: var(--admin-muted);
+    font-size: 16px;
+    line-height: 1.65;
+}
+
+.admin-email-form {
+    display: grid;
+    gap: 20px;
+}
+
+.admin-email-form label {
+    display: grid;
+    gap: 9px;
+    color: var(--admin-ink);
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.admin-email-form-grid {
+    display: grid;
+    grid-template-columns: minmax(220px, .7fr) minmax(280px, 1.3fr);
+    gap: 17px;
+}
+
+.admin-email-form input,
+.admin-email-form select,
+.admin-email-form textarea {
+    width: 100%;
+    border: 1px solid var(--admin-line);
+    border-radius: 12px;
+    outline: 0;
+    color: var(--admin-ink);
+    background: #fbfcfe;
+    font: inherit;
+    transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+
+.admin-email-form input,
+.admin-email-form select {
+    min-height: 52px;
+    padding: 0 15px;
+    font-size: 16px;
+}
+
+.admin-email-form textarea {
+    min-height: 190px;
+    padding: 15px;
+    resize: vertical;
+    font-size: 16px;
+    line-height: 1.65;
+}
+
+.admin-email-form input:focus,
+.admin-email-form select:focus,
+.admin-email-form textarea:focus {
+    border-color: #8bb8ff;
+    background: white;
+    box-shadow: 0 0 0 4px #287dff14;
+}
+
+.admin-email-form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+
+.admin-email-form-footer>span {
+    color: var(--admin-muted);
+    font-size: 14px;
+}
+
+.admin-email-send {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 50px;
+    padding: 0 20px;
+    border: 0;
+    border-radius: 11px;
+    color: white;
+    background: var(--admin-blue);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 750;
+    cursor: pointer;
+    box-shadow: 0 9px 20px #287dff24;
+    transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+}
+
+.admin-email-send:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px #287dff30;
+}
+
+.admin-email-send:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+.admin-email-feedback {
+    padding: 13px 15px;
+    border-radius: 11px;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.admin-email-feedback.success {
+    color: #167353;
+    background: #e9f8f1;
+}
+
+.admin-email-feedback.error {
+    color: #a13b3b;
+    background: #fff0f0;
+}
+
+@media (max-width: 700px) {
+    .admin-email-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-email-form-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .admin-email-send {
+        width: 100%;
+    }
+}
+
+/* Comfortable admin scale: readable without the oversized display treatment. */
+.admin-header h1 {
+    font-size: clamp(31px, 3.2vw, 42px);
+    letter-spacing: -1.5px;
+}
+
+.admin-header p {
+    font-size: 17px;
+}
+
+.admin-refresh {
+    height: 42px;
+    padding: 0 15px;
+    font-size: 14px;
+}
+
+.icon-button {
+    width: 42px;
+    height: 42px;
+}
+
+.admin-alert,
+.admin-alert button,
+.admin-alert small {
+    font-size: 14px;
+}
+
+.admin-stat-card {
+    min-height: 158px;
+    padding: 22px;
+}
+
+.stat-card-top {
+    font-size: 15px;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+}
+
+.admin-stat-card strong {
+    margin-top: 18px;
+    font-size: clamp(32px, 3vw, 41px);
+}
+
+.admin-stat-card small {
+    margin-top: 9px;
+    font-size: 13px;
+}
+
+.admin-panel {
+    padding: 26px;
+}
+
+.panel-heading>div>span {
+    font-size: 12px;
+}
+
+.panel-heading h2 {
+    font-size: 23px;
+}
+
+.panel-link,
+.period-switch button {
+    font-size: 14px;
+}
+
+.big-chart-stat strong {
+    font-size: 37px;
+}
+
+.big-chart-stat span,
+.chart-labels,
+.language-label,
+.pulse-grid span,
+.panel-note,
+.finance-note>span {
+    font-size: 14px;
+}
+
+.language-label b,
+.user-table-row>b {
+    font-size: 14px;
+}
+
+.user-table-row,
+.payment-activity-row,
+.waitlist-table-row {
+    min-height: 70px;
+    font-size: 14px;
+}
+
+.table-avatar {
+    width: 38px;
+    height: 38px;
+}
+
+.table-user strong,
+.payment-activity-row strong,
+.provider-row strong,
+.audit-row strong {
+    font-size: 15px;
+}
+
+.table-user small,
+.payment-activity-row small,
+.payment-activity-row time,
+.provider-row small,
+.audit-row small {
+    font-size: 13px;
+}
+
+.provider-logo {
+    width: 40px;
+    height: 40px;
+}
+
+.provider-row>b,
+.payment-status {
+    font-size: 14px;
+}
+
+.pulse-grid strong,
+.health-summary strong {
+    font-size: 25px;
+}
+
+.health-summary span,
+.funnel-label,
+.feature-usage-row span,
+.feature-usage-row b,
+.system-health-grid strong {
+    font-size: 14px;
+}
+
+.admin-utility-modal,
+.user-details-modal,
+.account-confirm-modal,
+.waitlist-modal {
+    font-size: 16px;
+}
+
+.admin-utility-modal h2,
+.user-details-modal h2,
+.account-confirm-modal h3,
+.waitlist-modal h2 {
+    font-size: 29px;
+}
+
+.admin-utility-modal input,
+.admin-login-card input,
+.waitlist-form input,
+.waitlist-form select,
+.account-confirm-label input {
+    min-height: 50px;
+    font-size: 17px;
+}
+
+.admin-email-intro {
+    font-size: 15px;
+}
+
+.admin-email-form label,
+.admin-email-form input,
+.admin-email-form select,
+.admin-email-form textarea {
+    font-size: 15px;
+}
+
+@media (max-width: 700px) {
+    .admin-header h1 {
+        font-size: 31px;
+    }
+
+    .admin-header p {
+        font-size: 15px;
+    }
+
+    .admin-stat-card {
+        min-height: 145px;
+        padding: 19px;
+    }
+
+    .admin-stat-card strong {
+        font-size: 32px;
+    }
+
+    .admin-panel {
+        padding: 22px 20px;
+    }
+
+    .panel-heading h2 {
+        font-size: 20px;
     }
 }

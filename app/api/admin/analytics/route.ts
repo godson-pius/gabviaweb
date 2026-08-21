@@ -10,30 +10,28 @@ type FirestoreDocument = {
 };
 
 type FirestoreRecord = Record<string, unknown> & { __id?: string; __createTime?: string; __path?: string };
+type RevenueProvider = "Flutterwave" | "Monnify" | "RevenueCat";
+type CurrencyTotal = { currency: string; amount: number; transactions: number };
 
 type RevenueTransaction = {
   id: string;
-  provider: "Flutterwave" | "Monnify";
-  amount: number;
-  settledAmount: number;
+  provider: RevenueProvider;
+  store: string;
+  productId: string;
+  points: number | null;
+  amount: number | null;
+  settledAmount: number | null;
   currency: string;
   status: string;
   createdAt: string;
   customer: string;
+  userId: string;
   reference: string;
+  transactionId: string;
+  isTest: boolean;
 };
 
-type PaymentLedgerTransaction = {
-  id: string;
-  provider: "Flutterwave" | "Monnify";
-  amount: number;
-  settledAmount: number;
-  currency: string;
-  status: string;
-  createdAt: string;
-  customer: string;
-  reference: string;
-};
+type PaymentLedgerTransaction = RevenueTransaction;
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -149,8 +147,48 @@ function round(value: number) {
   return Math.round(value * 100) / 100;
 }
 
+function nullableNumber(value: unknown) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() && Number.isFinite(Number(value))) return Number(value);
+  return null;
+}
+
+function currencyTotals(transactions: RevenueTransaction[], field: "amount" | "settledAmount"): CurrencyTotal[] {
+  const totals = new Map<string, CurrencyTotal>();
+  for (const transaction of transactions) {
+    const amount = transaction[field];
+    const currency = transaction.currency.toUpperCase();
+    if (amount === null || !/^[A-Z]{3}$/.test(currency)) continue;
+    const current = totals.get(currency) ?? { currency, amount: 0, transactions: 0 };
+    current.amount += amount;
+    current.transactions += 1;
+    totals.set(currency, current);
+  }
+  return Array.from(totals.values())
+    .map((total) => ({ ...total, amount: round(total.amount) }))
+    .sort((left, right) => right.amount - left.amount);
+}
+
+function isSuccessfulStatus(value: unknown) {
+  return ["successful", "success", "paid", "completed"].includes(String(value || "successful").toLowerCase());
+}
+
+function transactionKey(transaction: RevenueTransaction) {
+  return `${transaction.provider}:${transaction.reference !== "—" ? transaction.reference : transaction.id}`;
+}
+
 function trimBaseUrl(value?: string) {
   return (value ?? "").replace(/\/$/, "");
+}
+
+async function readProviderPayload(response: Response) {
+  const text = await response.text();
+  if (!text) return {} as Record<string, unknown>;
+  try {
+    return JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    return { responseMessage: text.slice(0, 240) };
+  }
 }
 
 async function getFlutterwaveTransactions(from: Date, to: Date): Promise<RevenueTransaction[]> {
@@ -180,13 +218,19 @@ async function getFlutterwaveTransactions(from: Date, to: Date): Promise<Revenue
       transactions.push({
         id: String(item.id ?? item.tx_ref ?? transactions.length),
         provider: "Flutterwave",
-        amount: Number(item.amount ?? 0),
-        settledAmount: Number(item.amount_settled ?? item.amount ?? 0),
+        store: "Web",
+        productId: "",
+        points: null,
+        amount: nullableNumber(item.amount),
+        settledAmount: nullableNumber(item.amount_settled ?? item.amount),
         currency: String(item.currency ?? "NGN"),
         status: String(item.status ?? "successful"),
         createdAt: String(item.created_at ?? new Date().toISOString()),
         customer: customer?.name || customer?.email || "Customer",
+        userId: "",
         reference: String(item.tx_ref ?? item.flw_ref ?? "—"),
+        transactionId: String(item.id ?? item.flw_ref ?? ""),
+        isTest: false,
       });
     }
     page += 1;
@@ -195,6 +239,7 @@ async function getFlutterwaveTransactions(from: Date, to: Date): Promise<Revenue
 }
 
 async function getMonnifyTransactions(from: Date, to: Date): Promise<RevenueTransaction[]> {
+  if (process.env.MONNIFY_ANALYTICS_ENABLED?.toLowerCase() === "false") return [];
   const baseUrl = trimBaseUrl(process.env.MONNIFY_BASE_URL);
   const apiKey = process.env.MONNIFY_API_KEY;
   const secretKey = process.env.MONNIFY_SECRET_KEY;
@@ -206,9 +251,9 @@ async function getMonnifyTransactions(from: Date, to: Date): Promise<RevenueTran
     headers: { Authorization: `Basic ${credentials}`, Accept: "application/json" },
     cache: "no-store",
   });
-  const authPayload = await authResponse.json() as { responseBody?: { accessToken?: string }; responseMessage?: string };
+  const authPayload = await readProviderPayload(authResponse) as { responseBody?: { accessToken?: string }; responseMessage?: string; message?: string };
   if (!authResponse.ok || !authPayload.responseBody?.accessToken) {
-    throw new Error(authPayload.responseMessage ?? "Monnify authentication failed.");
+    throw new Error(authPayload.responseMessage ?? authPayload.message ?? `Monnify authentication failed (HTTP ${authResponse.status}).`);
   }
 
   const transactions: RevenueTransaction[] = [];
@@ -218,15 +263,16 @@ async function getMonnifyTransactions(from: Date, to: Date): Promise<RevenueTran
     const params = new URLSearchParams({
       from: String(from.getTime()),
       to: String(to.getTime()),
-      pageSize: "100",
-      pageNo: String(page),
+      page: String(page),
+      size: "100",
+      paymentStatus: "PAID",
     });
     const response = await fetch(`${baseUrl}/merchant/transactions/search?${params.toString()}`, {
       headers: { Authorization: `Bearer ${authPayload.responseBody.accessToken}`, Accept: "application/json" },
       cache: "no-store",
     });
-    const payload = await response.json() as { responseBody?: { content?: Array<Record<string, unknown>>; totalPages?: number }; responseMessage?: string };
-    if (!response.ok) throw new Error(payload.responseMessage ?? "Monnify returned an error.");
+    const payload = await readProviderPayload(response) as { responseBody?: { content?: Array<Record<string, unknown>>; totalPages?: number }; responseMessage?: string; message?: string };
+    if (!response.ok) throw new Error(payload.responseMessage ?? payload.message ?? `Monnify returned HTTP ${response.status}.`);
     const body = payload.responseBody ?? {};
     totalPages = Math.min(body.totalPages ?? 1, 10);
     for (const item of body.content ?? []) {
@@ -235,13 +281,19 @@ async function getMonnifyTransactions(from: Date, to: Date): Promise<RevenueTran
       transactions.push({
         id: String(item.transactionReference ?? item.paymentReference ?? transactions.length),
         provider: "Monnify",
-        amount: Number(item.amountPaid ?? item.amount ?? 0),
-        settledAmount: Number(item.settlementAmount ?? item.amountPaid ?? item.amount ?? 0),
+        store: "Web",
+        productId: "",
+        points: null,
+        amount: nullableNumber(item.amountPaid ?? item.amount),
+        settledAmount: nullableNumber(item.settlementAmount ?? item.amountPaid ?? item.amount),
         currency: String(item.currencyCode ?? "NGN"),
         status,
         createdAt: String(item.transactionDate ?? item.createdOn ?? new Date().toISOString()),
         customer: String(item.customerName ?? item.customerEmail ?? "Customer"),
+        userId: "",
         reference: String(item.paymentReference ?? item.transactionReference ?? "—"),
+        transactionId: String(item.transactionReference ?? ""),
+        isTest: false,
       });
     }
     page += 1;
@@ -340,21 +392,48 @@ export async function GET(request: NextRequest) {
       }
     }
     const ledgerTransactions: PaymentLedgerTransaction[] = paymentRecords
-      .filter((record) => String(record.status || "successful") === "successful")
-      .map((record) => ({
-        id: String(record.__id ?? "—"),
-        provider: String(record.provider || "Monnify") === "Flutterwave" ? "Flutterwave" : "Monnify",
-        amount: Number(record.amount ?? 0),
-        settledAmount: Number(record.amount ?? 0),
-        currency: String(record.currency || "NGN"),
-        status: String(record.status || "successful"),
-        createdAt: String(record.created_at || record.__createTime || new Date().toISOString()),
-        customer: String(record.user_id || "Gabvia user"),
-        reference: String(record.reference || record.__id || "—"),
-      }));
-    // New verified payments use the ledger. Provider API data remains a legacy
-    // fallback until the ledger has its first successful payment.
-    const transactions: RevenueTransaction[] = ledgerTransactions.length > 0 ? ledgerTransactions : providerTransactions;
+      .filter((record) => isSuccessfulStatus(record.status))
+      .map((record) => {
+        const providerValue = String(record.provider || "");
+        const provider: RevenueProvider = providerValue === "Flutterwave" || providerValue === "Monnify" || providerValue === "RevenueCat"
+          ? providerValue
+          : "Monnify";
+        const reference = String(record.reference || record.transaction_id || record.__id || "—");
+        const amount = nullableNumber(record.amount);
+        const store = String(record.store || (provider === "RevenueCat" ? "Native store" : "Web"));
+        return {
+          id: String(record.__id ?? "—"),
+          provider,
+          store,
+          productId: String(record.product_id || ""),
+          points: nullableNumber(record.points),
+          amount,
+          settledAmount: nullableNumber(record.settled_amount ?? amount),
+          currency: String(record.currency || "—"),
+          status: String(record.status || "successful"),
+          createdAt: String(record.purchase_date || record.created_at || record.__createTime || new Date().toISOString()),
+          customer: String(record.user_id || "Gabvia user"),
+          userId: String(record.user_id || ""),
+          reference,
+          transactionId: String(record.transaction_id || reference),
+          isTest: reference.toLowerCase().startsWith("test_") || store.toLowerCase().includes("test"),
+        };
+      });
+
+    // The ledger is the trusted record for payments already verified by Gabvia,
+    // but provider APIs still contain older payments and records that may not
+    // have reached the ledger. Merge both sources and deduplicate by provider
+    // reference so one purchase is never counted twice.
+    const seenTransactionKeys = new Set(ledgerTransactions.map(transactionKey));
+    const transactions: RevenueTransaction[] = [
+      ...ledgerTransactions,
+      ...providerTransactions.filter((transaction) => {
+        const key = transactionKey(transaction);
+        if (seenTransactionKeys.has(key)) return false;
+        seenTransactionKeys.add(key);
+        return true;
+      }),
+    ].sort((left, right) => (parseDate(right.createdAt)?.getTime() ?? 0) - (parseDate(left.createdAt)?.getTime() ?? 0));
     let auditLogs: FirestoreRecord[] = [];
     if (process.env.FIREBASE_ADMIN_CLIENT_EMAIL && process.env.FIREBASE_ADMIN_PRIVATE_KEY) {
       try {
@@ -488,11 +567,21 @@ export async function GET(request: NextRequest) {
       .sort((left, right) => (right.createdAt ?? "").localeCompare(left.createdAt ?? ""));
     const recentUsers = users.slice(0, 8);
 
-    const grossRevenue = transactions.reduce((sum, transaction) => sum + transaction.amount, 0);
-    const settledRevenue = transactions.reduce((sum, transaction) => sum + transaction.settledAmount, 0);
+    const grossRevenue = transactions.reduce((sum, transaction) => sum + (transaction.amount ?? 0), 0);
+    const settledRevenue = transactions.reduce((sum, transaction) => sum + (transaction.settledAmount ?? 0), 0);
+    const grossRevenueByCurrency = currencyTotals(transactions, "amount");
+    const settledRevenueByCurrency = currencyTotals(transactions, "settledAmount");
     const revenueByMonth = monthlyKeys.map((month) => {
       const monthTransactions = transactions.filter((transaction) => { const date = parseDate(transaction.createdAt); return date ? monthKey(date) === month : false; });
-      return { month, label: new Date(`${month}-01T00:00:00Z`).toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }), gross: round(monthTransactions.reduce((sum, transaction) => sum + transaction.amount, 0)), settled: round(monthTransactions.reduce((sum, transaction) => sum + transaction.settledAmount, 0)), count: monthTransactions.length };
+      return {
+        month,
+        label: new Date(`${month}-01T00:00:00Z`).toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }),
+        gross: round(monthTransactions.reduce((sum, transaction) => sum + (transaction.amount ?? 0), 0)),
+        settled: round(monthTransactions.reduce((sum, transaction) => sum + (transaction.settledAmount ?? 0), 0)),
+        count: monthTransactions.length,
+        byCurrency: currencyTotals(monthTransactions, "amount"),
+        settledByCurrency: currencyTotals(monthTransactions, "settledAmount"),
+      };
     });
     const waitlistEntries = waitlist
       .map((entry) => ({
@@ -550,6 +639,8 @@ export async function GET(request: NextRequest) {
         totalGabPoints: profiles.reduce((sum, profile) => sum + Number(profile.gab_points ?? 0), 0),
         grossRevenue: round(grossRevenue),
         settledRevenue: round(settledRevenue),
+        grossRevenueByCurrency,
+        settledRevenueByCurrency,
         paidTransactions: transactions.length,
         waitlistCount: waitlist.length,
       },
@@ -569,19 +660,20 @@ export async function GET(request: NextRequest) {
           { label: "Referral signups", value: profiles.filter((profile) => Boolean(profile.referred_by)).length },
         ],
         moderation: { activeUsers: profiles.filter((profile) => profile.status !== "suspended").length, suspendedUsers: profiles.filter((profile) => profile.status === "suspended").length, reports: reportsResult[0].status === "fulfilled" || reportRecords.length > 0 ? reportRecords.length : null },
-        system: { status: warnings.length ? "degraded" : "healthy", profileRecords: profiles.length, messageRecords: messages.length, conversationRecords: conversations.length, translationRecords: translations.length, paymentProviders: [{ name: "Flutterwave", configured: Boolean(process.env.FLUTTERWAVE_BASE_URL && process.env.FLUTTERWAVE_SECRET_KEY) }, { name: "Monnify", configured: Boolean(process.env.MONNIFY_BASE_URL && process.env.MONNIFY_API_KEY && process.env.MONNIFY_SECRET_KEY) }] },
+        system: { status: warnings.length ? "degraded" : "healthy", profileRecords: profiles.length, messageRecords: messages.length, conversationRecords: conversations.length, translationRecords: translations.length, paymentProviders: [{ name: "Flutterwave", configured: Boolean(process.env.FLUTTERWAVE_BASE_URL && process.env.FLUTTERWAVE_SECRET_KEY) }, { name: "Monnify", configured: process.env.MONNIFY_ANALYTICS_ENABLED?.toLowerCase() !== "false" && Boolean(process.env.MONNIFY_BASE_URL && process.env.MONNIFY_API_KEY && process.env.MONNIFY_SECRET_KEY) }, { name: "RevenueCat", configured: paymentRecords.some((record) => String(record.provider || "") === "RevenueCat") }] },
       },
       trends: { daily: dailyTrend, monthly: monthlyTrend, revenue: revenueByMonth },
       breakdowns: {
         languages: Array.from(languageCounts.entries()).sort(([, left], [, right]) => right - left).slice(0, 6).map(([name, users]) => ({ name, users })),
-        providers: ["Flutterwave", "Monnify"].map((provider) => {
+        providers: ["Flutterwave", "Monnify", "RevenueCat"].map((provider) => {
           const providerTransactions = transactions.filter((transaction) => transaction.provider === provider);
-          return { provider, transactions: providerTransactions.length, gross: round(providerTransactions.reduce((sum, transaction) => sum + transaction.amount, 0)), settled: round(providerTransactions.reduce((sum, transaction) => sum + transaction.settledAmount, 0)) };
+          return { provider, transactions: providerTransactions.length, gross: round(providerTransactions.reduce((sum, transaction) => sum + (transaction.amount ?? 0), 0)), settled: round(providerTransactions.reduce((sum, transaction) => sum + (transaction.settledAmount ?? 0), 0)), grossByCurrency: currencyTotals(providerTransactions, "amount"), settledByCurrency: currencyTotals(providerTransactions, "settledAmount") };
         }),
       },
       recentUsers,
       users,
       waitlist: waitlistEntries,
+      paymentTransactions: transactions,
       auditLogs: auditLogEntries,
     });
   } catch (error) {

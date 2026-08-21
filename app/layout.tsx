@@ -5,6 +5,7 @@ import "./globals.css";
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
   display: "swap",
+  variable: "--font-hanken-grotesk",
 });
 
 export const metadata: Metadata = {
@@ -33,7 +34,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
-      <body className={hankenGrotesk.className}>{children}</body>
+      <body className={`${hankenGrotesk.className} ${hankenGrotesk.variable}`}>{children}</body>
     </html>
   );
 }
