@@ -16,9 +16,9 @@ type ResetRecord = {
   userId: string;
   codeHash: string;
   attempts: number;
-  expiresAt: string;
+  expiresAt: number;
   resetTokenHash?: string;
-  resetTokenExpiresAt?: string;
+  resetTokenExpiresAt?: number;
   consumedAt?: string;
 };
 
@@ -69,6 +69,12 @@ function decodeFirestoreFields(fields: Record<string, Record<string, unknown>> |
 
 function normalizeEmail(value: unknown) {
   return typeof value === "string" ? value.trim().toLowerCase().slice(0, 160) : "";
+}
+
+function timestampMilliseconds(value: unknown) {
+  if (typeof value === "number") return value;
+  const parsed = Date.parse(String(value ?? ""));
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
 }
 
 function hashValue(value: string) {
@@ -155,9 +161,9 @@ async function getResetRecord(projectId: string, accessToken: string, documentId
     userId: String(fields.user_id ?? ""),
     codeHash: String(fields.code_hash ?? ""),
     attempts: Number(fields.attempts ?? 0),
-    expiresAt: String(fields.expires_at ?? ""),
+    expiresAt: timestampMilliseconds(fields.expires_at),
     resetTokenHash: fields.reset_token_hash ? String(fields.reset_token_hash) : undefined,
-    resetTokenExpiresAt: fields.reset_token_expires_at ? String(fields.reset_token_expires_at) : undefined,
+    resetTokenExpiresAt: fields.reset_token_expires_at ? timestampMilliseconds(fields.reset_token_expires_at) : undefined,
     consumedAt: fields.consumed_at ? String(fields.consumed_at) : undefined,
   } satisfies ResetRecord;
 }
@@ -281,7 +287,7 @@ export async function POST(request: NextRequest) {
         user_id: firestoreString(user.id),
         code_hash: firestoreString(hashValue(code)),
         attempts: firestoreInteger(0),
-        expires_at: firestoreTimestamp(new Date(Date.now() + CODE_TTL_MS).toISOString()),
+        expires_at: firestoreInteger(Date.now() + CODE_TTL_MS),
         reset_token_hash: firestoreNull(),
         reset_token_expires_at: firestoreNull(),
         consumed_at: firestoreNull(),
@@ -297,7 +303,8 @@ export async function POST(request: NextRequest) {
     }
 
     const record = await getResetRecord(projectId, accessToken, documentId);
-    if (!record || record.email !== email || record.consumedAt || new Date(record.expiresAt).getTime() < Date.now()) return NextResponse.json({ ok: false, error: "This reset code has expired. Request a new one." }, { status: 400 });
+    if (!record || record.email !== email || record.consumedAt) return NextResponse.json({ ok: false, error: "This reset request is invalid. Request a new code." }, { status: 400 });
+    if (!Number.isFinite(record.expiresAt) || record.expiresAt <= Date.now()) return NextResponse.json({ ok: false, error: "This reset code has expired. Request a new one." }, { status: 400 });
 
     if (action === "verify") {
       if (!/^\d{6}$/.test(body.code ?? "")) return NextResponse.json({ ok: false, error: "Enter the six-digit reset code." }, { status: 400 });
@@ -311,14 +318,14 @@ export async function POST(request: NextRequest) {
       await patchResetRecord(projectId, accessToken, documentId, {
         code_hash: firestoreString(""),
         reset_token_hash: firestoreString(hashValue(resetToken)),
-        reset_token_expires_at: firestoreTimestamp(new Date(Date.now() + TOKEN_TTL_MS).toISOString()),
+        reset_token_expires_at: firestoreInteger(Date.now() + TOKEN_TTL_MS),
       });
       return NextResponse.json({ ok: true, reset_token: resetToken });
     }
 
     const password = body.new_password ?? "";
     if (password.length < 6) return NextResponse.json({ ok: false, error: "Your new password must be at least 6 characters." }, { status: 400 });
-    if (!body.reset_token || !record.resetTokenHash || !record.resetTokenExpiresAt || new Date(record.resetTokenExpiresAt).getTime() < Date.now() || !matchesHash(body.reset_token, record.resetTokenHash)) return NextResponse.json({ ok: false, error: "Your reset session is invalid or expired. Start again." }, { status: 400 });
+    if (!body.reset_token || !record.resetTokenHash || !record.resetTokenExpiresAt || !Number.isFinite(record.resetTokenExpiresAt) || record.resetTokenExpiresAt <= Date.now() || !matchesHash(body.reset_token, record.resetTokenHash)) return NextResponse.json({ ok: false, error: "Your reset session is invalid or expired. Start again." }, { status: 400 });
 
     await patchResetRecord(projectId, accessToken, documentId, { consumed_at: firestoreTimestamp(new Date().toISOString()) });
     await updateAuthPassword(projectId, accessToken, record.userId, password);
