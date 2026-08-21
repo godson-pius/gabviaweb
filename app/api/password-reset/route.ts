@@ -1,4 +1,4 @@
-import { createHash, createSign, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
+import { createHash, createPrivateKey, createSign, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +24,19 @@ type ResetRecord = {
 
 function encodeBase64Url(value: string | Buffer) {
   return Buffer.from(value).toString("base64url");
+}
+
+function normalizePrivateKey(value: string) {
+  let key = value.trim();
+  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+    try {
+      const parsed = JSON.parse(key);
+      key = typeof parsed === "string" ? parsed : key.slice(1, -1);
+    } catch {
+      key = key.slice(1, -1);
+    }
+  }
+  return key.replace(/\\+n/g, "\n").replace(/\r\n/g, "\n").trim();
 }
 
 function firestoreString(value: string) {
@@ -71,8 +84,14 @@ function matchesHash(value: string, expectedHash: string) {
 
 async function getGoogleAccessToken() {
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n");
-  if (!clientEmail || !privateKey) throw new Error("Password reset requires Firebase admin credentials.");
+  const rawPrivateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+  if (!clientEmail || !rawPrivateKey) throw new Error("Password reset requires Firebase admin credentials.");
+  let privateKey;
+  try {
+    privateKey = createPrivateKey(normalizePrivateKey(rawPrivateKey));
+  } catch {
+    throw new Error("FIREBASE_ADMIN_PRIVATE_KEY is not a valid PEM private key. Paste the complete service-account key, keeping its BEGIN/END lines and newline escapes.");
+  }
 
   const now = Math.floor(Date.now() / 1000);
   const unsignedToken = `${encodeBase64Url(JSON.stringify({ alg: "RS256", typ: "JWT" }))}.${encodeBase64Url(JSON.stringify({ iss: clientEmail, scope: "https://www.googleapis.com/auth/cloud-platform", aud: "https://oauth2.googleapis.com/token", iat: now, exp: now + 3600 }))}`;
@@ -90,22 +109,18 @@ async function getGoogleAccessToken() {
   return payload.access_token;
 }
 
-async function findUserByEmail(email: string) {
-  const apiKey = process.env.FIREBASE_API_KEY;
-  if (!apiKey) throw new Error("Firebase server configuration is missing.");
-
-  const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
+async function findUserByEmail(projectId: string, accessToken: string, email: string) {
+  const response = await fetch(`https://identitytoolkit.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/accounts:query`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: [email] }),
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ returnUserInfo: true, limit: "1", expression: [{ email }] }),
     cache: "no-store",
   });
-  const payload = await response.json() as { users?: Array<{ localId?: string; email?: string }>; error?: { message?: string } };
+  const payload = await response.json() as { userInfo?: Array<{ localId?: string; email?: string }>; error?: { message?: string } };
   if (!response.ok) {
-    if (payload.error?.message === "EMAIL_NOT_FOUND") return null;
     throw new Error(payload.error?.message ?? "Could not look up the account.");
   }
-  const user = payload.users?.[0];
+  const user = payload.userInfo?.[0];
   return user?.localId && user.email ? { id: user.localId, email: user.email.toLowerCase() } : null;
 }
 
@@ -256,7 +271,7 @@ export async function POST(request: NextRequest) {
       if (Date.now() - lastRequest < 60_000) return genericResponse();
       recentRequests.set(requestKey, Date.now());
 
-      const user = await findUserByEmail(email);
+      const user = await findUserByEmail(projectId, accessToken, email);
       if (!user) return genericResponse();
 
       const code = String(randomInt(100000, 1000000));
