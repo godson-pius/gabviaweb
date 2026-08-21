@@ -51,10 +51,6 @@ function firestoreTimestamp(value: string) {
   return { timestampValue: value };
 }
 
-function firestoreNull() {
-  return { nullValue: null };
-}
-
 function decodeFirestoreValue(value: Record<string, unknown> | undefined) {
   if (!value) return null;
   if ("stringValue" in value) return value.stringValue;
@@ -169,11 +165,12 @@ async function getResetRecord(projectId: string, accessToken: string, documentId
 }
 
 async function deleteResetRecord(projectId: string, accessToken: string, documentId: string) {
-  await fetch(resetDocumentUrl(projectId, documentId), {
+  const response = await fetch(resetDocumentUrl(projectId, documentId), {
     method: "DELETE",
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: "no-store",
   });
+  if (!response.ok && response.status !== 404) throw new Error("Could not replace the password reset request.");
 }
 
 function makeResetEmailHtml(code: string) {
@@ -282,15 +279,13 @@ export async function POST(request: NextRequest) {
 
       const code = String(randomInt(100000, 1000000));
       const now = new Date().toISOString();
+      await deleteResetRecord(projectId, accessToken, documentId);
       await patchResetRecord(projectId, accessToken, documentId, {
         email: firestoreString(user.email),
         user_id: firestoreString(user.id),
         code_hash: firestoreString(hashValue(code)),
         attempts: firestoreInteger(0),
         expires_at: firestoreInteger(Date.now() + CODE_TTL_MS),
-        reset_token_hash: firestoreNull(),
-        reset_token_expires_at: firestoreNull(),
-        consumed_at: firestoreNull(),
         created_at: firestoreTimestamp(now),
       });
       try {
@@ -303,7 +298,7 @@ export async function POST(request: NextRequest) {
     }
 
     const record = await getResetRecord(projectId, accessToken, documentId);
-    if (!record || record.email !== email || record.consumedAt) return NextResponse.json({ ok: false, error: "This reset request is invalid. Request a new code." }, { status: 400 });
+    if (!record || record.consumedAt) return NextResponse.json({ ok: false, error: "This reset request is invalid. Request a new code." }, { status: 400 });
     if (!Number.isFinite(record.expiresAt) || record.expiresAt <= Date.now()) return NextResponse.json({ ok: false, error: "This reset code has expired. Request a new one." }, { status: 400 });
 
     if (action === "verify") {
