@@ -123,6 +123,7 @@ async function findUserByEmail(projectId: string, accessToken: string, email: st
   });
   const payload = await response.json() as { userInfo?: Array<{ localId?: string; email?: string }>; error?: { message?: string } };
   if (!response.ok) {
+    if (payload.error?.message === "USER_NOT_FOUND") return null;
     throw new Error(payload.error?.message ?? "Could not look up the account.");
   }
   const user = payload.userInfo?.[0];
@@ -252,6 +253,7 @@ async function updateAuthPassword(projectId: string, accessToken: string, userId
   });
   if (!response.ok) {
     const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null;
+    if (payload?.error?.message === "USER_NOT_FOUND") throw new Error("This account is not present in the Firebase project used by the deployed backend. Check that FIREBASE_PROJECT_ID matches the mobile app.");
     throw new Error(payload?.error?.message ?? "Could not update the password.");
   }
 }
