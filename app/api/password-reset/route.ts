@@ -69,7 +69,10 @@ function normalizeEmail(value: unknown) {
 
 function timestampMilliseconds(value: unknown) {
   if (typeof value === "number") return value;
-  const parsed = Date.parse(String(value ?? ""));
+  const normalized = String(value ?? "").trim();
+  const numeric = Number(normalized);
+  if (Number.isFinite(numeric) && numeric > 0) return numeric < 1_000_000_000_000 ? numeric * 1000 : numeric;
+  const parsed = Date.parse(normalized);
   return Number.isFinite(parsed) ? parsed : Number.NaN;
 }
 
@@ -152,12 +155,14 @@ async function getResetRecord(projectId: string, accessToken: string, documentId
   const payload = await response.json() as { fields?: Record<string, Record<string, unknown>>; error?: { message?: string } };
   if (!response.ok) throw new Error(payload.error?.message ?? "Could not read the password reset request.");
   const fields = decodeFirestoreFields(payload.fields) as Record<string, unknown>;
+  const createdAt = timestampMilliseconds(fields.created_at);
+  const storedExpiresAt = timestampMilliseconds(fields.expires_at);
   return {
     email: String(fields.email ?? ""),
     userId: String(fields.user_id ?? ""),
     codeHash: String(fields.code_hash ?? ""),
     attempts: Number(fields.attempts ?? 0),
-    expiresAt: timestampMilliseconds(fields.expires_at),
+    expiresAt: Number.isFinite(storedExpiresAt) ? storedExpiresAt : Number.isFinite(createdAt) ? createdAt + CODE_TTL_MS : Number.NaN,
     resetTokenHash: fields.reset_token_hash ? String(fields.reset_token_hash) : undefined,
     resetTokenExpiresAt: fields.reset_token_expires_at ? timestampMilliseconds(fields.reset_token_expires_at) : undefined,
     consumedAt: fields.consumed_at ? String(fields.consumed_at) : undefined,
