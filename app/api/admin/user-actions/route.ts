@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
+const BULK_ACTION_LIMIT = 50;
+type AccountAction = "suspend" | "restore" | "delete";
+
 function encodeBase64Url(value: string | Buffer) {
   return Buffer.from(value).toString("base64url");
 }
@@ -86,10 +89,50 @@ async function deleteAuthUser(projectId: string, accessToken: string, userId: st
   }
 }
 
+function normalizeUserIds(userIds: unknown) {
+  if (!Array.isArray(userIds)) return [];
+  return Array.from(new Set(userIds.filter((value): value is string => typeof value === "string").map((value) => value.trim()).filter(Boolean)));
+}
+
+async function runAccountAction(projectId: string, accessToken: string, userId: string, action: AccountAction) {
+  if (action === "delete") {
+    await deleteAuthUser(projectId, accessToken, userId);
+    await deleteProfile(projectId, accessToken, userId);
+    return;
+  }
+  await updateAuthUser(projectId, accessToken, userId, action === "suspend");
+  await updateProfile(projectId, accessToken, userId, action === "suspend");
+}
+
+async function runBulkActions(projectId: string, accessToken: string, userIds: string[], action: AccountAction, adminEmail: string) {
+  const results: Array<{ userId: string; ok: boolean; error?: string }> = [];
+  for (const userId of userIds) {
+    try {
+      await runAccountAction(projectId, accessToken, userId, action);
+      try { await writeAuditLog(projectId, accessToken, { adminEmail, action: `bulk_${action}`, userId }); } catch { /* Account action remains successful if audit logging is unavailable. */ }
+      results.push({ userId, ok: true });
+    } catch (error) {
+      results.push({ userId, ok: false, error: error instanceof Error ? error.message : "Could not update this account." });
+    }
+  }
+  return results;
+}
+
 export async function PATCH(request: NextRequest) {
   try {
     const { email: adminEmail, role } = await authorizeAdmin(request);
-    const body = await request.json() as { userId?: string; action?: "suspend" | "restore" };
+    const body = await request.json() as { userId?: string; userIds?: unknown; action?: "suspend" | "restore" };
+    const bulkUserIds = normalizeUserIds(body.userIds);
+    if (bulkUserIds.length > 0) {
+      if (!body.action || !["suspend", "restore"].includes(body.action)) return NextResponse.json({ ok: false, error: "A valid bulk account action is required." }, { status: 400 });
+      if (bulkUserIds.length > BULK_ACTION_LIMIT) return NextResponse.json({ ok: false, error: `You can process up to ${BULK_ACTION_LIMIT} accounts at a time.` }, { status: 400 });
+      if (body.action === "suspend" && !["owner", "admin", "moderator"].includes(role)) return NextResponse.json({ ok: false, error: "Your admin role cannot suspend accounts." }, { status: 403 });
+      const projectId = process.env.FIREBASE_PROJECT_ID;
+      if (!projectId) throw new Error("Firebase project configuration is missing.");
+      const results = await runBulkActions(projectId, await getGoogleAccessToken(), bulkUserIds, body.action, adminEmail);
+      const succeeded = results.filter((result) => result.ok).length;
+      return NextResponse.json({ ok: true, action: body.action, requested: bulkUserIds.length, succeeded, failed: results.length - succeeded, results });
+    }
     const userId = body.userId?.trim();
     if (!userId || !body.action) return NextResponse.json({ ok: false, error: "A user and action are required." }, { status: 400 });
     if (body.action === "suspend" && !["owner", "admin", "moderator"].includes(role)) return NextResponse.json({ ok: false, error: "Your admin role cannot suspend accounts." }, { status: 403 });
@@ -108,7 +151,18 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { email: adminEmail, role } = await authorizeAdmin(request);
-    const body = await request.json() as { userId?: string; confirmation?: string };
+    const body = await request.json() as { userId?: string; userIds?: unknown; confirmation?: string };
+    const bulkUserIds = normalizeUserIds(body.userIds);
+    if (bulkUserIds.length > 0) {
+      if (body.confirmation !== "DELETE USERS") return NextResponse.json({ ok: false, error: "Type DELETE USERS to confirm bulk account deletion." }, { status: 400 });
+      if (bulkUserIds.length > BULK_ACTION_LIMIT) return NextResponse.json({ ok: false, error: `You can process up to ${BULK_ACTION_LIMIT} accounts at a time.` }, { status: 400 });
+      if (!["owner", "admin"].includes(role)) return NextResponse.json({ ok: false, error: "Only owner or admin roles can delete accounts." }, { status: 403 });
+      const projectId = process.env.FIREBASE_PROJECT_ID;
+      if (!projectId) throw new Error("Firebase project configuration is missing.");
+      const results = await runBulkActions(projectId, await getGoogleAccessToken(), bulkUserIds, "delete", adminEmail);
+      const succeeded = results.filter((result) => result.ok).length;
+      return NextResponse.json({ ok: true, action: "delete", requested: bulkUserIds.length, succeeded, failed: results.length - succeeded, results });
+    }
     const userId = body.userId?.trim();
     if (!userId || body.confirmation !== "DELETE") return NextResponse.json({ ok: false, error: "Type DELETE to confirm permanent account deletion." }, { status: 400 });
     if (!["owner", "admin"].includes(role)) return NextResponse.json({ ok: false, error: "Only owner or admin roles can delete accounts." }, { status: 403 });
