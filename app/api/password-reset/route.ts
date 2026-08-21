@@ -1,5 +1,5 @@
-import { createHash, createPrivateKey, createSign, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { createHash, createPrivateKey, createSign, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -304,7 +304,7 @@ export async function POST(request: NextRequest) {
 
     const record = await getResetRecord(projectId, accessToken, documentId);
     if (!record || record.consumedAt) return NextResponse.json({ ok: false, error: "This reset request is invalid. Request a new code." }, { status: 400 });
-    if (!Number.isFinite(record.expiresAt) || record.expiresAt <= Date.now()) return NextResponse.json({ ok: false, error: "This reset code has expired. Request a new one." }, { status: 400 });
+    if (record.expiresAt <= Date.now()) return NextResponse.json({ ok: false, error: "This reset code has expired. Request a new one." }, { status: 400 });
 
     if (action === "verify") {
       if (!/^\d{6}$/.test(body.code ?? "")) return NextResponse.json({ ok: false, error: "Enter the six-digit reset code." }, { status: 400 });
