@@ -335,8 +335,13 @@ export async function POST(request: NextRequest) {
     if (password.length < 6) return NextResponse.json({ ok: false, error: "Your new password must be at least 6 characters." }, { status: 400 });
     if (!body.reset_token || !record.resetTokenHash || !record.resetTokenExpiresAt || !Number.isFinite(record.resetTokenExpiresAt) || record.resetTokenExpiresAt <= Date.now() || !matchesHash(body.reset_token, record.resetTokenHash)) return NextResponse.json({ ok: false, error: "Your reset session is invalid or expired. Start again." }, { status: 400 });
 
+    // Resolve the account again from the stored email before updating it. This
+    // repairs reset records created before a backend project/UID mismatch was
+    // corrected and ensures the password is changed on the active project.
+    const currentUser = await findUserByEmail(projectId, accessToken, record.email);
+    if (!currentUser) throw new Error("This account is not present in the Firebase project used by the deployed backend. Check that FIREBASE_PROJECT_ID matches the mobile app.");
+    await updateAuthPassword(projectId, accessToken, currentUser.id, password);
     await patchResetRecord(projectId, accessToken, documentId, { consumed_at: firestoreTimestamp(new Date().toISOString()) });
-    await updateAuthPassword(projectId, accessToken, record.userId, password);
     await deleteResetRecord(projectId, accessToken, documentId);
     return NextResponse.json({ ok: true, message: "Your password has been updated. You can now sign in." });
   } catch (error) {
