@@ -1,5 +1,5 @@
-import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -25,14 +25,14 @@ function makeOnboardingEmailHtml(fullName: string) {
             <tr>
               <td style="padding:28px 34px;background:#16243b">
                 <img src="${logoUrl}" width="48" height="48" alt="Gabvia" style="display:inline-block;width:48px;height:48px;border:0;border-radius:14px;vertical-align:middle;background:#ffffff" />
-                <span style="display:inline-block;margin-left:12px;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-.5px;vertical-align:middle">gabvia</span>
+                <span style="display:inline-block;margin-left:12px;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-.5px;vertical-align:middle">Gabvia</span>
               </td>
             </tr>
             <tr>
               <td style="padding:42px 44px 36px">
                 <p style="margin:0 0 12px;color:#287dff;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase">Different languages. One conversation.</p>
                 <h1 style="margin:0 0 24px;color:#17243a;font-size:30px;line-height:1.2;letter-spacing:-.8px;font-weight:700">Welcome to Gabvia, ${safeName}.</h1>
-                <p style="margin:0;color:#35445a;font-size:16px;line-height:1.75">Your account is ready. Gabvia is built to make communication across different languages feel natural—no more copying messages into translators or struggling to understand someone because you speak different languages.</p>
+                <p style="margin:0;color:#35445a;font-size:16px;line-height:1.75">Your account is ready. Gabvia is built to make communication across different languages feel natural, no more copying messages into translators or struggling to understand someone because you speak different languages.</p>
                 <p style="margin:20px 0 0;color:#35445a;font-size:16px;line-height:1.75">Start a conversation, choose the language that feels natural to you, and bring your people in. Aiko, our husky mascot, will be cheering you on along the way.</p>
                 <p style="margin:28px 0 0"><a href="${siteUrl}" style="display:inline-block;color:#287dff;font-size:14px;font-weight:700;text-decoration:none">Open Gabvia →</a></p>
               </td>

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { createHash, createPrivateKey, createSign, randomBytes, randomInt, timingSafeEqual } from "node:crypto";
 
 export const dynamic = "force-dynamic";
@@ -194,7 +194,7 @@ function makeResetEmailHtml(code: string) {
             <tr>
               <td style="padding:28px 34px;background:#16243b">
                 <img src="${logoUrl}" width="48" height="48" alt="Gabvia" style="display:inline-block;width:48px;height:48px;border:0;border-radius:14px;vertical-align:middle;background:#ffffff" />
-                <span style="display:inline-block;margin-left:12px;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-.5px;vertical-align:middle">gabvia</span>
+                <span style="display:inline-block;margin-left:12px;color:#ffffff;font-size:24px;font-weight:700;letter-spacing:-.5px;vertical-align:middle">Gabvia</span>
               </td>
             </tr>
             <tr>
@@ -295,12 +295,18 @@ export async function POST(request: NextRequest) {
         expires_at: firestoreInteger(Date.now() + CODE_TTL_MS),
         created_at: firestoreTimestamp(now),
       });
-      try {
-        await sendResetCodeEmail(user.email, code);
-      } catch (error) {
-        await deleteResetRecord(projectId, accessToken, documentId);
-        throw error;
-      }
+      after(async () => {
+        try {
+          await sendResetCodeEmail(user.email, code);
+        } catch (error) {
+          console.error("Password reset email failed", { email: user.email, error });
+          try {
+            await deleteResetRecord(projectId, accessToken, documentId);
+          } catch (cleanupError) {
+            console.error("Could not remove failed password reset record", { email: user.email, cleanupError });
+          }
+        }
+      });
       return genericResponse();
     }
 
