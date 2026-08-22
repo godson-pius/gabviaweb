@@ -9,24 +9,6 @@ function escapeHtml(value: string) {
   return value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
-async function getAuthenticatedUser(request: NextRequest) {
-  const apiKey = process.env.FIREBASE_API_KEY;
-  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-  if (!apiKey || !token) throw new Error("Sign in is required.");
-
-  const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idToken: token }),
-    cache: "no-store",
-  });
-  const payload = await response.json() as { users?: Array<{ localId?: string; email?: string }> };
-  const user = payload.users?.[0];
-  const email = user?.email?.trim().toLowerCase() ?? "";
-  if (!response.ok || !user?.localId || !EMAIL_PATTERN.test(email)) throw new Error("Your session is invalid or expired.");
-  return { id: user.localId, email };
-}
-
 function makeOnboardingEmailHtml(fullName: string) {
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || "https://gabvia.app").replace(/\/+$/, "");
   const logoUrl = `${siteUrl}/logo.png`;
@@ -100,10 +82,13 @@ async function sendOnboardingEmail(email: string, fullName: string, userId: stri
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getAuthenticatedUser(request);
-    const body = await request.json().catch(() => ({})) as { full_name?: string };
+    const body = await request.json().catch(() => ({})) as { full_name?: string; email?: string; user_id?: string };
+    const email = body.email?.trim().toLowerCase() ?? "";
+    const userId = body.user_id?.trim() ?? "";
+    if (!EMAIL_PATTERN.test(email)) return NextResponse.json({ ok: false, error: "A valid email address is required." }, { status: 400 });
+    if (!userId) return NextResponse.json({ ok: false, error: "The registered user ID is required." }, { status: 400 });
     const fullName = body.full_name?.trim().slice(0, 120) || "there";
-    await sendOnboardingEmail(user.email, fullName, user.id);
+    await sendOnboardingEmail(email, fullName, userId);
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Could not send the onboarding email." }, { status: 500 });
