@@ -4611,6 +4611,343 @@ h2 span {
     }
 }
 
+/* Public legal documents */
+.legal-page {
+    min-height: 100vh;
+    background: #f7f8f6;
+    color: #17212d;
+}
+
+.legal-header {
+    width: min(1180px, calc(100% - 64px));
+    min-height: 92px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    border-bottom: 1px solid #e5e8e8;
+}
+
+.legal-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: #17212d;
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.legal-brand-mark {
+    display: grid;
+    width: 31px;
+    height: 31px;
+    place-items: center;
+    padding: 5px;
+    color: white;
+    background: #17212d;
+    border-radius: 10px;
+}
+
+.legal-brand-logo {
+    width: 23px;
+    height: 23px;
+    display: block;
+    object-fit: contain;
+}
+
+.legal-nav {
+    display: flex;
+    align-items: center;
+    gap: 27px;
+    color: #69737d;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.legal-nav a,
+.legal-footer a,
+.legal-document a {
+    transition: color .2s ease;
+}
+
+.legal-nav a:hover,
+.legal-nav .is-current,
+.legal-footer a:hover,
+.legal-document a {
+    color: #247bff;
+}
+
+.legal-layout {
+    width: min(1180px, calc(100% - 64px));
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 230px minmax(0, 780px);
+    gap: 88px;
+    align-items: start;
+    padding: 76px 0 100px;
+}
+
+.legal-aside {
+    position: sticky;
+    top: 28px;
+    padding-top: 8px;
+}
+
+.legal-eyebrow {
+    display: inline-block;
+    color: #247bff;
+    text-transform: uppercase;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+
+.legal-aside-copy {
+    max-width: 190px;
+    margin-top: 17px;
+    color: #7a858e;
+    font-size: 14px;
+    line-height: 1.65;
+}
+
+.legal-contents {
+    display: grid;
+    gap: 13px;
+    margin-top: 37px;
+    padding-left: 16px;
+    border-left: 1px solid #dce1e2;
+}
+
+.legal-contents a {
+    color: #69737d;
+    font-size: 12px;
+    line-height: 1.35;
+}
+
+.legal-contents a:hover {
+    color: #247bff;
+}
+
+.legal-document {
+    min-width: 0;
+    padding: 58px 74px 78px;
+    border: 1px solid #e2e7e7;
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: 0 25px 65px #1b2a3a0b;
+}
+
+.legal-document-intro h1 {
+    max-width: 690px;
+    margin-top: 17px;
+    color: #17212d;
+    font-size: clamp(42px, 6vw, 68px);
+    font-weight: 800;
+    line-height: .99;
+    letter-spacing: -4px;
+}
+
+.legal-lead {
+    max-width: 680px;
+    margin-top: 25px;
+    color: #62707c;
+    font-size: 17px;
+    line-height: 1.75;
+}
+
+.legal-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px 22px;
+    margin-top: 24px;
+    color: #99a3aa;
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.legal-notice {
+    display: grid;
+    grid-template-columns: 125px 1fr;
+    gap: 20px;
+    margin-top: 42px;
+    padding: 19px 20px;
+    border-left: 3px solid #d9ff56;
+    border-radius: 0 12px 12px 0;
+    background: #f4f9e5;
+    color: #576265;
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.legal-notice strong {
+    color: #27343b;
+    font-size: 12px;
+}
+
+.legal-document section {
+    margin-top: 49px;
+    padding-top: 29px;
+    border-top: 1px solid #e7eaeb;
+    scroll-margin-top: 25px;
+}
+
+.legal-document h2 {
+    color: #1d2933;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -.7px;
+    line-height: 1.2;
+}
+
+.legal-document h3 {
+    margin-top: 28px;
+    color: #34414b;
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.legal-document p,
+.legal-document li {
+    color: #66737d;
+    font-size: 14px;
+    line-height: 1.85;
+}
+
+.legal-document section > p {
+    margin-top: 14px;
+}
+
+.legal-document ul {
+    display: grid;
+    gap: 10px;
+    margin: 17px 0 0;
+    padding-left: 22px;
+}
+
+.legal-document li {
+    padding-left: 4px;
+}
+
+.legal-document li::marker {
+    color: #247bff;
+}
+
+.legal-document strong {
+    color: #3b4750;
+}
+
+.legal-contact {
+    padding-bottom: 8px;
+}
+
+.legal-footer {
+    width: min(1180px, calc(100% - 64px));
+    min-height: 105px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 25px;
+    border-top: 1px solid #e1e5e5;
+    color: #89939a;
+    font-size: 12px;
+}
+
+@media (max-width: 900px) {
+    .legal-layout {
+        grid-template-columns: 1fr;
+        gap: 35px;
+        padding-top: 52px;
+    }
+
+    .legal-aside {
+        position: static;
+    }
+
+    .legal-aside-copy {
+        max-width: 450px;
+    }
+
+    .legal-contents {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 11px 22px;
+        margin-top: 22px;
+        padding: 0 0 0 16px;
+    }
+}
+
+@media (max-width: 620px) {
+    .legal-header,
+    .legal-layout,
+    .legal-footer {
+        width: min(100% - 32px, 520px);
+    }
+
+    .legal-header {
+        min-height: 76px;
+    }
+
+    .legal-nav {
+        gap: 13px;
+        font-size: 12px;
+    }
+
+    .legal-nav a:last-child {
+        display: none;
+    }
+
+    .legal-layout {
+        padding: 39px 0 64px;
+    }
+
+    .legal-document {
+        padding: 34px 23px 48px;
+        border-radius: 16px;
+    }
+
+    .legal-document-intro h1 {
+        font-size: 43px;
+        letter-spacing: -2.8px;
+    }
+
+    .legal-lead {
+        font-size: 15px;
+        line-height: 1.7;
+    }
+
+    .legal-notice {
+        grid-template-columns: 1fr;
+        gap: 4px;
+        margin-top: 32px;
+    }
+
+    .legal-document section {
+        margin-top: 38px;
+        padding-top: 23px;
+    }
+
+    .legal-document h2 {
+        font-size: 20px;
+    }
+
+    .legal-document p,
+    .legal-document li {
+        font-size: 13px;
+        line-height: 1.75;
+    }
+
+    .legal-footer {
+        min-height: 125px;
+        align-items: flex-start;
+        flex-direction: column;
+        justify-content: center;
+        gap: 9px;
+    }
+}
+
 /* Admin insights */
 .retention-list,
 .funnel-list,
