@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
   openGraph: {
     title: "Gabvia — Conversations without borders",
-    description: "Chat naturally across languages with translation that keeps your meaning and your voice.",
+    description: "Communicate naturally across languages with translation that keeps your meaning and your voice.",
     url: "/",
     siteName: "Gabvia",
     type: "website",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "Gabvia — Conversations without borders",
-    description: "Chat naturally across languages with translation that keeps your meaning and your voice.",
+    description: "Communicate naturally across languages with translation that keeps your meaning and your voice.",
     images: ["/logo.png"],
   },
   icons: { icon: "/logo.png" },
