@@ -15,6 +15,7 @@ function LegalHeader({ current }: { current: "privacy" | "terms" }) {
       <nav className="legal-nav" aria-label="Legal navigation">
         <Link className={current === "privacy" ? "is-current" : ""} href="/privacy">Privacy</Link>
         <Link className={current === "terms" ? "is-current" : ""} href="/terms">Terms</Link>
+        <Link href="/delete-account">Delete account</Link>
         <Link href="/">Back to site <span aria-hidden="true">↗</span></Link>
       </nav>
     </header>
@@ -68,7 +69,7 @@ export default function PrivacyPage() {
           <section id="contact" className="legal-contact"><h2>13. Contact us</h2><p>Questions, privacy requests, and concerns about this Policy can be sent to:</p><p><strong>Gabvia</strong><br /><a href="mailto:legal@gabvia.app">legal@gabvia.app</a></p></section>
         </article>
       </div>
-      <footer className="legal-footer"><span>© 2026 Gabvia. Made for every voice.</span><span><Link href="/terms">Terms of Service</Link> · <Link href="/">Gabvia home</Link></span></footer>
+      <footer className="legal-footer"><span>© 2026 Gabvia. Made for every voice.</span><span><Link href="/terms">Terms of Service</Link> · <Link href="/delete-account">Delete account</Link> · <Link href="/">Gabvia home</Link></span></footer>
     </main>
   );
 }
