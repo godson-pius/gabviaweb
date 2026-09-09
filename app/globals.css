@@ -5182,7 +5182,62 @@ h2 span {
     align-items: center;
     gap: 14px;
     min-height: 52px;
+    width: 100%;
+    padding: 0;
+    border-top: 0;
+    border-right: 0;
+    border-left: 0;
     border-bottom: 1px solid #f0f2f4;
+    text-align: left;
+    cursor: pointer;
+}
+
+.audit-row:hover,
+.audit-row:focus-visible {
+    background: #f8fbff;
+    outline: 0;
+}
+
+.audit-detail-modal {
+    position: relative;
+    width: min(620px, calc(100vw - 32px));
+    max-height: min(760px, calc(100vh - 32px));
+    overflow: auto;
+    padding: 30px;
+    border: 1px solid #e3eaf1;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 24px 70px #17212d26;
+}
+
+.audit-detail-modal h2 {
+    margin: 7px 0 6px;
+    color: #202a34;
+    font-size: 22px;
+}
+
+.audit-detail-subtitle {
+    margin: 0 0 24px;
+    color: #71808d;
+    font-size: 13px;
+}
+
+.audit-detail-grid {
+    display: grid;
+    gap: 0;
+    border-top: 1px solid #edf1f5;
+}
+
+.audit-detail-grid .detail-row {
+    min-height: 44px;
+    padding: 10px 0;
+    border-bottom: 1px solid #edf1f5;
+}
+
+.audit-detail-grid .detail-row b {
+    max-width: 68%;
+    overflow-wrap: anywhere;
+    text-align: right;
 }
 
 .audit-row:last-child {

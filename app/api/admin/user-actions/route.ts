@@ -29,11 +29,24 @@ function firestoreString(value: string) {
   return { stringValue: value };
 }
 
-async function writeAuditLog(projectId: string, accessToken: string, entry: { adminEmail: string; action: string; userId: string }) {
+function requestMetadata(request: NextRequest) {
+  const userAgent = request.headers.get("user-agent") ?? "";
+  const forwardedFor = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const ipAddress = forwardedFor || request.headers.get("x-real-ip") || "Unknown";
+  const country = request.headers.get("x-vercel-ip-country") || request.headers.get("cf-ipcountry") || "Unknown";
+  const region = request.headers.get("x-vercel-ip-country-region") || "";
+  const city = request.headers.get("x-vercel-ip-city") || "";
+  const location = [city, region, country].filter(Boolean).join(", ") || "Unknown";
+  const operatingSystem = /Windows/i.test(userAgent) ? "Windows" : /Android/i.test(userAgent) ? "Android" : /iPhone|iPad|iPod/i.test(userAgent) ? "iOS" : /Mac OS X|Macintosh/i.test(userAgent) ? "macOS" : /Linux/i.test(userAgent) ? "Linux" : "Unknown";
+  const browser = /Edg\//i.test(userAgent) ? "Microsoft Edge" : /Chrome\//i.test(userAgent) ? "Google Chrome" : /Firefox\//i.test(userAgent) ? "Mozilla Firefox" : /Safari\//i.test(userAgent) ? "Safari" : "Unknown";
+  return { ipAddress, location, operatingSystem, browser, userAgent };
+}
+
+async function writeAuditLog(projectId: string, accessToken: string, entry: { adminEmail: string; action: string; userId: string; metadata: ReturnType<typeof requestMetadata> }) {
   const response = await fetch(`https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/admin_audit_logs?documentId=${randomUUID()}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ fields: { admin_email: firestoreString(entry.adminEmail), action: firestoreString(entry.action), user_id: firestoreString(entry.userId), created_at: { timestampValue: new Date().toISOString() } } }),
+    body: JSON.stringify({ fields: { admin_email: firestoreString(entry.adminEmail), action: firestoreString(entry.action), user_id: firestoreString(entry.userId), ip_address: firestoreString(entry.metadata.ipAddress), location: firestoreString(entry.metadata.location), operating_system: firestoreString(entry.metadata.operatingSystem), browser: firestoreString(entry.metadata.browser), user_agent: firestoreString(entry.metadata.userAgent), created_at: { timestampValue: new Date().toISOString() } } }),
     cache: "no-store",
   });
   if (!response.ok) throw new Error("Could not write admin audit log.");
@@ -104,12 +117,12 @@ async function runAccountAction(projectId: string, accessToken: string, userId: 
   await updateProfile(projectId, accessToken, userId, action === "suspend");
 }
 
-async function runBulkActions(projectId: string, accessToken: string, userIds: string[], action: AccountAction, adminEmail: string) {
+async function runBulkActions(projectId: string, accessToken: string, userIds: string[], action: AccountAction, adminEmail: string, metadata: ReturnType<typeof requestMetadata>) {
   const results: Array<{ userId: string; ok: boolean; error?: string }> = [];
   for (const userId of userIds) {
     try {
       await runAccountAction(projectId, accessToken, userId, action);
-      try { await writeAuditLog(projectId, accessToken, { adminEmail, action: `bulk_${action}`, userId }); } catch { /* Account action remains successful if audit logging is unavailable. */ }
+      try { await writeAuditLog(projectId, accessToken, { adminEmail, action: `bulk_${action}`, userId, metadata }); } catch { /* Account action remains successful if audit logging is unavailable. */ }
       results.push({ userId, ok: true });
     } catch (error) {
       results.push({ userId, ok: false, error: error instanceof Error ? error.message : "Could not update this account." });
@@ -120,6 +133,7 @@ async function runBulkActions(projectId: string, accessToken: string, userIds: s
 
 export async function PATCH(request: NextRequest) {
   try {
+    const metadata = requestMetadata(request);
     const { email: adminEmail, role } = await authorizeAdmin(request);
     const body = await request.json() as { userId?: string; userIds?: unknown; action?: "suspend" | "restore" };
     const bulkUserIds = normalizeUserIds(body.userIds);
@@ -129,7 +143,7 @@ export async function PATCH(request: NextRequest) {
       if (body.action === "suspend" && !["owner", "admin", "moderator"].includes(role)) return NextResponse.json({ ok: false, error: "Your admin role cannot suspend accounts." }, { status: 403 });
       const projectId = process.env.FIREBASE_PROJECT_ID;
       if (!projectId) throw new Error("Firebase project configuration is missing.");
-      const results = await runBulkActions(projectId, await getGoogleAccessToken(), bulkUserIds, body.action, adminEmail);
+      const results = await runBulkActions(projectId, await getGoogleAccessToken(), bulkUserIds, body.action, adminEmail, metadata);
       const succeeded = results.filter((result) => result.ok).length;
       return NextResponse.json({ ok: true, action: body.action, requested: bulkUserIds.length, succeeded, failed: results.length - succeeded, results });
     }
@@ -141,7 +155,7 @@ export async function PATCH(request: NextRequest) {
     const accessToken = await getGoogleAccessToken();
     await updateAuthUser(projectId, accessToken, userId, body.action === "suspend");
     await updateProfile(projectId, accessToken, userId, body.action === "suspend");
-    try { await writeAuditLog(projectId, accessToken, { adminEmail, action: body.action, userId }); } catch { /* Account action remains successful if audit logging is unavailable. */ }
+    try { await writeAuditLog(projectId, accessToken, { adminEmail, action: body.action, userId, metadata }); } catch { /* Account action remains successful if audit logging is unavailable. */ }
     return NextResponse.json({ ok: true, action: body.action, userId });
   } catch (error) {
     return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Could not update the account." }, { status: 500 });
@@ -150,6 +164,7 @@ export async function PATCH(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const metadata = requestMetadata(request);
     const { email: adminEmail, role } = await authorizeAdmin(request);
     const body = await request.json() as { userId?: string; userIds?: unknown; confirmation?: string };
     const bulkUserIds = normalizeUserIds(body.userIds);
@@ -159,7 +174,7 @@ export async function DELETE(request: NextRequest) {
       if (!["owner", "admin"].includes(role)) return NextResponse.json({ ok: false, error: "Only owner or admin roles can delete accounts." }, { status: 403 });
       const projectId = process.env.FIREBASE_PROJECT_ID;
       if (!projectId) throw new Error("Firebase project configuration is missing.");
-      const results = await runBulkActions(projectId, await getGoogleAccessToken(), bulkUserIds, "delete", adminEmail);
+      const results = await runBulkActions(projectId, await getGoogleAccessToken(), bulkUserIds, "delete", adminEmail, metadata);
       const succeeded = results.filter((result) => result.ok).length;
       return NextResponse.json({ ok: true, action: "delete", requested: bulkUserIds.length, succeeded, failed: results.length - succeeded, results });
     }
@@ -171,7 +186,7 @@ export async function DELETE(request: NextRequest) {
     const accessToken = await getGoogleAccessToken();
     await deleteAuthUser(projectId, accessToken, userId);
     await deleteProfile(projectId, accessToken, userId);
-    try { await writeAuditLog(projectId, accessToken, { adminEmail, action: "delete", userId }); } catch { /* Account action remains successful if audit logging is unavailable. */ }
+    try { await writeAuditLog(projectId, accessToken, { adminEmail, action: "delete", userId, metadata }); } catch { /* Account action remains successful if audit logging is unavailable. */ }
     return NextResponse.json({ ok: true, action: "delete", userId });
   } catch (error) {
     return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Could not delete the account." }, { status: 500 });

@@ -614,7 +614,7 @@ export async function GET(request: NextRequest) {
       return { label: `D${days}`, retained, eligible: eligible.length, rate: eligible.length ? round((retained / eligible.length) * 100) : 0 };
     });
     const auditLogEntries = auditLogs
-      .map((entry) => ({ id: String(entry.__id ?? "—"), action: String(entry.action || "admin action"), adminEmail: String(entry.admin_email || "Admin"), userId: String(entry.user_id || "—"), createdAt: parseDate(entry.created_at, entry.__createTime)?.toISOString() ?? null }))
+      .map((entry) => ({ id: String(entry.__id ?? "—"), action: String(entry.action || "admin action"), adminEmail: String(entry.admin_email || "Admin"), userId: String(entry.user_id || "—"), createdAt: parseDate(entry.created_at, entry.__createTime)?.toISOString() ?? null, ipAddress: String(entry.ip_address || "Not captured"), location: String(entry.location || "Not captured"), operatingSystem: String(entry.operating_system || "Not captured"), browser: String(entry.browser || "Not captured"), userAgent: String(entry.user_agent || "Not captured") }))
       .sort((left, right) => (right.createdAt ?? "").localeCompare(left.createdAt ?? ""))
       .slice(0, 30);
 
