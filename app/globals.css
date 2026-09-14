@@ -7036,7 +7036,12 @@ body {
 
 .user-table-header.user-table-selectable,
 .user-table-row.user-table-selectable {
-    grid-template-columns: 32px minmax(260px, 2.5fr) minmax(130px, 1.2fr) minmax(120px, .8fr) minmax(135px, 1fr);
+    grid-template-columns: 32px minmax(220px, 2.2fr) minmax(110px, 1fr) minmax(120px, 1.1fr) minmax(100px, .8fr) minmax(120px, 1fr);
+}
+
+.user-table-header:not(.user-table-selectable),
+.user-table-row:not(.user-table-selectable) {
+    grid-template-columns: minmax(220px, 2.2fr) minmax(110px, 1fr) minmax(120px, 1.1fr) minmax(100px, .8fr) minmax(120px, 1fr);
 }
 
 .user-select-cell {
@@ -7178,4 +7183,400 @@ body {
     letter-spacing: .1px;
     line-height: 1.2;
     vertical-align: middle;
+}
+
+/* User table points display */
+.user-table-points {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    color: #0c8261;
+    font-weight: 700;
+}
+
+.user-table-points small {
+    font-size: 11px;
+    font-weight: 600;
+    color: #3b9c7e;
+    letter-spacing: .3px;
+}
+
+/* Featured GAB POINTS Card in User Details Modal */
+.detail-points-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 22px;
+    padding: 20px 24px;
+    border: 1px solid #ccefe3;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #f4fbf8 0%, #e9f8f2 100%);
+    box-shadow: 0 4px 18px #1db08112;
+}
+
+.detail-points-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.detail-points-coin {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    color: #0b7a5a;
+    background: #d4f3e6;
+    border: 1px solid #b3e6d1;
+    box-shadow: 0 2px 8px #1db08122;
+}
+
+.detail-points-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.detail-points-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #1a7a5e;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.detail-points-balance {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.detail-points-balance strong {
+    font-size: 28px;
+    font-weight: 800;
+    color: #0b5c43;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+}
+
+.detail-points-balance span {
+    font-size: 13px;
+    font-weight: 700;
+    color: #278d6e;
+    letter-spacing: .5px;
+}
+
+.detail-add-points-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 11px 20px;
+    border: 1px solid #1aa57b;
+    border-radius: 9px;
+    color: #fff;
+    background: linear-gradient(180deg, #22bb8d 0%, #159c73 100%);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px #1aa57b33;
+    transition: all .15s ease;
+    white-space: nowrap;
+}
+
+.detail-add-points-btn:hover:not(:disabled) {
+    background: linear-gradient(180deg, #26cf9d 0%, #17ad80 100%);
+    box-shadow: 0 6px 18px #1aa57b44;
+    transform: translateY(-1px);
+}
+
+.detail-add-points-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.account-add-points-button {
+    flex: 1;
+    min-height: 52px;
+    border: 1px solid #b5e4d2;
+    border-radius: 8px;
+    color: #0c7556;
+    background: #edf9f4;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+
+.account-add-points-button:hover:not(:disabled) {
+    background: #def4ec;
+    border-color: #8ed6bc;
+}
+
+.account-add-points-button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+/* Add GAB Points Modal Dialog */
+.add-points-modal {
+    width: min(100%, 540px);
+    padding: 34px 38px 30px;
+    border-radius: 20px;
+    border: 1px solid #e1e7eb;
+    background: #ffffff;
+    box-shadow: 0 24px 70px #0b1a2d45;
+}
+
+.add-points-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.add-points-icon-badge {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    color: #0b7a5a;
+    background: #e2f7ed;
+    border: 1px solid #b9ecd6;
+    flex-shrink: 0;
+}
+
+.add-points-header h3 {
+    margin: 3px 0 2px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #162433;
+    letter-spacing: -0.5px;
+}
+
+.add-points-subtitle {
+    font-size: 14px;
+    color: #657582;
+    margin: 0;
+}
+
+.add-points-user-card {
+    margin-bottom: 22px;
+    background: #f6f9fa;
+    border: 1px solid #e5ecee;
+    border-radius: 12px;
+}
+
+.add-points-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.add-points-field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.add-points-field-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2b3945;
+}
+
+.add-points-field-label small {
+    font-size: 12px;
+    font-weight: 400;
+    color: #7b8a95;
+}
+
+.add-points-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.add-points-preset-chip {
+    padding: 8px 15px;
+    border: 1px solid #d4dde2;
+    border-radius: 8px;
+    background: #fbfcfd;
+    color: #334452;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s ease;
+}
+
+.add-points-preset-chip:hover:not(:disabled) {
+    border-color: #1aa57b;
+    color: #0f7556;
+    background: #f0faf5;
+}
+
+.add-points-preset-chip.active {
+    border-color: #1aa57b;
+    background: #e8f8f1;
+    color: #09684b;
+    box-shadow: 0 0 0 1px #1aa57b;
+}
+
+.add-points-input-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.add-points-input-box input {
+    width: 100%;
+    height: 48px;
+    padding: 0 54px 0 14px;
+    border: 1.5px solid #cfd9df;
+    border-radius: 10px;
+    font: inherit;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1b2834;
+    outline: none;
+    transition: border-color .15s ease;
+}
+
+.add-points-input-box input:focus {
+    border-color: #1ea97e;
+    box-shadow: 0 0 0 3px #1ea97e20;
+}
+
+.add-points-unit {
+    position: absolute;
+    right: 14px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #637785;
+    pointer-events: none;
+}
+
+.add-points-field input[type="text"] {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid #cfd9df;
+    border-radius: 10px;
+    font: inherit;
+    font-size: 14px;
+    color: #1b2834;
+    outline: none;
+}
+
+.add-points-field input[type="text"]:focus {
+    border-color: #287dff;
+    box-shadow: 0 0 0 3px #287dff20;
+}
+
+.add-points-summary-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-radius: 11px;
+    background: #f7faf9;
+    border: 1px solid #dceed6;
+}
+
+.summary-card-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.summary-card-row span {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6c7e8a;
+    text-transform: uppercase;
+}
+
+.summary-card-row b {
+    font-size: 15px;
+    color: #243442;
+}
+
+.summary-card-arrow {
+    font-size: 14px;
+    font-weight: 800;
+    color: #128a65;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: #dff5ea;
+}
+
+.summary-card-total {
+    text-align: right;
+}
+
+.summary-card-total span {
+    color: #0b7a5a;
+}
+
+.summary-new-balance {
+    font-size: 18px !important;
+    font-weight: 800 !important;
+    color: #09684b !important;
+}
+
+.add-points-confirm-btn {
+    background: linear-gradient(180deg, #1fb587 0%, #12936c 100%) !important;
+    border-color: #12936c !important;
+}
+
+.add-points-confirm-btn:hover:not(:disabled) {
+    background: linear-gradient(180deg, #25ca97 0%, #15a57a 100%) !important;
+}
+
+.add-points-error-msg {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #ab3333;
+    background: #fef1f1;
+    border: 1px solid #f9d1d1;
+}
+
+.add-points-success-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 20px;
+    border-radius: 12px;
+    background: #eefaf4;
+    border: 1px solid #bfead6;
+}
+
+.add-points-check {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    color: #fff;
+    background: #1cb586;
+    font-size: 20px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+
+.add-points-success-banner strong {
+    font-size: 16px;
+    color: #09684b;
+}
+
+.add-points-success-banner p {
+    margin: 4px 0 0;
+    font-size: 14px;
+    color: #1c7c5d;
 }

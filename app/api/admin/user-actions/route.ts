@@ -42,11 +42,25 @@ function requestMetadata(request: NextRequest) {
   return { ipAddress, location, operatingSystem, browser, userAgent };
 }
 
-async function writeAuditLog(projectId: string, accessToken: string, entry: { adminEmail: string; action: string; userId: string; metadata: ReturnType<typeof requestMetadata> }) {
+async function writeAuditLog(projectId: string, accessToken: string, entry: { adminEmail: string; action: string; userId: string; metadata: ReturnType<typeof requestMetadata>; details?: string }) {
+  const fields: Record<string, unknown> = {
+    admin_email: firestoreString(entry.adminEmail),
+    action: firestoreString(entry.action),
+    user_id: firestoreString(entry.userId),
+    ip_address: firestoreString(entry.metadata.ipAddress),
+    location: firestoreString(entry.metadata.location),
+    operating_system: firestoreString(entry.metadata.operatingSystem),
+    browser: firestoreString(entry.metadata.browser),
+    user_agent: firestoreString(entry.metadata.userAgent),
+    created_at: { timestampValue: new Date().toISOString() },
+  };
+  if (entry.details) {
+    fields.details = firestoreString(entry.details);
+  }
   const response = await fetch(`https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/admin_audit_logs?documentId=${randomUUID()}`, {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ fields: { admin_email: firestoreString(entry.adminEmail), action: firestoreString(entry.action), user_id: firestoreString(entry.userId), ip_address: firestoreString(entry.metadata.ipAddress), location: firestoreString(entry.metadata.location), operating_system: firestoreString(entry.metadata.operatingSystem), browser: firestoreString(entry.metadata.browser), user_agent: firestoreString(entry.metadata.userAgent), created_at: { timestampValue: new Date().toISOString() } } }),
+    body: JSON.stringify({ fields }),
     cache: "no-store",
   });
   if (!response.ok) throw new Error("Could not write admin audit log.");
@@ -91,6 +105,43 @@ async function deleteProfile(projectId: string, accessToken: string, userId: str
   if (!response.ok && response.status !== 404) {
     const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null;
     throw new Error(payload?.error?.message ?? "Could not delete the user profile.");
+  }
+}
+
+async function getUserProfile(projectId: string, accessToken: string, userId: string) {
+  const response = await fetch(`https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/profiles/${encodeURIComponent(userId)}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    if (response.status === 404) throw new Error("User profile was not found.");
+    const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null;
+    throw new Error(payload?.error?.message ?? "Could not load the user profile.");
+  }
+  const data = await response.json() as { fields?: Record<string, { integerValue?: string; doubleValue?: number; stringValue?: string }> };
+  const rawPoints = data.fields?.gab_points?.integerValue ?? data.fields?.gab_points?.doubleValue;
+  const currentPoints = typeof rawPoints === "number" ? rawPoints : Number(rawPoints ?? 0);
+  return { currentPoints: Number.isFinite(currentPoints) ? currentPoints : 0 };
+}
+
+async function addPointsToProfile(projectId: string, accessToken: string, userId: string, newPoints: number) {
+  const now = new Date().toISOString();
+  const params = new URLSearchParams();
+  ["gab_points", "updated_at"].forEach((fieldPath) => params.append("updateMask.fieldPaths", fieldPath));
+  const response = await fetch(`https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/profiles/${encodeURIComponent(userId)}?${params.toString()}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      fields: {
+        gab_points: { integerValue: String(Math.max(0, Math.floor(newPoints))) },
+        updated_at: { stringValue: now },
+      },
+    }),
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null;
+    throw new Error(payload?.error?.message ?? "Could not update user points.");
   }
 }
 
@@ -190,5 +241,65 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ ok: true, action: "delete", userId });
   } catch (error) {
     return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Could not delete the account." }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const metadata = requestMetadata(request);
+    const { email: adminEmail, role } = await authorizeAdmin(request);
+    if (!["owner", "admin", "moderator"].includes(role)) {
+      return NextResponse.json({ ok: false, error: "Your admin role cannot adjust user points." }, { status: 403 });
+    }
+    const body = await request.json() as {
+      action?: "add_points";
+      userId?: string;
+      points?: number;
+      reason?: string;
+    };
+    if (body.action !== "add_points") {
+      return NextResponse.json({ ok: false, error: "Invalid action specified." }, { status: 400 });
+    }
+    const userId = body.userId?.trim();
+    const pointsToAdd = Math.floor(Number(body.points));
+    if (!userId) {
+      return NextResponse.json({ ok: false, error: "A user ID is required." }, { status: 400 });
+    }
+    if (!pointsToAdd || pointsToAdd <= 0 || !Number.isFinite(pointsToAdd)) {
+      return NextResponse.json({ ok: false, error: "Points to add must be a positive whole number." }, { status: 400 });
+    }
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    if (!projectId) throw new Error("Firebase project configuration is missing.");
+
+    const accessToken = await getGoogleAccessToken();
+    const { currentPoints } = await getUserProfile(projectId, accessToken, userId);
+    const newPoints = currentPoints + pointsToAdd;
+
+    await addPointsToProfile(projectId, accessToken, userId, newPoints);
+
+    const reason = body.reason?.trim();
+    const auditAction = `add_points (+${pointsToAdd.toLocaleString()})`;
+    try {
+      await writeAuditLog(projectId, accessToken, {
+        adminEmail,
+        action: auditAction,
+        userId,
+        metadata,
+        details: reason ? `Reason: ${reason}` : undefined,
+      });
+    } catch {
+      /* Point grant remains successful even if audit logging fails */
+    }
+
+    return NextResponse.json({
+      ok: true,
+      action: "add_points",
+      userId,
+      previousPoints: currentPoints,
+      addedPoints: pointsToAdd,
+      newPoints,
+    });
+  } catch (error) {
+    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Could not add points." }, { status: 500 });
   }
 }

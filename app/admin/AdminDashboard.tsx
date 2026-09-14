@@ -243,6 +243,38 @@ export default function AdminDashboard({ firebaseApiKey }: { firebaseApiKey: str
     }
   };
 
+  const handleAddPoints = async (userId: string, points: number, reason?: string) => {
+    setDataError("");
+    try {
+      const response = await fetch("/api/admin/user-actions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "add_points", userId, points, reason }),
+      });
+      const payload = await response.json() as { ok?: boolean; error?: string; newPoints?: number };
+      if (!response.ok || !payload.ok) throw new Error(payload.error ?? "Could not add points to this user.");
+      const updatedBalance = payload.newPoints;
+      setData((current) => {
+        const updateList = (list: UserSummary[]) =>
+          list.map((u) => (u.id === userId ? { ...u, points: updatedBalance ?? (u.points + points) } : u));
+        return {
+          ...current,
+          users: updateList(current.users),
+          recentUsers: updateList(current.recentUsers),
+          metrics: {
+            ...current.metrics,
+            totalGabPoints: current.metrics.totalGabPoints + points,
+          },
+        };
+      });
+      return payload;
+    } catch (actionError) {
+      const msg = actionError instanceof Error ? actionError.message : "Could not add points to this user.";
+      setDataError(msg);
+      throw actionError;
+    }
+  };
+
   if (!token) return <LoginScreen apiKeyConfigured={Boolean(firebaseApiKey)} email={email} password={password} error={error || dataError} loading={loading} setEmail={setEmail} setPassword={setPassword} onSubmit={handleLogin} />;
 
   const activeTrend = period === "daily" ? data.trends.daily : data.trends.monthly;
@@ -255,7 +287,7 @@ export default function AdminDashboard({ firebaseApiKey }: { firebaseApiKey: str
   const chartCurrency = selectedCurrency || availableCurrencies[0] || "NGN";
   const maxRevenue = Math.max(...data.trends.revenue.map((item) => item.byCurrency.find((total) => total.currency === chartCurrency)?.amount ?? 0), 1);
 
-  return <div className="admin-app"><aside className="admin-sidebar"><div className="admin-brand"><Image src="/logo.png" alt="" width={31} height={31} /><span>gabvia</span><b>ADMIN</b></div><div className="admin-workspace"><span className="workspace-avatar">G</span><span><strong>Gabvia HQ</strong><small>Analytics workspace</small></span><span className="workspace-chevron">⌄</span></div><nav className="admin-nav" aria-label="Admin navigation"><p>Workspace</p>{([["overview", "Overview", "grid"], ["users", "Users", "users"], ["messaging", "Messaging", "message"], ["revenue", "Revenue", "wallet"], ["insights", "Insights", "trend"]] as [Section, string, IconName][]).map(([key, label, icon]) => <button className={section === key ? "active" : ""} key={key} onClick={() => setSection(key)}><Icon name={icon} size={17} /><span>{label}</span>{key === "users" && <em>{formatNumber(data.metrics.totalUsers)}</em>}</button>)}</nav><nav className="admin-nav admin-nav-secondary" aria-label="Settings navigation"><p>Manage</p><button onClick={() => setDataError("Settings are managed in the Gabvia project configuration.")}><Icon name="settings" size={17} /><span>Settings</span></button><button onClick={() => setDataError(data.warnings.length ? data.warnings.join(" · ") : "No active alerts.")}><Icon name="bell" size={17} /><span>Alerts</span><i className="alert-dot" /></button></nav><div className="sidebar-bottom"><div className="admin-user"><span className="admin-user-avatar">{(adminEmail || "A").slice(0, 1).toUpperCase()}</span><span><strong>{adminEmail || "Admin"}</strong><small>{data.adminRole} role</small></span></div><button className="logout-button" aria-label="Sign out" onClick={logout}><Icon name="logout" size={16} /></button></div></aside><main className="admin-main"><header className="admin-header"><div><div className="admin-breadcrumb">Workspace <span>/</span> <b>{section[0].toUpperCase() + section.slice(1)}</b></div><h1>{section === "overview" ? "Good morning, admin" : `${section[0].toUpperCase() + section.slice(1)} analytics`}</h1><p>{section === "overview" ? "Here's what's happening across Gabvia today." : `A closer look at Gabvia ${section} and the signals that matter.`}</p></div><div className="admin-header-actions"><button className="icon-button" onClick={() => { setSearchOpen(true); setNotificationsOpen(false); }} aria-label="Search users"><Icon name="search" size={17} /></button><button className="icon-button notification-button" onClick={() => { setNotificationsOpen(true); setSearchOpen(false); }} aria-label="Show alerts"><Icon name="bell" size={17} /><i /></button><button className="admin-refresh" onClick={() => void loadAnalytics(token)} disabled={loadingData}><Icon name="refresh" size={15} /> {loadingData ? "Refreshing" : "Refresh data"}</button></div></header>{dataError && <div className="admin-alert error"><span>!</span><p>{dataError}</p><button onClick={() => { setDataError(""); void loadAnalytics(token); }}>Retry</button></div>}{data.warnings.length > 0 && <div className="admin-alert warning"><span>i</span><p>Some payment providers could not be reached. Product analytics are still live.</p><small>{data.warnings.join(" · ")}</small></div>}{section === "overview" && <Overview data={data} activeTrend={activeTrend} period={period} setPeriod={setPeriod} maxLanguageUsers={maxLanguageUsers} setSection={setSection} />}{section === "users" && <UsersSection key={searchSelectedUserId ?? "users"} data={data} activeTrend={activeTrend} period={period} setPeriod={setPeriod} onAccountAction={handleAccountAction} onBulkAccountAction={handleBulkAccountAction} initialSelectedUserId={searchSelectedUserId} />}{section === "messaging" && <MessagingSection data={data} activeTrend={activeTrend} period={period} setPeriod={setPeriod} token={token} />}{section === "revenue" && <RevenueSection data={data} maxRevenue={maxRevenue} chartCurrency={chartCurrency} availableCurrencies={availableCurrencies} selectedCurrency={chartCurrency} onCurrencyChange={setSelectedCurrency} />}{section === "insights" && <InsightsSection data={data} />}{searchOpen && <AdminSearchModal users={data.users ?? []} onClose={() => setSearchOpen(false)} onOpenUsers={(userId) => { setSearchSelectedUserId(userId ?? null); setSection("users"); setSearchOpen(false); }} />}{notificationsOpen && <AdminNotificationsModal data={data} onClose={() => setNotificationsOpen(false)} />}</main></div>;
+  return <div className="admin-app"><aside className="admin-sidebar"><div className="admin-brand"><Image src="/logo.png" alt="" width={31} height={31} /><span>gabvia</span><b>ADMIN</b></div><div className="admin-workspace"><span className="workspace-avatar">G</span><span><strong>Gabvia HQ</strong><small>Analytics workspace</small></span><span className="workspace-chevron">⌄</span></div><nav className="admin-nav" aria-label="Admin navigation"><p>Workspace</p>{([["overview", "Overview", "grid"], ["users", "Users", "users"], ["messaging", "Messaging", "message"], ["revenue", "Revenue", "wallet"], ["insights", "Insights", "trend"]] as [Section, string, IconName][]).map(([key, label, icon]) => <button className={section === key ? "active" : ""} key={key} onClick={() => setSection(key)}><Icon name={icon} size={17} /><span>{label}</span>{key === "users" && <em>{formatNumber(data.metrics.totalUsers)}</em>}</button>)}</nav><nav className="admin-nav admin-nav-secondary" aria-label="Settings navigation"><p>Manage</p><button onClick={() => setDataError("Settings are managed in the Gabvia project configuration.")}><Icon name="settings" size={17} /><span>Settings</span></button><button onClick={() => setDataError(data.warnings.length ? data.warnings.join(" · ") : "No active alerts.")}><Icon name="bell" size={17} /><span>Alerts</span><i className="alert-dot" /></button></nav><div className="sidebar-bottom"><div className="admin-user"><span className="admin-user-avatar">{(adminEmail || "A").slice(0, 1).toUpperCase()}</span><span><strong>{adminEmail || "Admin"}</strong><small>{data.adminRole} role</small></span></div><button className="logout-button" aria-label="Sign out" onClick={logout}><Icon name="logout" size={16} /></button></div></aside><main className="admin-main"><header className="admin-header"><div><div className="admin-breadcrumb">Workspace <span>/</span> <b>{section[0].toUpperCase() + section.slice(1)}</b></div><h1>{section === "overview" ? "Good morning, admin" : `${section[0].toUpperCase() + section.slice(1)} analytics`}</h1><p>{section === "overview" ? "Here's what's happening across Gabvia today." : `A closer look at Gabvia ${section} and the signals that matter.`}</p></div><div className="admin-header-actions"><button className="icon-button" onClick={() => { setSearchOpen(true); setNotificationsOpen(false); }} aria-label="Search users"><Icon name="search" size={17} /></button><button className="icon-button notification-button" onClick={() => { setNotificationsOpen(true); setSearchOpen(false); }} aria-label="Show alerts"><Icon name="bell" size={17} /><i /></button><button className="admin-refresh" onClick={() => void loadAnalytics(token)} disabled={loadingData}><Icon name="refresh" size={15} /> {loadingData ? "Refreshing" : "Refresh data"}</button></div></header>{dataError && <div className="admin-alert error"><span>!</span><p>{dataError}</p><button onClick={() => { setDataError(""); void loadAnalytics(token); }}>Retry</button></div>}{data.warnings.length > 0 && <div className="admin-alert warning"><span>i</span><p>Some payment providers could not be reached. Product analytics are still live.</p><small>{data.warnings.join(" · ")}</small></div>}{section === "overview" && <Overview data={data} activeTrend={activeTrend} period={period} setPeriod={setPeriod} maxLanguageUsers={maxLanguageUsers} setSection={setSection} />}{section === "users" && <UsersSection key={searchSelectedUserId ?? "users"} data={data} activeTrend={activeTrend} period={period} setPeriod={setPeriod} onAccountAction={handleAccountAction} onBulkAccountAction={handleBulkAccountAction} onAddPoints={handleAddPoints} initialSelectedUserId={searchSelectedUserId} />}{section === "messaging" && <MessagingSection data={data} activeTrend={activeTrend} period={period} setPeriod={setPeriod} token={token} />}{section === "revenue" && <RevenueSection data={data} maxRevenue={maxRevenue} chartCurrency={chartCurrency} availableCurrencies={availableCurrencies} selectedCurrency={chartCurrency} onCurrencyChange={setSelectedCurrency} />}{section === "insights" && <InsightsSection data={data} />}{searchOpen && <AdminSearchModal users={data.users ?? []} onClose={() => setSearchOpen(false)} onOpenUsers={(userId) => { setSearchSelectedUserId(userId ?? null); setSection("users"); setSearchOpen(false); }} />}{notificationsOpen && <AdminNotificationsModal data={data} onClose={() => setNotificationsOpen(false)} />}</main></div>;
 }
 
 function LoginScreen({ apiKeyConfigured, email, password, error, loading, setEmail, setPassword, onSubmit }: { apiKeyConfigured: boolean; email: string; password: string; error: string; loading: boolean; setEmail: (value: string) => void; setPassword: (value: string) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
@@ -279,7 +311,7 @@ function Overview({ data, activeTrend, period, setPeriod, maxLanguageUsers, setS
   return <><div className="stat-grid"><StatCard label="Total users" value={formatNumber(data.metrics.totalUsers)} change={`${formatNumber(data.metrics.referredUsers)} referred`} icon="users" /><StatCard label="Daily active users" value={formatNumber(data.metrics.dau)} change={`${data.metrics.activeRate}% of MAU`} icon="trend" tone="green" /><StatCard label="Monthly active users" value={formatNumber(data.metrics.mau)} change="Last 30 days" icon="grid" tone="violet" /><StatCard label="Gross revenue" value={formatMoney(data.metrics.grossRevenue)} change={`${formatNumber(data.metrics.paidTransactions)} paid transactions`} icon="wallet" tone="yellow" /></div><div className="admin-two-column"><section className="admin-panel engagement-panel"><PanelHeading eyebrow="Engagement" title="Active users" action={<div className="period-switch"><button className={period === "daily" ? "selected" : ""} onClick={() => setPeriod("daily")}>30 days</button><button className={period === "monthly" ? "selected" : ""} onClick={() => setPeriod("monthly")}>12 months</button></div>} /><div className="big-chart-stat"><strong>{formatNumber(period === "daily" ? data.metrics.mau : data.trends.monthly.reduce((sum, item) => sum + (item.activeUsers > 0 ? 1 : 0), 0))}</strong><span><i className="positive-dot" /> Unique active users</span></div><LineChart data={activeTrend} dataKey="activeUsers" /></section><section className="admin-panel language-panel"><PanelHeading eyebrow="Audience" title="Top languages" action={<Icon name="globe" size={17} />} /><div className="language-list">{data.breakdowns.languages.map((language) => <div className="language-row" key={language.name}><div className="language-label"><span>{language.name}</span><b>{formatNumber(language.users)}</b></div><div className="language-bar"><i style={{ width: `${(language.users / maxLanguageUsers) * 100}%` }} /></div></div>)}{data.breakdowns.languages.length === 0 && <EmptyState text="No user language data yet." />}</div></section></div><div className="admin-two-column lower-grid"><section className="admin-panel"><PanelHeading eyebrow="Users" title="New arrivals" action={<button className="panel-link" onClick={() => setSection("users")}>View all <Icon name="arrow" size={13} /></button>} /><UserTable users={data.recentUsers.slice(0, 5)} /></section><section className="admin-panel quick-panel"><PanelHeading eyebrow="Product pulse" title="At a glance" /><div className="pulse-grid"><div><span><Icon name="message" size={14} /> Messages this month</span><strong>{formatNumber(data.metrics.messagesThisMonth)}</strong></div><div><span><Icon name="grid" size={14} /> Conversations</span><strong>{formatNumber(data.metrics.totalConversations)}</strong></div><div><span><Icon name="mic" size={14} /> Translations</span><strong>{formatNumber(data.metrics.totalTranslations)}</strong></div><div><span><Icon name="wallet" size={14} /> Settled revenue</span><strong>{formatMoney(data.metrics.settledRevenue)}</strong></div><div><span><Icon name="users" size={14} /> Early access</span><strong>{formatNumber(data.metrics.waitlistCount)}</strong></div></div></section></div><WaitlistPanel entries={data.waitlist} /></>;
 }
 
-function UsersSection({ data, activeTrend, period, setPeriod, onAccountAction, onBulkAccountAction, initialSelectedUserId }: { data: DashboardData; activeTrend: TrendPoint[]; period: "daily" | "monthly"; setPeriod: (period: "daily" | "monthly") => void; onAccountAction: (userId: string, action: "suspend" | "restore" | "delete", confirmation?: string) => Promise<void>; onBulkAccountAction: (userIds: string[], action: "suspend" | "restore" | "delete", confirmation?: string) => Promise<{ requested?: number; succeeded?: number; failed?: number }>; initialSelectedUserId?: string | null }) {
+function UsersSection({ data, activeTrend, period, setPeriod, onAccountAction, onBulkAccountAction, onAddPoints, initialSelectedUserId }: { data: DashboardData; activeTrend: TrendPoint[]; period: "daily" | "monthly"; setPeriod: (period: "daily" | "monthly") => void; onAccountAction: (userId: string, action: "suspend" | "restore" | "delete", confirmation?: string) => Promise<void>; onBulkAccountAction: (userIds: string[], action: "suspend" | "restore" | "delete", confirmation?: string) => Promise<{ requested?: number; succeeded?: number; failed?: number }>; onAddPoints: (userId: string, points: number, reason?: string) => Promise<unknown>; initialSelectedUserId?: string | null }) {
   const allUsers = data.users ?? data.recentUsers ?? [];
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "suspended">("all");
@@ -315,7 +347,7 @@ function UsersSection({ data, activeTrend, period, setPeriod, onAccountAction, o
       setBulkProcessing(false);
     }
   };
-  return <><div className="stat-grid"><StatCard label="Total users" value={formatNumber(data.metrics.totalUsers)} change="All time" icon="users" /><StatCard label="Daily active users" value={formatNumber(data.metrics.dau)} change="Today" icon="trend" tone="green" /><StatCard label="Monthly active users" value={formatNumber(data.metrics.mau)} change="Last 30 days" icon="grid" tone="violet" /><StatCard label="Referral signups" value={formatNumber(data.metrics.referredUsers)} change={`${data.metrics.totalUsers ? Math.round((data.metrics.referredUsers / data.metrics.totalUsers) * 100) : 0}% of users`} icon="arrow" tone="yellow" /></div><section className="admin-panel full-panel"><PanelHeading eyebrow="Retention signal" title="User activity" action={<div className="period-switch"><button className={period === "daily" ? "selected" : ""} onClick={() => setPeriod("daily")}>30 days</button><button className={period === "monthly" ? "selected" : ""} onClick={() => setPeriod("monthly")}>12 months</button></div>} /><LineChart data={activeTrend} dataKey="activeUsers" height={280} /></section><div className="user-directory-grid"><section className="admin-panel"><PanelHeading eyebrow="Directory" title="All users" action={<div className="directory-actions"><button className="panel-link" onClick={() => downloadCsv("gabvia-users.csv", ["Name", "Username", "Language", "Messages", "Conversations", "Joined"], filteredUsers.map((user) => [user.name, user.username, user.language, user.messages, user.conversations, formatDate(user.createdAt)]))}><Icon name="download" size={13} /> Export</button><select className="directory-status-filter" aria-label="Filter users by status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "all" | "active" | "suspended")}><option value="all">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option></select><span className="directory-count">{formatNumber(filteredUsers.length)} shown</span></div>} /><div className="user-search"><Icon name="search" size={14} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, username, or language" /></div>{selectedUserIds.size > 0 && <div className="bulk-action-toolbar"><span><strong>{formatNumber(selectedUserIds.size)}</strong> selected{bulkSelectionOverLimit ? " · Select 50 or fewer" : ""}</span><button className="bulk-action-suspend" onClick={() => setBulkAction("suspend")} disabled={bulkProcessing || bulkSelectionOverLimit}>Suspend selected</button><button className="bulk-action-restore" onClick={() => setBulkAction("restore")} disabled={bulkProcessing || bulkSelectionOverLimit}>Restore selected</button><button className="bulk-action-delete" onClick={() => setBulkAction("delete")} disabled={bulkProcessing || bulkSelectionOverLimit}>Delete selected</button><button className="bulk-action-clear" onClick={() => setSelectedUserIds(new Set())} disabled={bulkProcessing}>Clear</button></div>}{bulkFeedback && <div className={`bulk-action-feedback ${bulkFeedback.type}`} role="status">{bulkFeedback.text}</div>}<UserTable users={filteredUsers} onSelect={(user) => setSelectedUserId(user.id)} selectedUserId={selectedUserId ?? undefined} selectable selectedUserIds={selectedUserIds} allSelected={allFilteredSelected} onToggleAll={toggleAllFiltered} onToggleSelect={toggleUserSelection} /></section></div><UserDetailsModal user={selectedUser} onClose={() => setSelectedUserId(null)} onAccountAction={onAccountAction} />{bulkAction && <BulkAccountConfirmationModal action={bulkAction} count={selectedUserIds.size} confirmation={bulkConfirmation} setConfirmation={setBulkConfirmation} processing={bulkProcessing} onCancel={closeBulkConfirmation} onConfirm={() => void confirmBulkAction()} />}</>;
+  return <><div className="stat-grid"><StatCard label="Total users" value={formatNumber(data.metrics.totalUsers)} change="All time" icon="users" /><StatCard label="Daily active users" value={formatNumber(data.metrics.dau)} change="Today" icon="trend" tone="green" /><StatCard label="Monthly active users" value={formatNumber(data.metrics.mau)} change="Last 30 days" icon="grid" tone="violet" /><StatCard label="Referral signups" value={formatNumber(data.metrics.referredUsers)} change={`${data.metrics.totalUsers ? Math.round((data.metrics.referredUsers / data.metrics.totalUsers) * 100) : 0}% of users`} icon="arrow" tone="yellow" /></div><section className="admin-panel full-panel"><PanelHeading eyebrow="Retention signal" title="User activity" action={<div className="period-switch"><button className={period === "daily" ? "selected" : ""} onClick={() => setPeriod("daily")}>30 days</button><button className={period === "monthly" ? "selected" : ""} onClick={() => setPeriod("monthly")}>12 months</button></div>} /><LineChart data={activeTrend} dataKey="activeUsers" height={280} /></section><div className="user-directory-grid"><section className="admin-panel"><PanelHeading eyebrow="Directory" title="All users" action={<div className="directory-actions"><button className="panel-link" onClick={() => downloadCsv("gabvia-users.csv", ["Name", "Username", "Language", "GAB Points", "Messages", "Conversations", "Joined"], filteredUsers.map((user) => [user.name, user.username, user.language, user.points, user.messages, user.conversations, formatDate(user.createdAt)]))}><Icon name="download" size={13} /> Export</button><select className="directory-status-filter" aria-label="Filter users by status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "all" | "active" | "suspended")}><option value="all">All statuses</option><option value="active">Active</option><option value="suspended">Suspended</option></select><span className="directory-count">{formatNumber(filteredUsers.length)} shown</span></div>} /><div className="user-search"><Icon name="search" size={14} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, username, or language" /></div>{selectedUserIds.size > 0 && <div className="bulk-action-toolbar"><span><strong>{formatNumber(selectedUserIds.size)}</strong> selected{bulkSelectionOverLimit ? " · Select 50 or fewer" : ""}</span><button className="bulk-action-suspend" onClick={() => setBulkAction("suspend")} disabled={bulkProcessing || bulkSelectionOverLimit}>Suspend selected</button><button className="bulk-action-restore" onClick={() => setBulkAction("restore")} disabled={bulkProcessing || bulkSelectionOverLimit}>Restore selected</button><button className="bulk-action-delete" onClick={() => setBulkAction("delete")} disabled={bulkProcessing || bulkSelectionOverLimit}>Delete selected</button><button className="bulk-action-clear" onClick={() => setSelectedUserIds(new Set())} disabled={bulkProcessing}>Clear</button></div>}{bulkFeedback && <div className={`bulk-action-feedback ${bulkFeedback.type}`} role="status">{bulkFeedback.text}</div>}<UserTable users={filteredUsers} onSelect={(user) => setSelectedUserId(user.id)} selectedUserId={selectedUserId ?? undefined} selectable selectedUserIds={selectedUserIds} allSelected={allFilteredSelected} onToggleAll={toggleAllFiltered} onToggleSelect={toggleUserSelection} /></section></div><UserDetailsModal user={selectedUser} onClose={() => setSelectedUserId(null)} onAccountAction={onAccountAction} onAddPoints={onAddPoints} />{bulkAction && <BulkAccountConfirmationModal action={bulkAction} count={selectedUserIds.size} confirmation={bulkConfirmation} setConfirmation={setBulkConfirmation} processing={bulkProcessing} onCancel={closeBulkConfirmation} onConfirm={() => void confirmBulkAction()} />}</>;
 }
 
 function InsightsSection({ data }: { data: DashboardData }) {
@@ -386,19 +418,20 @@ function PanelHeading({ eyebrow, title, action }: { eyebrow: string; title: stri
 
 function UserTable({ users, onSelect, selectedUserId, selectable = false, selectedUserIds = new Set<string>(), allSelected = false, onToggleAll, onToggleSelect }: { users: UserSummary[]; onSelect?: (user: UserSummary) => void; selectedUserId?: string; selectable?: boolean; selectedUserIds?: Set<string>; allSelected?: boolean; onToggleAll?: () => void; onToggleSelect?: (userId: string) => void }) {
   if (users.length === 0) return <EmptyState text="No users found yet." />;
-  return <div className="user-table"><div className={`user-table-header ${selectable ? "user-table-selectable" : ""}`}>{selectable && <span className="user-select-cell"><input type="checkbox" checked={allSelected} onChange={onToggleAll} aria-label="Select all filtered users" /></span>}<span>User</span><span>Language</span><span>Messages</span><span>Joined</span></div>{users.map((user) => <div className={`user-table-row ${selectable ? "user-table-selectable" : ""} ${user.status === "suspended" ? "suspended" : ""} ${selectedUserId === user.id ? "selected" : ""}`} key={user.id} onClick={() => onSelect?.(user)} onKeyDown={(event) => { if (onSelect && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); onSelect(user); } }} role={onSelect ? "button" : undefined} tabIndex={onSelect ? 0 : undefined}>{selectable && <span className="user-select-cell" onClick={(event) => event.stopPropagation()}><input type="checkbox" checked={selectedUserIds.has(user.id)} onChange={() => onToggleSelect?.(user.id)} aria-label={`Select ${user.name}`} /></span>}<div className="table-user"><span className={`table-avatar ${user.status === "suspended" ? "suspended" : ""}`}>{user.name.slice(0, 1).toUpperCase()}</span><span><strong>{user.name}</strong><small>@{user.username}{user.status === "suspended" && <span className="user-suspended-badge">Suspended</span>}</small></span></div><span>{user.language}</span><b>{formatNumber(user.messages)}</b><span>{formatDate(user.createdAt)}</span></div>)}</div>;
+  return <div className="user-table"><div className={`user-table-header ${selectable ? "user-table-selectable" : ""}`}>{selectable && <span className="user-select-cell"><input type="checkbox" checked={allSelected} onChange={onToggleAll} aria-label="Select all filtered users" /></span>}<span>User</span><span>Language</span><span>GAB Points</span><span>Messages</span><span>Joined</span></div>{users.map((user) => <div className={`user-table-row ${selectable ? "user-table-selectable" : ""} ${user.status === "suspended" ? "suspended" : ""} ${selectedUserId === user.id ? "selected" : ""}`} key={user.id} onClick={() => onSelect?.(user)} onKeyDown={(event) => { if (onSelect && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); onSelect(user); } }} role={onSelect ? "button" : undefined} tabIndex={onSelect ? 0 : undefined}>{selectable && <span className="user-select-cell" onClick={(event) => event.stopPropagation()}><input type="checkbox" checked={selectedUserIds.has(user.id)} onChange={() => onToggleSelect?.(user.id)} aria-label={`Select ${user.name}`} /></span>}<div className="table-user"><span className={`table-avatar ${user.status === "suspended" ? "suspended" : ""}`}>{user.name.slice(0, 1).toUpperCase()}</span><span><strong>{user.name}</strong><small>@{user.username}{user.status === "suspended" && <span className="user-suspended-badge">Suspended</span>}</small></span></div><span>{user.language}</span><b className="user-table-points">{formatNumber(user.points)} <small>GAB</small></b><b>{formatNumber(user.messages)}</b><span>{formatDate(user.createdAt)}</span></div>)}</div>;
 }
 
 type AccountAction = "suspend" | "restore" | "delete";
 
-function UserDetailsModal({ user, onClose, onAccountAction }: { user: UserSummary | null; onClose: () => void; onAccountAction: (userId: string, action: AccountAction, confirmation?: string) => Promise<void> }) {
+function UserDetailsModal({ user, onClose, onAccountAction, onAddPoints }: { user: UserSummary | null; onClose: () => void; onAccountAction: (userId: string, action: AccountAction, confirmation?: string) => Promise<void>; onAddPoints: (userId: string, points: number, reason?: string) => Promise<unknown> }) {
   const [confirmAction, setConfirmAction] = useState<AccountAction | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [processingAction, setProcessingAction] = useState<AccountAction | null>(null);
+  const [addPointsOpen, setAddPointsOpen] = useState(false);
   if (!user) return null;
   const isSuspended = user.status === "suspended";
   const closeConfirmation = () => { setConfirmAction(null); setDeleteConfirmation(""); };
-  const closeModal = () => { closeConfirmation(); onClose(); };
+  const closeModal = () => { closeConfirmation(); setAddPointsOpen(false); onClose(); };
   const confirmAccountAction = async () => {
     if (!confirmAction || (confirmAction === "delete" && deleteConfirmation !== "DELETE")) return;
     const action = confirmAction;
@@ -411,7 +444,7 @@ function UserDetailsModal({ user, onClose, onAccountAction }: { user: UserSummar
       setProcessingAction(null);
     }
   };
-  return <div className="admin-detail-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !processingAction) closeModal(); }}><section className="user-details-modal" role="dialog" aria-modal="true" aria-labelledby="user-details-title"><button className="admin-modal-close" onClick={closeModal} aria-label="Close user details" disabled={Boolean(processingAction)}><Icon name="close" size={17} /></button><div className="user-detail-top"><span className="user-detail-avatar">{user.name.slice(0, 1).toUpperCase()}</span><div><span className="detail-kicker">User profile</span><h2 id="user-details-title">{user.name}</h2><p>@{user.username}</p></div><span className={`user-status ${isSuspended ? "suspended" : ""}`}>{isSuspended ? "Suspended" : "Active profile"}</span></div><div className="user-detail-id">ID <code>{user.id}</code></div><div className="detail-stat-grid"><div><span>Messages</span><strong>{formatNumber(user.messages)}</strong></div><div><span>Conversations</span><strong>{formatNumber(user.conversations)}</strong></div><div><span>Voice notes</span><strong>{formatNumber(user.voiceMessages)}</strong></div><div><span>Translations</span><strong>{formatNumber(user.translations)}</strong></div></div><div className="detail-section"><span className="detail-kicker">Profile</span><DetailRow label="Language" value={user.language} /><DetailRow label="GAB points" value={formatNumber(user.points)} /><DetailRow label="Bonus plan" value={user.bonusPlan} /><DetailRow label="Signup position" value={user.signupPosition ? `#${user.signupPosition}` : "—"} /><DetailRow label="Joined" value={formatDate(user.createdAt)} /><DetailRow label="Last active" value={formatDate(user.lastActive)} /></div><div className="detail-section"><span className="detail-kicker">Referrals</span><DetailRow label="Referred by" value={user.referredBy} /><DetailRow label="Referrer ID" value={user.referredById ?? "—"} /><DetailRow label="Referral code" value={user.referralCode} /><DetailRow label="Users referred" value={formatNumber(user.referrals)} /></div><div className="detail-section"><span className="detail-kicker">Message breakdown</span><DetailRow label="Text messages" value={formatNumber(user.textMessages)} /><DetailRow label="Voice messages" value={formatNumber(user.voiceMessages)} /></div><div className="modal-action-footer"><button className="account-suspend-button" onClick={() => setConfirmAction(isSuspended ? "restore" : "suspend")} disabled={Boolean(processingAction)}>{isSuspended ? "Restore account" : "Suspend account"}</button><button className="account-delete-button" onClick={() => setConfirmAction("delete")} disabled={Boolean(processingAction)}>Delete account</button></div></section>{confirmAction && <AccountConfirmationModal action={confirmAction} user={user} deleteConfirmation={deleteConfirmation} setDeleteConfirmation={setDeleteConfirmation} processing={processingAction === confirmAction} onCancel={closeConfirmation} onConfirm={() => void confirmAccountAction()} />}</div>;
+  return <div className="admin-detail-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !processingAction && !addPointsOpen) closeModal(); }}><section className="user-details-modal" role="dialog" aria-modal="true" aria-labelledby="user-details-title"><button className="admin-modal-close" onClick={closeModal} aria-label="Close user details" disabled={Boolean(processingAction) || addPointsOpen}><Icon name="close" size={17} /></button><div className="user-detail-top"><span className="user-detail-avatar">{user.name.slice(0, 1).toUpperCase()}</span><div><span className="detail-kicker">User profile</span><h2 id="user-details-title">{user.name}</h2><p>@{user.username}</p></div><span className={`user-status ${isSuspended ? "suspended" : ""}`}>{isSuspended ? "Suspended" : "Active profile"}</span></div><div className="user-detail-id">ID <code>{user.id}</code></div><div className="detail-points-card"><div className="detail-points-left"><div className="detail-points-coin"><Icon name="wallet" size={20} /></div><div className="detail-points-info"><span className="detail-points-label">GAB POINTS BALANCE</span><div className="detail-points-balance"><strong>{formatNumber(user.points)}</strong><span>GAB</span></div></div></div><button type="button" className="detail-add-points-btn" onClick={() => setAddPointsOpen(true)} disabled={Boolean(processingAction)}>+ Add GAB points</button></div><div className="detail-stat-grid"><div><span>Messages</span><strong>{formatNumber(user.messages)}</strong></div><div><span>Conversations</span><strong>{formatNumber(user.conversations)}</strong></div><div><span>Voice notes</span><strong>{formatNumber(user.voiceMessages)}</strong></div><div><span>Translations</span><strong>{formatNumber(user.translations)}</strong></div></div><div className="detail-section"><span className="detail-kicker">Profile</span><DetailRow label="Language" value={user.language} /><DetailRow label="GAB points" value={`${formatNumber(user.points)} GAB`} /><DetailRow label="Bonus plan" value={user.bonusPlan} /><DetailRow label="Signup position" value={user.signupPosition ? `#${user.signupPosition}` : "—"} /><DetailRow label="Joined" value={formatDate(user.createdAt)} /><DetailRow label="Last active" value={formatDate(user.lastActive)} /></div><div className="detail-section"><span className="detail-kicker">Referrals</span><DetailRow label="Referred by" value={user.referredBy} /><DetailRow label="Referrer ID" value={user.referredById ?? "—"} /><DetailRow label="Referral code" value={user.referralCode} /><DetailRow label="Users referred" value={formatNumber(user.referrals)} /></div><div className="detail-section"><span className="detail-kicker">Message breakdown</span><DetailRow label="Text messages" value={formatNumber(user.textMessages)} /><DetailRow label="Voice messages" value={formatNumber(user.voiceMessages)} /></div><div className="modal-action-footer"><button type="button" className="account-add-points-button" onClick={() => setAddPointsOpen(true)} disabled={Boolean(processingAction)}>+ Add GAB points</button><button className="account-suspend-button" onClick={() => setConfirmAction(isSuspended ? "restore" : "suspend")} disabled={Boolean(processingAction)}>{isSuspended ? "Restore account" : "Suspend account"}</button><button className="account-delete-button" onClick={() => setConfirmAction("delete")} disabled={Boolean(processingAction)}>Delete account</button></div></section>{confirmAction && <AccountConfirmationModal action={confirmAction} user={user} deleteConfirmation={deleteConfirmation} setDeleteConfirmation={setDeleteConfirmation} processing={processingAction === confirmAction} onCancel={closeConfirmation} onConfirm={() => void confirmAccountAction()} />}{addPointsOpen && <AddPointsModal user={user} onClose={() => setAddPointsOpen(false)} onAddPoints={onAddPoints} />}</div>;
 }
 
 function AccountConfirmationModal({ action, user, deleteConfirmation, setDeleteConfirmation, processing, onCancel, onConfirm }: { action: AccountAction; user: UserSummary; deleteConfirmation: string; setDeleteConfirmation: (value: string) => void; processing: boolean; onCancel: () => void; onConfirm: () => void }) {
@@ -432,6 +465,180 @@ function BulkAccountConfirmationModal({ action, count, confirmation, setConfirma
   const actionLabel = isDelete ? "Delete selected" : isRestore ? "Restore selected" : "Suspend selected";
   const processingLabel = isDelete ? "Deleting accounts…" : isRestore ? "Restoring accounts…" : "Suspending accounts…";
   return <div className="account-confirm-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !processing) onCancel(); }}><section className={`account-confirm-modal bulk-account-confirm-modal ${isDelete ? "danger" : isRestore ? "restore" : "suspend"}`} role="alertdialog" aria-modal="true" aria-labelledby="bulk-account-confirm-title"><div className="account-confirm-icon"><Icon name={isDelete ? "close" : "users"} size={20} /></div><h3 id="bulk-account-confirm-title">{title}</h3><p>{description}</p>{isDelete && <label className="account-confirm-label">Type <b>DELETE USERS</b> to confirm<input value={confirmation} onChange={(event) => setConfirmation(event.target.value)} placeholder="DELETE USERS" autoComplete="off" autoFocus disabled={processing} /></label>}{processing && <div className="account-processing-feedback" role="status" aria-live="polite"><span className="account-processing-spinner" />{processingLabel}</div>}<div className="account-confirm-actions"><button onClick={onCancel} disabled={processing}>Cancel</button><button className={isDelete ? "confirm-danger" : "confirm-primary"} disabled={processing || (isDelete && confirmation !== "DELETE USERS")} onClick={onConfirm}>{processing ? processingLabel : actionLabel}</button></div></section></div>;
+}
+
+function AddPointsModal({ user, onClose, onAddPoints }: { user: UserSummary; onClose: () => void; onAddPoints: (userId: string, points: number, reason?: string) => Promise<unknown> }) {
+  const presets = [100, 200, 500, 1000, 2500, 5000];
+  const [selectedPreset, setSelectedPreset] = useState<number | null>(500);
+  const [customAmount, setCustomAmount] = useState<string>("500");
+  const [reason, setReason] = useState("");
+  const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const parsedPoints = Math.floor(Number(customAmount) || 0);
+  const newBalance = Math.max(0, user.points + (parsedPoints > 0 ? parsedPoints : 0));
+
+  const handleSelectPreset = (amount: number) => {
+    setSelectedPreset(amount);
+    setCustomAmount(String(amount));
+    setError("");
+  };
+
+  const handleCustomChange = (val: string) => {
+    setCustomAmount(val);
+    const num = Number(val);
+    if (presets.includes(num)) {
+      setSelectedPreset(num);
+    } else {
+      setSelectedPreset(null);
+    }
+    setError("");
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (parsedPoints <= 0) {
+      setError("Please enter a valid amount of points greater than 0.");
+      return;
+    }
+    setProcessing(true);
+    setError("");
+    try {
+      await onAddPoints(user.id, parsedPoints, reason.trim() || undefined);
+      setSuccess(`Successfully added +${formatNumber(parsedPoints)} GAB points! New balance: ${formatNumber(newBalance)} GAB.`);
+      setTimeout(() => {
+        onClose();
+      }, 1300);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add points.");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  return (
+    <div className="account-confirm-overlay add-points-overlay" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget && !processing) onClose(); }}>
+      <section className="account-confirm-modal add-points-modal" role="dialog" aria-modal="true" aria-labelledby="add-points-title">
+        <button className="admin-modal-close" onClick={onClose} aria-label="Close" disabled={processing}>
+          <Icon name="close" size={17} />
+        </button>
+
+        <div className="add-points-header">
+          <div className="add-points-icon-badge">
+            <Icon name="wallet" size={22} />
+          </div>
+          <div>
+            <span className="utility-kicker">GAB POINTS MANAGEMENT</span>
+            <h3 id="add-points-title">Add GAB Points</h3>
+            <p className="add-points-subtitle">Credit usage points directly to this user&apos;s account.</p>
+          </div>
+        </div>
+
+        <div className="account-confirm-user add-points-user-card">
+          <span className="table-avatar">{user.name.slice(0, 1).toUpperCase()}</span>
+          <div>
+            <strong>{user.name}</strong>
+            <small>@{user.username} · Current balance: <b>{formatNumber(user.points)} GAB</b></small>
+          </div>
+        </div>
+
+        {success ? (
+          <div className="add-points-success-banner" role="status">
+            <span className="add-points-check">✓</span>
+            <div>
+              <strong>Points Added Successfully</strong>
+              <p>{success}</p>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="add-points-form">
+            <div className="add-points-field">
+              <label className="add-points-field-label">Quick select amount</label>
+              <div className="add-points-presets">
+                {presets.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    className={`add-points-preset-chip ${selectedPreset === p ? "active" : ""}`}
+                    onClick={() => handleSelectPreset(p)}
+                    disabled={processing}
+                  >
+                    +{formatNumber(p)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="add-points-field">
+              <label className="add-points-field-label" htmlFor="points-amount-input">
+                Points to credit
+              </label>
+              <div className="add-points-input-box">
+                <input
+                  id="points-amount-input"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={customAmount}
+                  onChange={(e) => handleCustomChange(e.target.value)}
+                  placeholder="e.g. 500"
+                  required
+                  disabled={processing}
+                  autoFocus
+                />
+                <span className="add-points-unit">GAB</span>
+              </div>
+            </div>
+
+            <div className="add-points-field">
+              <label className="add-points-field-label" htmlFor="points-reason-input">
+                Administrative note <small>(optional, logged in security audit)</small>
+              </label>
+              <input
+                id="points-reason-input"
+                type="text"
+                maxLength={100}
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="e.g. Support compensation, promotional grant, milestone bonus"
+                disabled={processing}
+              />
+            </div>
+
+            <div className="add-points-summary-card">
+              <div className="summary-card-row">
+                <span>Current balance:</span>
+                <b>{formatNumber(user.points)} GAB</b>
+              </div>
+              <div className="summary-card-arrow">
+                + {formatNumber(parsedPoints > 0 ? parsedPoints : 0)} GAB
+              </div>
+              <div className="summary-card-row summary-card-total">
+                <span>New projected balance:</span>
+                <b className="summary-new-balance">{formatNumber(newBalance)} GAB</b>
+              </div>
+            </div>
+
+            {error && <div className="add-points-error-msg">{error}</div>}
+
+            <div className="account-confirm-actions">
+              <button type="button" onClick={onClose} disabled={processing}>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="confirm-primary add-points-confirm-btn"
+                disabled={processing || parsedPoints <= 0}
+              >
+                {processing ? "Crediting points…" : `Add +${formatNumber(parsedPoints || 0)} GAB Points`}
+              </button>
+            </div>
+          </form>
+        )}
+      </section>
+    </div>
+  );
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) { return <div className="detail-row"><span>{label}</span><b>{value}</b></div>; }
