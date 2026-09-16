@@ -210,6 +210,80 @@ h2 span {
     background: #2d3540;
 }
 
+.button-playstore {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 22px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    background: var(--ink);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 12px 24px #11151d20;
+    transition: transform .2s ease, background .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.button-playstore:hover {
+    transform: translateY(-2px);
+    background: #273342;
+    border-color: rgba(255, 255, 255, 0.28);
+    box-shadow: 0 16px 28px #11151d32;
+}
+
+.playstore-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.15;
+    text-align: left;
+}
+
+.playstore-text small {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.playstore-text strong {
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: -0.2px;
+}
+
+.download-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 28px;
+    flex-wrap: wrap;
+}
+
+.button-playstore-light {
+    background: #ffffff;
+    color: #0f1720;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+}
+
+.button-playstore-light .playstore-text small {
+    color: #556271;
+}
+
+.button-playstore-light .playstore-text strong {
+    color: #0f1720;
+}
+
+.button-playstore-light:hover {
+    background: #f4f6f8;
+    color: #0f1720;
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.28);
+}
+
 .button-quiet {
     color: #606872;
     padding-left: 0;
@@ -3874,6 +3948,39 @@ h2 span {
 .theme-dark .nav-cta:hover,
 .theme-dark .button-primary:hover {
     background: #e6ff82;
+}
+
+.theme-dark .button-playstore {
+    background: #141f2d;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 12px 24px #00000045;
+}
+
+.theme-dark .button-playstore:hover {
+    background: #1d2c40;
+    border-color: rgba(217, 255, 86, 0.4);
+    box-shadow: 0 16px 30px #00000060;
+}
+
+.theme-dark .button-playstore-light {
+    background: var(--lime);
+    color: #0f171d;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+}
+
+.theme-dark .button-playstore-light .playstore-text small {
+    color: #2b3a1a;
+}
+
+.theme-dark .button-playstore-light .playstore-text strong {
+    color: #0f171d;
+}
+
+.theme-dark .button-playstore-light:hover {
+    background: #e6ff82;
+    box-shadow: 0 16px 30px rgba(0, 0, 0, 0.45);
 }
 
 .theme-dark .theme-toggle {
