@@ -29,6 +29,7 @@ import {
   Lock,
   LogOut,
   MessageSquare,
+  MoreVertical,
   Pencil,
   Pin,
   Plus,
@@ -166,6 +167,9 @@ export default function ChatPage() {
 
   // Mobile View state (toggle between sidebar and active chat)
   const [mobileShowChat, setMobileShowChat] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeMessageActionId, setActiveMessageActionId] = useState<string | null>(null);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
 
   // Quick Translator Modal State
   const [isQuickTranslatorOpen, setIsQuickTranslatorOpen] = useState(false);
@@ -325,10 +329,24 @@ export default function ChatPage() {
     }
   };
 
+  const handleCopyMessage = (msg: Message) => {
+    const textToCopy = msg.translated_content || msg.content || "";
+    if (textToCopy && typeof navigator !== "undefined") {
+      navigator.clipboard.writeText(textToCopy);
+      setCopiedMessageId(msg.id);
+      setTimeout(() => setCopiedMessageId(null), 2000);
+      setActiveMessageActionId(null);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Only send on Enter without Shift on desktop keyboards (>= 768px)
+    // On mobile keyboards, Enter inserts a newline for a better mobile typing experience
     if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+      if (typeof window !== "undefined" && window.innerWidth >= 768) {
+        e.preventDefault();
+        handleSendMessage();
+      }
     }
   };
 
@@ -375,6 +393,7 @@ export default function ChatPage() {
     try {
       await startDirectChat(targetId);
       closeNewChatModal();
+      setMobileShowChat(true);
     } catch (err: unknown) {
       const errObj = err as { message?: string };
       alert(errObj.message || "Could not start chat");
@@ -527,6 +546,7 @@ export default function ChatPage() {
       await deleteGroup(activeConversationId);
       setIsGroupDetailsOpen(false);
       setShowDeleteGroupConfirm(false);
+      setMobileShowChat(false);
     } catch (err: any) {
       alert(err?.message || "Failed to delete group.");
     } finally {
@@ -637,13 +657,13 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[#0b111e] text-slate-100 flex flex-col">
+    <div className="h-[100dvh] max-h-[100dvh] w-full overflow-hidden bg-[#0b111e] text-slate-100 flex flex-col overscroll-none">
       {/* Recovery Banner if needed */}
       {needsKeyRecovery && (
-        <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5 flex items-center justify-between text-xs text-amber-200">
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-3 sm:px-4 py-2 sm:py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-200 shrink-0">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-            <span>
+            <span className="leading-snug">
               New browser detected. Enter your Backup PIN to restore your End-to-End Encryption keys and read past messages.
             </span>
           </div>
@@ -653,7 +673,7 @@ export default function ChatPage() {
               setBackupPin("");
               setIsBackupModalOpen(true);
             }}
-            className="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition-colors"
+            className="self-end sm:self-auto px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition-colors shrink-0 cursor-pointer"
           >
             Recover Keys
           </button>
@@ -920,7 +940,7 @@ export default function ChatPage() {
           </div>
 
           {/* User profile footer */}
-          <div className="p-3 border-t border-slate-800/80 bg-slate-950/40 flex items-center justify-between">
+          <div className="p-3 border-t border-slate-800/80 bg-slate-950/40 flex items-center justify-between pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center font-bold text-xs text-emerald-400 shrink-0">
                 {profile?.full_name?.charAt(0).toUpperCase() || profile?.username?.charAt(0).toUpperCase() || "U"}
@@ -935,7 +955,7 @@ export default function ChatPage() {
 
             <button
               onClick={() => setIsSecurityModalOpen(true)}
-              className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+              className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer"
               title="End-to-End Encryption Security Verified"
             >
               <ShieldCheck className="w-4 h-4" />
@@ -948,13 +968,18 @@ export default function ChatPage() {
           {activeConversation ? (
             <>
               {/* Chat Top Bar */}
-              <div className="h-16 px-4 sm:px-6 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-3 min-w-0">
+              <div className="h-16 px-3 sm:px-6 border-b border-slate-800/80 bg-slate-900/70 backdrop-blur-md flex items-center justify-between shrink-0 gap-2 relative">
+                <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                  {/* Mobile Back Button */}
                   <button
-                    onClick={() => setMobileShowChat(false)}
-                    className="md:hidden p-1 rounded-lg text-slate-400 hover:text-white"
+                    onClick={() => {
+                      setMobileShowChat(false);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="md:hidden w-10 h-10 -ml-1 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 active:scale-95 transition-all shrink-0 cursor-pointer"
+                    aria-label="Back to conversations"
                   >
-                    <ChevronLeft className="w-5 h-5" />
+                    <ChevronLeft className="w-6 h-6" />
                   </button>
 
                   <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/60 flex items-center justify-center text-slate-300 font-bold text-sm shrink-0 shadow">
@@ -965,37 +990,37 @@ export default function ChatPage() {
                     )}
                   </div>
 
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-white truncate">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <h3 className="text-sm font-bold text-white truncate max-w-[130px] xs:max-w-[180px] sm:max-w-[260px] md:max-w-xs">
                         {activeConversation.type === "group"
                           ? activeConversation.name || "Group Chat"
                           : otherParticipant?.full_name || otherParticipant?.username || "Direct Chat"}
                       </h3>
                       {activeConversation.type === "group" ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold shrink-0">
                           <Users className="w-2.5 h-2.5" /> Group
                         </span>
                       ) : (
                         <button
                           onClick={() => setIsSecurityModalOpen(true)}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold hover:bg-emerald-500/20 transition-colors"
+                          className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold hover:bg-emerald-500/20 transition-colors shrink-0 cursor-pointer"
                         >
                           <Lock className="w-2.5 h-2.5" /> E2EE
                         </button>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2 text-[11px] text-slate-400">
+                    <div className="flex items-center gap-1.5 text-[11px] text-slate-400 truncate">
                       {activeConversation.type === "group" ? (
-                        <span>{activeConversation.participants.length} members · Multilingual Translation</span>
+                        <span>{activeConversation.participants.length} members · Multilingual</span>
                       ) : (
                         <>
-                          {otherParticipant?.username && <span>@{otherParticipant.username}</span>}
+                          {otherParticipant?.username && <span className="truncate">@{otherParticipant.username}</span>}
                           {otherParticipant?.native_language && (
                             <>
                               <span>•</span>
-                              <span className="flex items-center gap-1 text-emerald-400/90">
+                              <span className="flex items-center gap-1 text-emerald-400/90 shrink-0">
                                 <Globe className="w-3 h-3" /> Speaks {otherParticipant.native_language}
                               </span>
                             </>
@@ -1006,7 +1031,8 @@ export default function ChatPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 sm:gap-2">
+                {/* Desktop Action Buttons */}
+                <div className="hidden md:flex items-center gap-1.5 sm:gap-2 shrink-0">
                   {/* Quick Translator Tool */}
                   <button
                     onClick={() => setIsQuickTranslatorOpen(true)}
@@ -1014,7 +1040,7 @@ export default function ChatPage() {
                     title="Quick Translator Tool"
                   >
                     <Languages className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Translator</span>
+                    <span>Translator</span>
                   </button>
 
                   {/* Summarize Conversation */}
@@ -1024,7 +1050,7 @@ export default function ChatPage() {
                     title="Summarize conversation with AI"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Summarize</span>
+                    <span>Summarize</span>
                   </button>
 
                   {/* Group Specific Buttons */}
@@ -1036,7 +1062,7 @@ export default function ChatPage() {
                         title="Schedule Group Event"
                       >
                         <CalendarPlus className="w-3.5 h-3.5" />
-                        <span className="hidden sm:inline">Event</span>
+                        <span>Event</span>
                       </button>
 
                       <button
@@ -1045,18 +1071,100 @@ export default function ChatPage() {
                         title="Group Details & Members"
                       >
                         <Users className="w-3.5 h-3.5 text-emerald-400" />
-                        <span className="hidden sm:inline">Members ({activeConversation.participants.length})</span>
+                        <span>Members ({activeConversation.participants.length})</span>
                       </button>
                     </>
                   )}
 
                   <button
                     onClick={() => setIsSecurityModalOpen(true)}
-                    className="p-2 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 transition-colors"
+                    className="p-2 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 transition-colors cursor-pointer"
                     title="Security Details"
                   >
                     <Shield className="w-4 h-4" />
                   </button>
+                </div>
+
+                {/* Mobile Action Controls */}
+                <div className="flex md:hidden items-center gap-1 shrink-0 relative">
+                  <button
+                    onClick={() => setIsQuickTranslatorOpen(true)}
+                    className="w-9 h-9 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition-all cursor-pointer active:scale-95"
+                    title="Quick Translator"
+                  >
+                    <Languages className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    className="w-9 h-9 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/50 flex items-center justify-center transition-all cursor-pointer active:scale-95"
+                    title="More actions"
+                  >
+                    <MoreVertical className="w-4 h-4" />
+                  </button>
+
+                  {/* Mobile Dropdown Menu */}
+                  {mobileMenuOpen && (
+                    <div
+                      className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute top-16 right-3 w-56 rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-2 flex flex-col gap-1 animate-scaleUp z-50"
+                      >
+                        <button
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            handleSummarize();
+                          }}
+                          className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-amber-300 hover:bg-slate-800/80 rounded-xl transition-colors text-left cursor-pointer"
+                        >
+                          <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                          <span>AI Summarize</span>
+                        </button>
+
+                        {activeConversation.type === "group" && (
+                          <>
+                            <button
+                              onClick={() => {
+                                setMobileMenuOpen(false);
+                                setIsEventModalOpen(true);
+                              }}
+                              className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-emerald-400 hover:bg-slate-800/80 rounded-xl transition-colors text-left cursor-pointer"
+                            >
+                              <CalendarPlus className="w-4 h-4 text-emerald-400 shrink-0" />
+                              <span>Schedule Event</span>
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setMobileMenuOpen(false);
+                                setIsGroupDetailsOpen(true);
+                              }}
+                              className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800/80 rounded-xl transition-colors text-left cursor-pointer"
+                            >
+                              <Users className="w-4 h-4 text-emerald-400 shrink-0" />
+                              <span>Members ({activeConversation.participants.length})</span>
+                            </button>
+                          </>
+                        )}
+
+                        <div className="my-1 border-t border-slate-800" />
+
+                        <button
+                          onClick={() => {
+                            setMobileMenuOpen(false);
+                            setIsSecurityModalOpen(true);
+                          }}
+                          className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800/80 rounded-xl transition-colors text-left cursor-pointer"
+                        >
+                          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <span>E2EE Security Info</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1322,33 +1430,113 @@ export default function ChatPage() {
                             </div>
                           </div>
 
-                          {/* Quick message actions on hover */}
-                          <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity self-center shrink-0">
-                            <button
-                              onClick={() => setReplyTo(msg)}
-                              className="p-1 rounded-lg text-slate-500 hover:text-white transition-colors cursor-pointer"
-                              title="Reply"
-                            >
-                              <Reply className="w-3.5 h-3.5" />
-                            </button>
-
-                            {isMe && msg.type === "text" && (
+                          {/* Message actions: hover on desktop, popup menu on mobile */}
+                          <div className="relative self-center shrink-0">
+                            {/* Desktop hover actions */}
+                            <div className="hidden md:flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
-                                onClick={() => handleStartEditMessage(msg)}
-                                className="p-1 rounded-lg text-slate-500 hover:text-amber-400 transition-colors cursor-pointer"
-                                title="Edit Message"
+                                onClick={() => setReplyTo(msg)}
+                                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                                title="Reply"
                               >
-                                <Pencil className="w-3.5 h-3.5" />
+                                <Reply className="w-3.5 h-3.5" />
                               </button>
-                            )}
+                              <button
+                                onClick={() => handleCopyMessage(msg)}
+                                className="p-1 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                                title="Copy Text"
+                              >
+                                {copiedMessageId === msg.id ? (
+                                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                ) : (
+                                  <Copy className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+                              {isMe && msg.type === "text" && (
+                                <button
+                                  onClick={() => handleStartEditMessage(msg)}
+                                  className="p-1 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                                  title="Edit Message"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                              <button
+                                onClick={() => setDeletingMessage(msg)}
+                                className="p-1 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                                title="Delete Message"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
 
-                            <button
-                              onClick={() => setDeletingMessage(msg)}
-                              className="p-1 rounded-lg text-slate-500 hover:text-rose-400 transition-colors cursor-pointer"
-                              title="Delete Message"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            {/* Mobile action trigger (three dots) */}
+                            <div className="md:hidden">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveMessageActionId(activeMessageActionId === msg.id ? null : msg.id);
+                                }}
+                                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                                  activeMessageActionId === msg.id
+                                    ? "bg-slate-800 text-white"
+                                    : "text-slate-500 hover:text-slate-300"
+                                }`}
+                                title="Message options"
+                              >
+                                <MoreVertical className="w-3.5 h-3.5" />
+                              </button>
+
+                              {/* Mobile Popover Menu */}
+                              {activeMessageActionId === msg.id && (
+                                <div
+                                  onClick={(e) => e.stopPropagation()}
+                                  className={`absolute z-30 bottom-full mb-1 ${
+                                    isMe ? "right-0" : "left-0"
+                                  } min-w-[130px] bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 flex flex-col gap-1 animate-scaleUp`}
+                                >
+                                  <button
+                                    onClick={() => {
+                                      setReplyTo(msg);
+                                      setActiveMessageActionId(null);
+                                    }}
+                                    className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors text-left cursor-pointer"
+                                  >
+                                    <Reply className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                    <span>Reply</span>
+                                  </button>
+                                  <button
+                                    onClick={() => handleCopyMessage(msg)}
+                                    className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors text-left cursor-pointer"
+                                  >
+                                    <Copy className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                                    <span>{copiedMessageId === msg.id ? "Copied!" : "Copy"}</span>
+                                  </button>
+                                  {isMe && msg.type === "text" && (
+                                    <button
+                                      onClick={() => {
+                                        handleStartEditMessage(msg);
+                                        setActiveMessageActionId(null);
+                                      }}
+                                      className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-slate-300 hover:text-amber-400 hover:bg-slate-800 rounded-xl transition-colors text-left cursor-pointer"
+                                    >
+                                      <Pencil className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                                      <span>Edit</span>
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => {
+                                      setDeletingMessage(msg);
+                                      setActiveMessageActionId(null);
+                                    }}
+                                    className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors text-left cursor-pointer"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                                    <span>Delete</span>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1360,41 +1548,41 @@ export default function ChatPage() {
 
               {/* Edit Message Banner */}
               {editingMessage && (
-                <div className="px-4 py-2 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs animate-fadeIn">
+                <div className="px-3 sm:px-4 py-2 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs animate-fadeIn shrink-0">
                   <div className="flex items-center gap-2 text-slate-300 truncate">
                     <Pencil className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                     <span className="text-amber-300 font-semibold shrink-0">Editing Message:</span>
-                    <span className="text-slate-400 truncate max-w-sm">{editingMessage.content}</span>
+                    <span className="text-slate-400 truncate max-w-xs sm:max-w-sm">{editingMessage.content}</span>
                   </div>
-                  <button onClick={handleCancelEditMessage} className="text-slate-500 hover:text-white p-1 cursor-pointer" title="Cancel Edit">
-                    <X className="w-3.5 h-3.5" />
+                  <button onClick={handleCancelEditMessage} className="text-slate-500 hover:text-white p-1 cursor-pointer shrink-0" title="Cancel Edit">
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               )}
 
               {/* Reply Preview Banner */}
               {replyTo && (
-                <div className="px-4 py-2 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs">
+                <div className="px-3 sm:px-4 py-2 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs shrink-0">
                   <div className="flex items-center gap-2 text-slate-300 truncate">
-                    <Reply className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Replying to <strong>{replyTo.sender_name}</strong>: </span>
-                    <span className="text-slate-400 truncate max-w-sm">{replyTo.content}</span>
+                    <Reply className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span className="truncate">Replying to <strong>{replyTo.sender_name}</strong>: </span>
+                    <span className="text-slate-400 truncate max-w-xs sm:max-w-sm">{replyTo.content}</span>
                   </div>
-                  <button onClick={() => setReplyTo(null)} className="text-slate-500 hover:text-white p-1">
-                    <X className="w-3.5 h-3.5" />
+                  <button onClick={() => setReplyTo(null)} className="text-slate-500 hover:text-white p-1 cursor-pointer shrink-0">
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               )}
 
               {/* Input Area */}
-              <div className="p-3 sm:p-4 border-t border-slate-800/80 bg-slate-900/60 backdrop-blur-md">
+              <div className="p-2.5 sm:p-4 border-t border-slate-800/80 bg-slate-900/70 backdrop-blur-xl shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
                 {sendError && (
-                  <div className="mb-2 text-xs text-rose-400 flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20">
-                    <AlertTriangle className="w-3.5 h-3.5" />
+                  <div className="mb-2 text-xs text-rose-400 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                    <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
                     <span>{sendError}</span>
                   </div>
                 )}
-                <form onSubmit={handleSendMessage} className="flex items-end gap-2">
+                <form onSubmit={handleSendMessage} className="flex items-end gap-1.5 sm:gap-2">
                   <div className="flex-1 relative rounded-2xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/60 transition-all">
                     <textarea
                       ref={textareaRef}
@@ -1406,15 +1594,15 @@ export default function ChatPage() {
                       }}
                       onKeyDown={handleKeyDown}
                       rows={1}
-                      placeholder={`Write a message in ${profile?.native_language || "your language"}... (Enter to send)`}
-                      className="w-full bg-transparent px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none resize-none max-h-32"
+                      placeholder={`Write in ${profile?.native_language || "your language"}...`}
+                      className="w-full bg-transparent px-3.5 py-2.5 sm:px-4 sm:py-3 text-base sm:text-sm text-white placeholder-slate-500 focus:outline-none resize-none max-h-32 min-h-[44px]"
                     />
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setIsQuickTranslatorOpen(true)}
-                    className="p-3 rounded-2xl bg-slate-950/80 hover:bg-slate-800 text-slate-400 hover:text-emerald-400 border border-slate-800 transition-all cursor-pointer shrink-0"
+                    className="w-11 h-11 rounded-2xl bg-slate-950/80 hover:bg-slate-800 text-slate-400 hover:text-emerald-400 border border-slate-800 flex items-center justify-center transition-all cursor-pointer active:scale-95 shrink-0"
                     title="Translate text or voice"
                   >
                     <Languages className="w-5 h-5" />
@@ -1423,7 +1611,7 @@ export default function ChatPage() {
                   <button
                     type="submit"
                     disabled={!messageText.trim() || isSending}
-                    className="p-3 rounded-2xl bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md shadow-emerald-500/20 cursor-pointer shrink-0"
+                    className="w-11 h-11 rounded-2xl bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all shadow-md shadow-emerald-500/20 cursor-pointer shrink-0"
                   >
                     {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                   </button>
@@ -1434,7 +1622,8 @@ export default function ChatPage() {
                     <Lock className="w-3 h-3 text-emerald-400" />
                     End-to-End Encrypted
                   </span>
-                  <span>Shift+Enter for new line</span>
+                  <span className="hidden sm:inline">Shift+Enter for new line</span>
+                  <span className="sm:hidden text-[10px] text-slate-500">Private Session</span>
                 </div>
               </div>
             </>
@@ -1461,14 +1650,14 @@ export default function ChatPage() {
 
       {/* NEW CHAT / GROUP MODAL */}
       {isNewChatModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-2xl animate-scaleUp">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-md max-h-[90dvh] flex flex-col rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl animate-scaleUp overflow-hidden">
+            <div className="flex items-center justify-between mb-4 shrink-0">
               <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-950/70 border border-slate-800">
                 <button
                   type="button"
                   onClick={() => setNewChatTab("direct")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${newChatTab === "direct"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${newChatTab === "direct"
                       ? "bg-emerald-500 text-slate-950 shadow-md"
                       : "text-slate-400 hover:text-white"
                     }`}
@@ -1478,7 +1667,7 @@ export default function ChatPage() {
                 <button
                   type="button"
                   onClick={() => setNewChatTab("group")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${newChatTab === "group"
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${newChatTab === "group"
                       ? "bg-emerald-500 text-slate-950 shadow-md"
                       : "text-slate-400 hover:text-white"
                     }`}
@@ -1489,27 +1678,27 @@ export default function ChatPage() {
 
               <button
                 onClick={closeNewChatModal}
-                className="text-slate-500 hover:text-white p-1 rounded-lg transition-colors"
+                className="text-slate-500 hover:text-white p-2 rounded-xl transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {newChatTab === "direct" ? (
-              <>
-                <div className="relative mb-4">
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="relative mb-3 shrink-0">
                   <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5" />
                   <input
                     type="text"
                     value={userSearchTerm}
                     onChange={(e) => handleUserSearchChange(e.target.value)}
                     placeholder="Search by @username or email..."
-                    className="w-full rounded-2xl bg-slate-950 border border-slate-800 pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/60"
+                    className="w-full rounded-2xl bg-slate-950 border border-slate-800 pl-10 pr-4 py-2.5 sm:py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/60"
                     autoFocus
                   />
                 </div>
 
-                <div className="max-h-64 overflow-y-auto divide-y divide-slate-800/40">
+                <div className="flex-1 overflow-y-auto divide-y divide-slate-800/40 pr-1">
                   {isSearchingUsers ? (
                     <div className="p-4 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
                       <Loader2 className="w-4 h-4 animate-spin text-emerald-400" /> Searching users...
@@ -1524,20 +1713,20 @@ export default function ChatPage() {
                         key={target.id}
                         className="p-3 flex items-center justify-between hover:bg-slate-800/40 rounded-xl transition-colors"
                       >
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 font-bold text-xs">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 font-bold text-xs shrink-0">
                             {(target.full_name || target.username).charAt(0).toUpperCase()}
                           </div>
-                          <div>
-                            <p className="text-sm font-semibold text-white">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-white truncate">
                               {target.full_name || target.username}
                             </p>
-                            <p className="text-xs text-slate-400">@{target.username} · {target.native_language}</p>
+                            <p className="text-xs text-slate-400 truncate">@{target.username} · {target.native_language}</p>
                           </div>
                         </div>
                         <button
                           onClick={() => handleStartChatWithUser(target.id)}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold hover:bg-emerald-400 transition-colors cursor-pointer"
+                          className="px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold hover:bg-emerald-400 transition-colors cursor-pointer shrink-0 ml-2"
                         >
                           Chat
                         </button>
@@ -1545,9 +1734,9 @@ export default function ChatPage() {
                     ))
                   )}
                 </div>
-              </>
+              </div>
             ) : (
-              <form onSubmit={handleCreateGroup} className="space-y-4">
+              <form onSubmit={handleCreateGroup} className="space-y-4 flex-1 overflow-y-auto pr-1">
                 {groupError && (
                   <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
@@ -1613,7 +1802,7 @@ export default function ChatPage() {
                 </div>
 
                 {/* Member Search Results */}
-                <div className="max-h-48 overflow-y-auto divide-y divide-slate-800/40 border border-slate-800/60 rounded-2xl bg-slate-950/40">
+                <div className="max-h-40 overflow-y-auto divide-y divide-slate-800/40 border border-slate-800/60 rounded-2xl bg-slate-950/40">
                   {isSearchingUsers ? (
                     <div className="p-3 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
                       <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" /> Searching...
@@ -1678,105 +1867,107 @@ export default function ChatPage() {
 
       {/* SETTINGS / PROFILE MODAL */}
       {isSettingsOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-md max-h-[90dvh] flex flex-col rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between mb-4 sm:mb-6 shrink-0">
+              <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                 <Settings className="w-5 h-5 text-emerald-400" /> Profile & Settings
               </h3>
-              <button onClick={() => setIsSettingsOpen(false)} className="text-slate-500 hover:text-white">
+              <button onClick={() => setIsSettingsOpen(false)} className="text-slate-500 hover:text-white p-2 rounded-xl transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Profile Info */}
-            <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 mb-5 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center font-bold text-emerald-400 text-base">
-                {profile?.full_name?.charAt(0).toUpperCase() || "U"}
+            <div className="flex-1 overflow-y-auto pr-1 space-y-4">
+              {/* Profile Info */}
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center font-bold text-emerald-400 text-base shrink-0">
+                  {profile?.full_name?.charAt(0).toUpperCase() || "U"}
+                </div>
+                <div className="min-w-0">
+                  <h4 className="font-bold text-white text-sm truncate">{profile?.full_name}</h4>
+                  <p className="text-xs text-slate-400 truncate">@{profile?.username}</p>
+                  <p className="text-xs text-slate-500 truncate">{profile?.email}</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <h4 className="font-bold text-white text-sm truncate">{profile?.full_name}</h4>
-                <p className="text-xs text-slate-400">@{profile?.username}</p>
-                <p className="text-xs text-slate-500 truncate">{profile?.email}</p>
-              </div>
-            </div>
 
-            {/* Native Language Select */}
-            <div className="mb-5">
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                Your Native Language
-              </label>
-              <div className="relative rounded-2xl bg-slate-950 border border-slate-800">
-                <Globe className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5 pointer-events-none" />
-                <select
-                  value={profile?.native_language || "English"}
-                  onChange={(e) => updateLanguage(e.target.value)}
-                  className="w-full bg-transparent pl-10 pr-4 py-3 text-sm text-white rounded-2xl appearance-none cursor-pointer focus:outline-none"
+              {/* Native Language Select */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  Your Native Language
+                </label>
+                <div className="relative rounded-2xl bg-slate-950 border border-slate-800">
+                  <Globe className="w-4 h-4 text-slate-500 absolute left-3.5 top-3.5 pointer-events-none" />
+                  <select
+                    value={profile?.native_language || "English"}
+                    onChange={(e) => updateLanguage(e.target.value)}
+                    className="w-full bg-transparent pl-10 pr-4 py-3 text-sm text-white rounded-2xl appearance-none cursor-pointer focus:outline-none"
+                  >
+                    {LANGUAGES.map((l) => (
+                      <option key={l.value} value={l.value} className="bg-slate-900 text-white">
+                        {l.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Incoming messages will be translated into this language.
+                </p>
+              </div>
+
+              {/* E2EE Backup PIN Section */}
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-white flex items-center gap-1.5">
+                    <KeyRound className="w-4 h-4 text-emerald-400" /> E2EE Backup PIN
+                  </span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${hasBackup ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"}`}>
+                    {hasBackup ? "Backed Up" : "Not Set"}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mb-3">
+                  {hasBackup
+                    ? "Your keys are safely backed up with a secure PIN. You can change your PIN anytime."
+                    : "Set a 4-8 digit PIN to back up your keys so you never lose message history when switching devices."}
+                </p>
+                <button
+                  onClick={() => {
+                    setBackupError("");
+                    setBackupPin("");
+                    setIsBackupModalOpen(true);
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition-colors cursor-pointer"
                 >
-                  {LANGUAGES.map((l) => (
-                    <option key={l.value} value={l.value} className="bg-slate-900 text-white">
-                      {l.label}
-                    </option>
-                  ))}
-                </select>
+                  {hasBackup ? "Update Backup PIN" : "Setup Backup PIN"}
+                </button>
               </div>
-              <p className="text-[11px] text-slate-500 mt-1">
-                Incoming messages will be translated into this language.
-              </p>
-            </div>
 
-            {/* E2EE Backup PIN Section */}
-            <div className="mb-5 p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-white flex items-center gap-1.5">
-                  <KeyRound className="w-4 h-4 text-emerald-400" /> E2EE Backup PIN
-                </span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${hasBackup ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"}`}>
-                  {hasBackup ? "Backed Up" : "Not Set"}
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 mb-3">
-                {hasBackup
-                  ? "Your keys are safely backed up with a secure PIN. You can change your PIN anytime."
-                  : "Set a 4-8 digit PIN to back up your keys so you never lose message history when switching devices."}
-              </p>
+              {/* Sign Out Button */}
               <button
-                onClick={() => {
-                  setBackupError("");
-                  setBackupPin("");
-                  setIsBackupModalOpen(true);
+                onClick={async () => {
+                  await signOut();
+                  setIsSettingsOpen(false);
+                  router.replace("/login");
                 }}
-                className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold transition-colors"
+                className="w-full py-3 px-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
-                {hasBackup ? "Update Backup PIN" : "Setup Backup PIN"}
+                <LogOut className="w-4 h-4" /> Sign Out
               </button>
             </div>
-
-            {/* Sign Out Button */}
-            <button
-              onClick={async () => {
-                await signOut();
-                setIsSettingsOpen(false);
-                router.replace("/login");
-              }}
-              className="w-full py-3 px-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-500/20 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
-            >
-              <LogOut className="w-4 h-4" /> Sign Out
-            </button>
           </div>
         </div>
       )}
 
       {/* BACKUP / RECOVER KEYS MODAL */}
       {isBackupModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-sm rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-sm max-h-[90dvh] flex flex-col rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl overflow-y-auto">
+            <div className="flex items-center justify-between mb-4 shrink-0">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <KeyRound className="w-4 h-4 text-emerald-400" />
                 {needsKeyRecovery ? "Recover E2EE Keys" : "Set Backup PIN"}
               </h3>
-              <button onClick={() => setIsBackupModalOpen(false)} className="text-slate-500 hover:text-white">
+              <button onClick={() => setIsBackupModalOpen(false)} className="text-slate-500 hover:text-white p-2 rounded-xl transition-colors cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -1820,7 +2011,7 @@ export default function ChatPage() {
               <button
                 type="submit"
                 disabled={isBackingUp || backupPin.length < 4}
-                className="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-colors disabled:opacity-50"
+                className="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {isBackingUp ? (
                   <span className="flex items-center justify-center gap-2">
@@ -1839,18 +2030,18 @@ export default function ChatPage() {
 
       {/* SECURITY DETAILS MODAL */}
       {isSecurityModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-md max-h-[90dvh] flex flex-col rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between mb-4 shrink-0">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-400" /> Gabvia Security Architecture
               </h3>
-              <button onClick={() => setIsSecurityModalOpen(false)} className="text-slate-500 hover:text-white">
+              <button onClick={() => setIsSecurityModalOpen(false)} className="text-slate-500 hover:text-white p-2 rounded-xl transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-3.5 text-xs text-slate-300">
+            <div className="space-y-3.5 text-xs text-slate-300 flex-1 overflow-y-auto pr-1">
               <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80">
                 <h4 className="font-bold text-emerald-400 flex items-center gap-1.5 mb-1">
                   <Lock className="w-3.5 h-3.5" /> Military-Grade End-to-End Encryption
@@ -1881,7 +2072,7 @@ export default function ChatPage() {
 
             <button
               onClick={() => setIsSecurityModalOpen(false)}
-              className="mt-5 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition-colors"
+              className="mt-4 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition-colors shrink-0 cursor-pointer"
             >
               Close
             </button>
@@ -1891,7 +2082,7 @@ export default function ChatPage() {
 
       {/* FLOATING MILESTONE CELEBRATION TOAST */}
       {milestoneToast && (
-        <div className="fixed top-4 right-4 z-50 animate-bounce p-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-emerald-500 text-slate-950 font-bold text-xs shadow-2xl flex items-center gap-3">
+        <div className="fixed top-4 right-4 z-50 animate-bounce p-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-emerald-500 text-slate-950 font-bold text-xs shadow-2xl flex items-center gap-3 max-w-[calc(100vw-2rem)]">
           <Award className="w-6 h-6 text-slate-950 shrink-0" />
           <div>
             <p className="text-xs font-black">🎉 Milestone Unlocked!</p>
@@ -1904,14 +2095,14 @@ export default function ChatPage() {
 
       {/* SUMMARIZE CHAT MODAL */}
       {isSummarizeOpen && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-xl rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-2xl animate-scaleUp">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-xl max-h-[90dvh] flex flex-col rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl animate-scaleUp overflow-hidden">
+            <div className="flex items-center justify-between mb-4 shrink-0">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-amber-400" />
                 AI Conversation Summary
               </h3>
-              <button onClick={() => setIsSummarizeOpen(false)} className="text-slate-500 hover:text-white transition-colors cursor-pointer">
+              <button onClick={() => setIsSummarizeOpen(false)} className="text-slate-500 hover:text-white p-2 rounded-xl transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1922,12 +2113,12 @@ export default function ChatPage() {
                 <p className="text-xs text-slate-400">Analyzing conversation with AI...</p>
               </div>
             ) : (
-              <div>
-                <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 leading-relaxed max-h-[60vh] overflow-y-auto">
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-xs text-slate-200 leading-relaxed flex-1 overflow-y-auto">
                   <FormattedSummary content={summaryText} />
                 </div>
 
-                <div className="mt-4 flex items-center justify-between gap-3">
+                <div className="mt-4 flex items-center justify-between gap-3 shrink-0">
                   <button
                     onClick={() => {
                       if (!summaryText) return;
@@ -1963,8 +2154,8 @@ export default function ChatPage() {
 
       {/* GROUP DETAILS & MEMBERS MODAL */}
       {isGroupDetailsOpen && activeConversation && activeConversation.type === "group" && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-2xl animate-scaleUp max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl animate-scaleUp max-h-[90dvh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-4 shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
@@ -2200,14 +2391,14 @@ export default function ChatPage() {
 
       {/* SCHEDULE EVENT MODAL */}
       {isEventModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-2xl animate-scaleUp">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-md max-h-[90dvh] flex flex-col rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl animate-scaleUp overflow-hidden">
+            <div className="flex items-center justify-between mb-4 shrink-0">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <CalendarPlus className="w-5 h-5 text-emerald-400" />
                 Schedule Group Event
               </h3>
-              <button onClick={() => setIsEventModalOpen(false)} className="text-slate-500 hover:text-white">
+              <button onClick={() => setIsEventModalOpen(false)} className="text-slate-500 hover:text-white p-2 rounded-xl transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -2219,7 +2410,7 @@ export default function ChatPage() {
               </div>
             )}
 
-            <form onSubmit={handleScheduleEvent} className="space-y-4">
+            <form onSubmit={handleScheduleEvent} className="space-y-4 flex-1 overflow-y-auto pr-1">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                   Event Title
@@ -2280,11 +2471,11 @@ export default function ChatPage() {
 
       {/* EARLY ADOPTER 1,000 MILESTONE MODAL */}
       {isMilestoneModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-2xl animate-scaleUp">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-md max-h-[90dvh] flex flex-col rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl animate-scaleUp overflow-hidden">
+            <div className="flex items-center justify-between mb-4 shrink-0">
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+                <div className="w-9 h-9 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
                   <Gift className="w-5 h-5" />
                 </div>
                 <div>
@@ -2294,99 +2485,101 @@ export default function ChatPage() {
                   <p className="text-[11px] text-slate-400">Exclusive new user reward campaign</p>
                 </div>
               </div>
-              <button onClick={() => setIsMilestoneModalOpen(false)} className="text-slate-500 hover:text-white">
+              <button onClick={() => setIsMilestoneModalOpen(false)} className="text-slate-500 hover:text-white p-2 rounded-xl transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Progress Card */}
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-slate-950 to-emerald-500/10 border border-amber-500/30 mb-4">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-xs font-bold text-white">Campaign Progress</span>
-                <span className="text-xs font-extrabold text-amber-400">
-                  {claimedMilestonesPoints} / 1,000 GAB Points
-                </span>
-              </div>
-              <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-amber-400 to-emerald-400 transition-all duration-500 rounded-full"
-                  style={{ width: `${Math.min(100, (claimedMilestonesPoints / 1000) * 100)}%` }}
-                />
-              </div>
-              <p className="text-[10px] text-slate-400 mt-2">
-                {claimedMilestonesCount} of {ALL_MILESTONES.length} milestones claimed. GAB Points power your real-time multilingual translations.
-              </p>
-            </div>
-
-            {/* Milestones Checklist */}
-            <div className="space-y-2 mb-4 max-h-56 overflow-y-auto pr-1">
-              {ALL_MILESTONES.map((key) => {
-                const info = MILESTONE_LABELS[key];
-                const isClaimed = !!profile?.bonus_claims?.[key];
-                return (
+            <div className="flex-1 overflow-y-auto pr-1 space-y-4">
+              {/* Progress Card */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-slate-950 to-emerald-500/10 border border-amber-500/30">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-bold text-white">Campaign Progress</span>
+                  <span className="text-xs font-extrabold text-amber-400">
+                    {claimedMilestonesPoints} / 1,000 GAB Points
+                  </span>
+                </div>
+                <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
                   <div
-                    key={key}
-                    className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-colors ${isClaimed
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-white"
-                        : "bg-slate-950/40 border-slate-800 text-slate-300"
-                      }`}
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      {isClaimed ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                      ) : (
-                        <Circle className="w-4 h-4 text-slate-500 shrink-0" />
-                      )}
-                      <div className="min-w-0">
-                        <p className={`text-xs font-bold truncate ${isClaimed ? "text-emerald-300" : "text-white"}`}>
-                          {info.title}
-                        </p>
-                        <p className="text-[10px] text-slate-400 truncate">{info.desc}</p>
-                      </div>
-                    </div>
-                    <span
-                      className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${isClaimed
-                          ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                          : "bg-slate-800 text-slate-400"
+                    className="h-full bg-gradient-to-r from-amber-400 to-emerald-400 transition-all duration-500 rounded-full"
+                    style={{ width: `${Math.min(100, (claimedMilestonesPoints / 1000) * 100)}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-2">
+                  {claimedMilestonesCount} of {ALL_MILESTONES.length} milestones claimed. GAB Points power your real-time multilingual translations.
+                </p>
+              </div>
+
+              {/* Milestones Checklist */}
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {ALL_MILESTONES.map((key) => {
+                  const info = MILESTONE_LABELS[key];
+                  const isClaimed = !!profile?.bonus_claims?.[key];
+                  return (
+                    <div
+                      key={key}
+                      className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-colors ${isClaimed
+                          ? "bg-emerald-500/10 border-emerald-500/30 text-white"
+                          : "bg-slate-950/40 border-slate-800 text-slate-300"
                         }`}
                     >
-                      +{info.points} pts
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Referral Share Box for the Invite Milestone */}
-            <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                  Your Referral Code
-                </p>
-                <p className="text-xs font-bold text-white truncate">
-                  {profile?.referral_code || profile?.username || "—"}
-                </p>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {isClaimed ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        ) : (
+                          <Circle className="w-4 h-4 text-slate-500 shrink-0" />
+                        )}
+                        <div className="min-w-0">
+                          <p className={`text-xs font-bold truncate ${isClaimed ? "text-emerald-300" : "text-white"}`}>
+                            {info.title}
+                          </p>
+                          <p className="text-[10px] text-slate-400 truncate">{info.desc}</p>
+                        </div>
+                      </div>
+                      <span
+                        className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${isClaimed
+                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                            : "bg-slate-800 text-slate-400"
+                          }`}
+                      >
+                        +{info.points} pts
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-              <button
-                onClick={() => {
-                  const code = profile?.referral_code || profile?.username || "";
-                  const link = `https://gabvia.app/register?ref=${code}`;
-                  navigator.clipboard.writeText(link);
-                  setReferralCopied(true);
-                  setTimeout(() => setReferralCopied(false), 2000);
-                }}
-                className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
-              >
-                {referralCopied ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-emerald-400" /> Link Copied
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" /> Copy Invite Link
-                  </>
-                )}
-              </button>
+
+              {/* Referral Share Box for the Invite Milestone */}
+              <div className="p-3 rounded-2xl bg-slate-950 border border-slate-800 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Your Referral Code
+                  </p>
+                  <p className="text-xs font-bold text-white truncate">
+                    {profile?.referral_code || profile?.username || "—"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    const code = profile?.referral_code || profile?.username || "";
+                    const link = `https://gabvia.app/register?ref=${code}`;
+                    navigator.clipboard.writeText(link);
+                    setReferralCopied(true);
+                    setTimeout(() => setReferralCopied(false), 2000);
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0"
+                >
+                  {referralCopied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-400" /> Link Copied
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" /> Copy Invite Link
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -2394,8 +2587,8 @@ export default function ChatPage() {
 
       {/* DELETE MESSAGE CONFIRM MODAL */}
       {deletingMessage && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-sm rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-2xl animate-scaleUp space-y-4">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-sm rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl animate-scaleUp space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
                 <Trash2 className="w-5 h-5" />
@@ -2466,14 +2659,14 @@ export default function ChatPage() {
 
       {/* EDIT EVENT MODAL */}
       {editingEvent && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-3xl bg-slate-900 border border-slate-800 p-6 shadow-2xl animate-scaleUp">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+          <div className="w-full max-w-md max-h-[90dvh] flex flex-col rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl animate-scaleUp overflow-hidden">
+            <div className="flex items-center justify-between mb-4 shrink-0">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <Pencil className="w-5 h-5 text-amber-400" />
                 Edit Group Event
               </h3>
-              <button onClick={() => setEditingEvent(null)} className="text-slate-500 hover:text-white cursor-pointer">
+              <button onClick={() => setEditingEvent(null)} className="text-slate-500 hover:text-white p-2 rounded-xl transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -2485,7 +2678,7 @@ export default function ChatPage() {
               </div>
             )}
 
-            <form onSubmit={handleUpdateEvent} className="space-y-4">
+            <form onSubmit={handleUpdateEvent} className="space-y-4 flex-1 overflow-y-auto pr-1">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                   Event Title
@@ -2526,7 +2719,7 @@ export default function ChatPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-2 justify-end pt-1">
+              <div className="flex items-center gap-2 justify-end pt-1 shrink-0">
                 <button
                   type="button"
                   disabled={isUpdatingEvent}
