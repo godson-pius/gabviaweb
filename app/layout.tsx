@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Hanken_Grotesk } from 'next/font/google';
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
 
 const hankenGrotesk = Hanken_Grotesk({
   subsets: ["latin"],
@@ -31,10 +32,14 @@ export const metadata: Metadata = {
   icons: { icon: "/logo.png" },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${hankenGrotesk.className} ${hankenGrotesk.variable}`}>{children}</body>
+      <body className={`${hankenGrotesk.className} ${hankenGrotesk.variable}`}>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }

@@ -1,0 +1,112 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isConversationParticipant(conversationId) {
+      return isAuthenticated() && 
+        request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+    }
+
+    // Profiles Collection
+    match /profiles/{userId} {
+      // Allow read for username login resolution, registration availability checks, and profile display
+      allow read: if true;
+
+      // Users can only create their own profile matching their Auth UID
+      allow create: if isOwner(userId) 
+        && request.resource.data.id == userId
+        && request.resource.data.username is string
+        && request.resource.data.email is string;
+
+      // Users can only update their own profile; cannot alter other users' data
+      allow update: if isOwner(userId);
+
+      // Accounts can only be deleted by self or admin
+      allow delete: if isOwner(userId);
+    }
+
+    // Conversations Collection
+    match /conversations/{conversationId} {
+      // Users can read conversations they are participants of OR pending invitees of
+      allow read: if isAuthenticated() && (
+        request.auth.uid in resource.data.participants ||
+        request.auth.uid in resource.data.pending_participants
+      );
+
+      // Users can create a conversation only if they include themselves as a participant
+      allow create: if isAuthenticated() 
+        && request.auth.uid in request.resource.data.participants;
+
+      // Existing participants can update metadata, OR pending invitees can accept/decline their invite
+      allow update: if isAuthenticated() && (
+        request.auth.uid in resource.data.participants ||
+        request.auth.uid in resource.data.pending_participants
+      );
+
+      // Only the group creator / admin can delete the conversation
+      allow delete: if isAuthenticated() && resource.data.admin_id == request.auth.uid;
+
+      // Messages Subcollection
+      match /messages/{messageId} {
+        // Only conversation participants can read messages
+        allow read: if isConversationParticipant(conversationId);
+
+        // Only conversation participants can create messages, and sender_id MUST match auth.uid
+        allow create: if isConversationParticipant(conversationId)
+          && request.resource.data.sender_id == request.auth.uid;
+
+        // Only message sender can update (e.g. edit message), or participants can update delivery/read status
+        allow update: if isConversationParticipant(conversationId) && (
+          resource.data.sender_id == request.auth.uid ||
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'read_by', 'deleted_for'])
+        );
+
+        // Sender or conversation participants can delete for themselves
+        allow delete: if isConversationParticipant(conversationId);
+
+        // Translations Subcollection
+        match /translations/{translationId} {
+          allow read, write: if isConversationParticipant(conversationId);
+        }
+      }
+
+      // Events Subcollection
+      match /events/{eventId} {
+        allow read, write: if isConversationParticipant(conversationId);
+      }
+    }
+
+    // Scheduled Messages Collection
+    match /scheduled_messages/{messageId} {
+      allow read, update, delete: if isAuthenticated() && resource.data.sender_id == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.sender_id == request.auth.uid;
+    }
+
+    // Audit logs & Administrative Data
+    match /admin_audit_logs/{logId} {
+      allow read, write: if false; // Only accessed via secure server-side Admin SDK
+    }
+
+    // Payment Ledgers
+    match /payment_records/{recordId} {
+      allow read: if isAuthenticated() && resource.data.user_id == request.auth.uid;
+      allow write: if false; // Only server webhooks / Admin SDK can write payment records
+    }
+
+    // Waitlist collection
+    match /waitlist/{entry} {
+      allow create: if true; // Public waitlist signup
+      allow read, update, delete: if false;
+    }
+  }
+}

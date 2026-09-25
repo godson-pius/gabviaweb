@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const PLAY_STORE_URL =
@@ -171,9 +172,14 @@ const featureCards = [
 
 const faqItems = [
   {
+    question: "Can I use Gabvia on the web without installing the app?",
+    answer:
+      "Yes! You can register, sign in, and chat directly in your web browser. All direct conversations on the web are protected with client-side end-to-end encryption so your privacy is preserved whether on web or mobile.",
+  },
+  {
     question: "Where can I download Gabvia?",
     answer:
-      "Gabvia is officially live on Google Play! You can download the app directly to your Android device and start connecting across languages immediately.",
+      "Gabvia is officially live on Google Play! You can download the app directly to your Android device, or simply chat online right here on Gabvia Web.",
   },
   {
     question: "What is Gabvia?",
@@ -238,6 +244,12 @@ export default function Home() {
           <a href="#download" onClick={closeMenu}>
             Download
           </a>
+          <Link href="/translator" onClick={closeMenu} className="font-semibold text-slate-300 hover:text-emerald-400">
+            Translator
+          </Link>
+          <Link href="/chat" onClick={closeMenu} className="nav-link-chat font-semibold text-emerald-400">
+            Chat on Web
+          </Link>
         </div>
         <button
           className="theme-toggle"
@@ -249,14 +261,12 @@ export default function Home() {
           <Icon name={theme === "dark" ? "sun" : "moon"} size={16} />
           <span>{theme === "dark" ? "Light" : "Dark"}</span>
         </button>
-        <a
+        <Link
           className="nav-cta"
-          href={PLAY_STORE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
+          href="/chat"
         >
-          Get on Google Play <Icon name="arrow-up-right" size={15} />
-        </a>
+          Chat on Web <Icon name="arrow-right" size={15} />
+        </Link>
         <button
           className="menu-toggle"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
@@ -269,16 +279,23 @@ export default function Home() {
       <section className="hero shell" id="main-content">
         <div className="hero-copy">
           <div className="eyebrow">
-            <span className="eyebrow-dot" /> Now Live on Google Play
+            <span className="eyebrow-dot" /> Now Live on Web &amp; Google Play
           </div>
           <h1>
             Say it in your language. <em>Feel it in theirs.</em>
           </h1>
           <p className="hero-text">
             Gabvia is the multilingual chat app for conversations that cross borders, time
-            zones, and everything in between. Download now and start connecting.
+            zones, and everything in between. Chat directly in your browser or download the app.
           </p>
           <div className="hero-actions">
+            <Link
+              className="button button-accent"
+              href="/chat"
+              style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontWeight: "700" }}
+            >
+              <Icon name="spark" size={15} /> Chat on Web
+            </Link>
             <a
               className="button button-playstore"
               href={PLAY_STORE_URL}
@@ -305,7 +322,7 @@ export default function Home() {
               <i>M</i>
               <i>A</i>
             </span>
-            <span>Available on Android · Free to download</span>
+            <span>Now on Web &amp; Android · Free to register</span>
           </div>
         </div>
 
@@ -653,6 +670,7 @@ export default function Home() {
         <div className="footer-links">
           <a href="#why-gabvia">Why Gabvia</a>
           <a href="#features">Features</a>
+          <Link href="/translator">Translator</Link>
           <a href="#faq">FAQ</a>
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
