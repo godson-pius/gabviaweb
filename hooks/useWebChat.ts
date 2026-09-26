@@ -30,6 +30,12 @@ import { validateMessage } from "@/lib/security";
 import { translateText, isSameLanguageOrIdentical } from "@/lib/translation";
 import { sendPushNotifications, PushNotificationItem } from "@/lib/notifications";
 import { awardMilestonePoints } from "@/lib/rewards";
+import {
+  playMessageSound,
+  showWebNotification,
+  updateTabUnreadCount,
+  InAppMessageToast,
+} from "@/lib/webNotifications";
 
 const profileCache: Record<string, Profile> = {};
 const globalTranslationCache: Record<string, string> = {};
@@ -54,6 +60,15 @@ export function useWebChat() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [activeParticipantProfiles, setActiveParticipantProfiles] = useState<Record<string, Profile>>({});
   const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [incomingToast, setIncomingToast] = useState<InAppMessageToast | null>(null);
+
+  const activeConversationIdRef = useRef<string | null>(activeConversationId);
+  useEffect(() => {
+    activeConversationIdRef.current = activeConversationId;
+  }, [activeConversationId]);
+
+  const knownConversationsRef = useRef<Map<string, { lastMessageId?: string; lastMessageAt?: string; unreadCount: number }>>(new Map());
+  const isFirstConversationsLoadRef = useRef(true);
 
   const activeConversation = conversations.find((c) => c.id === activeConversationId) || null;
   const participantProfilesRef = useRef<Record<string, Profile>>({});
@@ -120,7 +135,84 @@ export function useWebChat() {
             })
           );
 
+          // Check for incoming notifications across conversations
+          if (isFirstConversationsLoadRef.current) {
+            snapshot.docs.forEach((docSnap) => {
+              const d = docSnap.data();
+              knownConversationsRef.current.set(docSnap.id, {
+                lastMessageId: d.last_message_id,
+                lastMessageAt: d.last_message_at?.toDate ? d.last_message_at.toDate().toISOString() : (d.last_message_at || ""),
+                unreadCount: (d.unread_count?.[user.uid] as number) || 0,
+              });
+            });
+            isFirstConversationsLoadRef.current = false;
+          } else {
+            snapshot.docChanges().forEach((change) => {
+              if (change.type === "modified" || change.type === "added") {
+                const docSnap = change.doc;
+                const cId = docSnap.id;
+                const d = docSnap.data();
+                const prev = knownConversationsRef.current.get(cId);
+                const newUnread = (d.unread_count?.[user.uid] as number) || 0;
+                const prevUnread = prev?.unreadCount || 0;
+                const newLastId = d.last_message_id || "";
+                const prevLastId = prev?.lastMessageId || "";
+
+                const isCurrentActive = cId === activeConversationIdRef.current;
+                const isSentByMe = d.last_sender_id === user.uid;
+
+                // Incoming notification if unread increased or new message arrived and not sent by current user
+                const hasNewIncoming =
+                  !isSentByMe &&
+                  ((newUnread > prevUnread) || (newLastId && newLastId !== prevLastId));
+
+                if (!isCurrentActive && hasNewIncoming) {
+                  playMessageSound();
+
+                  const otherUserId = (d.participants as string[])?.find((id) => id !== user.uid);
+                  const senderProfile = (d.last_sender_id ? profileCache[d.last_sender_id] : null) || (otherUserId ? profileCache[otherUserId] : null);
+                  const senderName = senderProfile?.username || senderProfile?.full_name || (d.type === "group" ? d.name : "Gabvia User");
+
+                  let preview = d.last_message || "New message received";
+                  if (preview.startsWith("{")) {
+                    preview = "🔒 Sent a secure message";
+                  }
+
+                  const title = d.type === "group" ? `${d.name || "Group"} • ${senderName}` : senderName;
+
+                  // 1. Browser Desktop Notification
+                  showWebNotification({
+                    title,
+                    body: preview,
+                    tag: cId,
+                    onClick: () => {
+                      setActiveConversationId(cId);
+                    },
+                  });
+
+                  // 2. In-App Toast Banner
+                  setIncomingToast({
+                    id: `${cId}-${Date.now()}`,
+                    conversationId: cId,
+                    senderName: title,
+                    messageText: preview,
+                    timestamp: Date.now(),
+                  });
+                }
+
+                // Update tracked state
+                knownConversationsRef.current.set(cId, {
+                  lastMessageId: newLastId,
+                  lastMessageAt: d.last_message_at?.toDate ? d.last_message_at.toDate().toISOString() : (d.last_message_at || ""),
+                  unreadCount: newUnread,
+                });
+              }
+            });
+          }
+
           setConversations(list);
+          const totalUnread = list.reduce((acc, c) => acc + ((c.unread_count?.[user.uid] as number) || 0), 0);
+          updateTabUnreadCount(totalUnread);
           setLoadingConversations(false);
         } catch (err) {
           console.warn("Conversations listener error:", err);
@@ -333,6 +425,9 @@ export function useWebChat() {
   useEffect(() => {
     if (!user || !activeConversationId) return;
 
+    let isInitialMessagesLoad = true;
+    const seenMessageIds = new Set<string>();
+
     const q = query(
       collection(db, "conversations", activeConversationId, "messages"),
       orderBy("created_at", "desc"),
@@ -342,6 +437,41 @@ export function useWebChat() {
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
+        // Track newly added messages from other users
+        if (isInitialMessagesLoad) {
+          snapshot.docs.forEach((docSnap) => seenMessageIds.add(docSnap.id));
+          isInitialMessagesLoad = false;
+        } else {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === "added" && !seenMessageIds.has(change.doc.id)) {
+              seenMessageIds.add(change.doc.id);
+              const mData = change.doc.data();
+              if (mData.sender_id !== user.uid) {
+                // Incoming message in active conversation!
+                playMessageSound();
+
+                // If tab is hidden or not focused, trigger desktop notification!
+                if (typeof document !== "undefined" && (document.hidden || !document.hasFocus())) {
+                  const senderProfile = participantProfilesRef.current[mData.sender_id] || profileCache[mData.sender_id];
+                  const senderName = senderProfile?.username || senderProfile?.full_name || "New message";
+                  let preview = mData.type === "audio" ? "🎤 Voice note" : mData.content;
+                  if (preview?.startsWith("{")) {
+                    preview = "🔒 Sent a secure message";
+                  }
+                  showWebNotification({
+                    title: activeConversation?.type === "group" ? `${activeConversation.name || "Group"} • ${senderName}` : senderName,
+                    body: preview || "Sent a message",
+                    tag: activeConversationId,
+                    onClick: () => {
+                      window.focus();
+                    },
+                  });
+                }
+              }
+            }
+          });
+        }
+
         const myLang = profileRef.current?.native_language || "English";
         const parsedMessages: Message[] = snapshot.docs
           .filter((docSnap) => {
@@ -556,6 +686,7 @@ export function useWebChat() {
       last_message: content,
       last_message_at: serverTimestamp(),
       last_message_id: newDoc.id,
+      last_sender_id: user.uid,
     };
 
     otherParticipants.forEach((pId) => {
@@ -1255,5 +1386,7 @@ export function useWebChat() {
     replyTo,
     setReplyTo,
     activeParticipantProfiles,
+    incomingToast,
+    clearIncomingToast: () => setIncomingToast(null),
   };
 }

@@ -12,6 +12,8 @@ import { Message, Profile } from "@/types/chat";
 import {
   AlertTriangle,
   Award,
+  Bell,
+  BellOff,
   Calendar,
   CalendarPlus,
   Check,
@@ -45,8 +47,22 @@ import {
   UserMinus,
   UserPlus,
   Users,
+  Volume2,
+  VolumeX,
   X,
 } from "lucide-react";
+import { NotificationToast } from "@/components/chat/NotificationToast";
+import { NotificationPermissionBanner } from "@/components/chat/NotificationPermissionBanner";
+import {
+  isSoundEnabled,
+  setSoundEnabled,
+  areNotificationsEnabled,
+  setNotificationsEnabled,
+  getNotificationPermission,
+  requestNotificationPermission,
+  playMessageSound,
+  showWebNotification,
+} from "@/lib/webNotifications";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -93,6 +109,8 @@ export default function ChatPage() {
     replyTo,
     setReplyTo,
     activeParticipantProfiles,
+    incomingToast,
+    clearIncomingToast,
   } = useWebChat();
 
   const [messageText, setMessageText] = useState("");
@@ -124,6 +142,19 @@ export default function ChatPage() {
   const [backupError, setBackupError] = useState("");
   const [backupSuccess, setBackupSuccess] = useState(false);
   const [isBackingUp, setIsBackingUp] = useState(false);
+
+  // Notification Settings State
+  const [soundActive, setSoundActive] = useState(true);
+  const [notifActive, setNotifActive] = useState(true);
+  const [browserPermission, setBrowserPermission] = useState<string>("default");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSoundActive(isSoundEnabled());
+      setNotifActive(areNotificationsEnabled());
+      setBrowserPermission(getNotificationPermission());
+    }
+  }, [isSettingsOpen]);
 
   // Summarize Modal State
   const [isSummarizeOpen, setIsSummarizeOpen] = useState(false);
@@ -780,6 +811,9 @@ export default function ChatPage() {
               )}
             </div>
           </div>
+
+          {/* Browser Notification Permission Banner */}
+          <NotificationPermissionBanner />
 
           {/* Group Invitations Banner */}
           {invitations.length > 0 && (
@@ -1942,6 +1976,137 @@ export default function ChatPage() {
                 </button>
               </div>
 
+              {/* Notifications & Sound Section */}
+              <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-white flex items-center gap-1.5">
+                    <Bell className="w-4 h-4 text-emerald-400" /> Notifications & Sound
+                  </span>
+                  <span
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                      browserPermission === "granted"
+                        ? "bg-emerald-500/10 text-emerald-400"
+                        : browserPermission === "denied"
+                        ? "bg-rose-500/10 text-rose-400"
+                        : "bg-amber-500/10 text-amber-400"
+                    }`}
+                  >
+                    {browserPermission === "granted"
+                      ? "Active"
+                      : browserPermission === "denied"
+                      ? "Blocked"
+                      : "Not Enabled"}
+                  </span>
+                </div>
+
+                {/* Sound Toggle */}
+                <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center gap-2">
+                    {soundActive ? (
+                      <Volume2 className="w-4 h-4 text-emerald-400" />
+                    ) : (
+                      <VolumeX className="w-4 h-4 text-slate-500" />
+                    )}
+                    <div>
+                      <p className="text-xs font-medium text-slate-200">Message Sound</p>
+                      <p className="text-[10px] text-slate-500">Play chime when messages arrive</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const next = !soundActive;
+                      setSoundActive(next);
+                      setSoundEnabled(next);
+                      if (next) playMessageSound();
+                    }}
+                    className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors cursor-pointer ${
+                      soundActive ? "bg-emerald-500" : "bg-slate-800"
+                    }`}
+                  >
+                    <div
+                      className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                        soundActive ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Browser Notifications Toggle / Request */}
+                <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center gap-2">
+                    {notifActive && browserPermission === "granted" ? (
+                      <Bell className="w-4 h-4 text-emerald-400" />
+                    ) : (
+                      <BellOff className="w-4 h-4 text-slate-500" />
+                    )}
+                    <div>
+                      <p className="text-xs font-medium text-slate-200">Browser Alerts</p>
+                      <p className="text-[10px] text-slate-500">
+                        {browserPermission === "granted"
+                          ? "Desktop & background notifications"
+                          : browserPermission === "denied"
+                          ? "Blocked in browser permissions"
+                          : "Prompt for browser permission"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {browserPermission === "granted" ? (
+                    <button
+                      onClick={() => {
+                        const next = !notifActive;
+                        setNotifActive(next);
+                        setNotificationsEnabled(next);
+                      }}
+                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors cursor-pointer ${
+                        notifActive ? "bg-emerald-500" : "bg-slate-800"
+                      }`}
+                    >
+                      <div
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                          notifActive ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        const res = await requestNotificationPermission();
+                        setBrowserPermission(res);
+                        if (res === "granted") {
+                          setNotifActive(true);
+                          playMessageSound();
+                          showWebNotification({
+                            title: "Notifications Enabled 🔔",
+                            body: "You're all set to receive message notifications on web!",
+                          });
+                        }
+                      }}
+                      disabled={browserPermission === "denied"}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      {browserPermission === "denied" ? "Blocked" : "Enable"}
+                    </button>
+                  )}
+                </div>
+
+                {/* Test Notification Button */}
+                <button
+                  onClick={() => {
+                    playMessageSound();
+                    showWebNotification({
+                      title: "Gabvia Web Chat",
+                      body: "Test notification: sound and alerts are working properly! 🎉",
+                      tag: "test-notification",
+                    });
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium border border-slate-800 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Bell className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Test Notification Sound & Alert</span>
+                </button>
+              </div>
+
               {/* Sign Out Button */}
               <button
                 onClick={async () => {
@@ -2079,6 +2244,16 @@ export default function ChatPage() {
           </div>
         </div>
       )}
+
+      {/* FLOATING INCOMING MESSAGE NOTIFICATION TOAST */}
+      <NotificationToast
+        toast={incomingToast}
+        onOpenConversation={(convId) => {
+          setActiveConversationId(convId);
+          setMobileShowChat(true);
+        }}
+        onClose={clearIncomingToast}
+      />
 
       {/* FLOATING MILESTONE CELEBRATION TOAST */}
       {milestoneToast && (
