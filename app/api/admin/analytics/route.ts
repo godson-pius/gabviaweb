@@ -354,43 +354,70 @@ export async function GET(request: NextRequest) {
   try {
     const { email: adminEmail, idToken, role: adminRole } = await authorize(request);
     const { start: activityStart, end: activityEnd } = makeDateRange(365);
-    const [profiles, conversations, messages, translations, waitlist, revenueResults] = await Promise.all([
-      runFirestoreCollection("profiles", false, idToken),
-      runFirestoreCollection("conversations", false, idToken),
-      runFirestoreCollection("messages", true, idToken),
-      runFirestoreCollection("translations", true, idToken),
-      runFirestoreCollection("waitlist", false, idToken),
+
+    // Acquire Google Service Account access token for administrative read of Firestore
+    let adminToken = idToken;
+    if (process.env.FIREBASE_ADMIN_CLIENT_EMAIL && process.env.FIREBASE_ADMIN_PRIVATE_KEY) {
+      try {
+        adminToken = await getGoogleAccessToken();
+      } catch (tokenErr) {
+        console.warn("[Admin Analytics] Could not acquire Google Service Account token, falling back to idToken:", tokenErr);
+      }
+    }
+
+    const [
+      profilesResult,
+      conversationsResult,
+      messagesResult,
+      translationsResult,
+      waitlistResult,
+      revenueResults,
+    ] = await Promise.all([
+      Promise.allSettled([runFirestoreCollection("profiles", false, adminToken)]),
+      Promise.allSettled([runFirestoreCollection("conversations", false, adminToken)]),
+      Promise.allSettled([runFirestoreCollection("messages", true, adminToken)]),
+      Promise.allSettled([runFirestoreCollection("translations", true, adminToken)]),
+      Promise.allSettled([runFirestoreCollection("waitlist", false, adminToken)]),
       Promise.allSettled([
         getFlutterwaveTransactions(activityStart, activityEnd),
         getMonnifyTransactions(activityStart, activityEnd),
       ]),
     ]);
 
-    const warnings = revenueResults.flatMap((result, index) => {
+    const profiles = profilesResult[0].status === "fulfilled" ? profilesResult[0].value : [];
+    const conversations = conversationsResult[0].status === "fulfilled" ? conversationsResult[0].value : [];
+    const messages = messagesResult[0].status === "fulfilled" ? messagesResult[0].value : [];
+    const translations = translationsResult[0].status === "fulfilled" ? translationsResult[0].value : [];
+    const waitlist = waitlistResult[0].status === "fulfilled" ? waitlistResult[0].value : [];
+
+    const warnings: string[] = revenueResults.flatMap((result, index) => {
       if (result.status === "rejected") return [`${index === 0 ? "Flutterwave" : "Monnify"}: ${result.reason instanceof Error ? result.reason.message : "Could not load transactions."}`];
       return [];
     });
+
+    if (profilesResult[0].status === "rejected") {
+      warnings.push(`Profiles: ${profilesResult[0].reason instanceof Error ? profilesResult[0].reason.message : "Could not load profiles."}`);
+    }
+    if (conversationsResult[0].status === "rejected") {
+      warnings.push(`Conversations: ${conversationsResult[0].reason instanceof Error ? conversationsResult[0].reason.message : "Could not load conversations."}`);
+    }
+    if (messagesResult[0].status === "rejected") {
+      warnings.push(`Messages: ${messagesResult[0].reason instanceof Error ? messagesResult[0].reason.message : "Could not load messages."}`);
+    }
+    if (waitlistResult[0].status === "rejected") {
+      warnings.push(`Waitlist: ${waitlistResult[0].reason instanceof Error ? waitlistResult[0].reason.message : "Could not load waitlist."}`);
+    }
+
     const providerTransactions = revenueResults.flatMap((result) => result.status === "fulfilled" ? result.value : []);
-    const paymentLedgerResult = await Promise.allSettled([runFirestoreCollection("payment_transactions", false, idToken)]);
+    const paymentLedgerResult = await Promise.allSettled([runFirestoreCollection("payment_transactions", false, adminToken)]);
     let paymentRecords = paymentLedgerResult[0].status === "fulfilled" ? paymentLedgerResult[0].value : [];
-    if (paymentLedgerResult[0].status === "rejected" && process.env.FIREBASE_ADMIN_CLIENT_EMAIL && process.env.FIREBASE_ADMIN_PRIVATE_KEY) {
-      try {
-        paymentRecords = await runFirestoreCollection("payment_transactions", false, await getGoogleAccessToken());
-      } catch {
-        warnings.push("Payment ledger: Could not load recorded successful payments.");
-      }
-    } else if (paymentLedgerResult[0].status === "rejected") {
+    if (paymentLedgerResult[0].status === "rejected") {
       warnings.push("Payment ledger: Could not load recorded successful payments.");
     }
-    const reportsResult = await Promise.allSettled([runFirestoreCollection("reports", false, idToken)]);
+
+    const reportsResult = await Promise.allSettled([runFirestoreCollection("reports", false, adminToken)]);
     let reportRecords = reportsResult[0].status === "fulfilled" ? reportsResult[0].value : [];
-    if (reportsResult[0].status === "rejected" && process.env.FIREBASE_ADMIN_CLIENT_EMAIL && process.env.FIREBASE_ADMIN_PRIVATE_KEY) {
-      try {
-        reportRecords = await runFirestoreCollection("reports", false, await getGoogleAccessToken());
-      } catch {
-        reportRecords = [];
-      }
-    }
+
     const ledgerTransactions: PaymentLedgerTransaction[] = paymentRecords
       .filter((record) => isSuccessfulStatus(record.status))
       .map((record) => {
@@ -434,14 +461,12 @@ export async function GET(request: NextRequest) {
         return true;
       }),
     ].sort((left, right) => (parseDate(right.createdAt)?.getTime() ?? 0) - (parseDate(left.createdAt)?.getTime() ?? 0));
+
     let auditLogs: FirestoreRecord[] = [];
-    if (process.env.FIREBASE_ADMIN_CLIENT_EMAIL && process.env.FIREBASE_ADMIN_PRIVATE_KEY) {
-      try {
-        const serviceToken = await getGoogleAccessToken();
-        auditLogs = await runFirestoreCollection("admin_audit_logs", false, serviceToken);
-      } catch (error) {
-        warnings.push(`Audit log: ${error instanceof Error ? error.message : "Could not load audit events."}`);
-      }
+    try {
+      auditLogs = await runFirestoreCollection("admin_audit_logs", false, adminToken);
+    } catch (error) {
+      warnings.push(`Audit log: ${error instanceof Error ? error.message : "Could not load audit events."}`);
     }
 
     const now = new Date();
