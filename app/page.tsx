@@ -1,5 +1,6 @@
 "use client";
 
+import { AppWorkflow3D } from "@/components/landing/AppWorkflow3D";
 import { SpaceGlobe } from "@/components/landing/SpaceGlobe";
 import Image from "next/image";
 import Link from "next/link";
@@ -700,80 +701,21 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. How It Works */}
+      {/* 5. How It Works - 3D Interactive Platform Simulator */}
       <section
         id="how-it-works"
-        className={`py-24 border-b transition-colors ${isDark ? "border-zinc-800/80 bg-[#0c0d12]" : "border-zinc-200/80 bg-[#fafafa]"
+        className={`py-24 border-b transition-colors relative overflow-hidden ${isDark ? "border-zinc-800/80 bg-[#0c0d12]" : "border-zinc-200/80 bg-[#fafafa]"
           }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mb-16">
+          <div className="max-w-3xl mb-12">
             <span className="font-mono text-xs text-zinc-400 uppercase tracking-widest block mb-2">
-              02 // HOW IT WORKS
+              02 // HOW TO USE GABVIA
             </span>
-            <h2
-              className={`text-3xl sm:text-4xl font-extrabold tracking-tight mb-4 ${isDark ? "text-white" : "text-zinc-950"
-                }`}
-            >
-              Simple, natural, and effortless.
-            </h2>
-            <p className={`text-base leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
-              Three simple steps to communicate with anyone across the globe without language barriers.
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div
-              className={`p-8 rounded-3xl border space-y-4 shadow-sm ${isDark ? "border-zinc-800 bg-zinc-900/60" : "border-zinc-200 bg-white"
-                }`}
-            >
-              <span className="font-mono text-xs font-bold text-zinc-400">STEP 01</span>
-              <div
-                className={`w-10 h-10 rounded-xl border flex items-center justify-center ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-100 border-zinc-200 text-zinc-900"
-                  }`}
-              >
-                <Icon name="globe" size={20} />
-              </div>
-              <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>Open in Any Browser</h3>
-              <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
-                Visit gabvia.app from any computer, tablet, or mobile device. Sign in or register in seconds with zero downloads.
-              </p>
-            </div>
-
-            <div
-              className={`p-8 rounded-3xl border space-y-4 shadow-sm ${isDark ? "border-zinc-800 bg-zinc-900/60" : "border-zinc-200 bg-white"
-                }`}
-            >
-              <span className="font-mono text-xs font-bold text-zinc-400">STEP 02</span>
-              <div
-                className={`w-10 h-10 rounded-xl border flex items-center justify-center ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-100 border-zinc-200 text-zinc-900"
-                  }`}
-              >
-                <Icon name="spark" size={20} />
-              </div>
-              <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>Talk in Your Language</h3>
-              <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
-                Write or record audio in your native language. Gabvia automatically translates your messages into your recipient&apos;s language.
-              </p>
-            </div>
-
-            <div
-              className={`p-8 rounded-3xl border space-y-4 shadow-sm ${isDark ? "border-zinc-800 bg-zinc-900/60" : "border-zinc-200 bg-white"
-                }`}
-            >
-              <span className="font-mono text-xs font-bold text-zinc-400">STEP 03</span>
-              <div
-                className={`w-10 h-10 rounded-xl border flex items-center justify-center ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-100 border-zinc-200 text-zinc-900"
-                  }`}
-              >
-                <Icon name="shield" size={20} />
-              </div>
-              <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>Fully Private &amp; Secure</h3>
-              <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
-                Full end-to-end encryption ensures that your conversations stay confidential. Only the intended recipient can read your chats.
-              </p>
-            </div>
-          </div>
+          {/* Three.js Interactive 3D Platform Simulator */}
+          <AppWorkflow3D theme={theme} />
         </div>
       </section>
 
