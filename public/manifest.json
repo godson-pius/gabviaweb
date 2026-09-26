@@ -1,0 +1,21 @@
+{
+  "name": "Gabvia — Multilingual Communication Platform",
+  "short_name": "Gabvia",
+  "description": "Real-time multilingual communication platform with instant voice notes and AI translation across 40+ languages with end-to-end encryption.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "categories": ["social", "communication", "utilities", "productivity"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "lang": "en",
+  "dir": "ltr"
+}

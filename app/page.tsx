@@ -1,8 +1,9 @@
 "use client";
 
+import { SpaceGlobe } from "@/components/landing/SpaceGlobe";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=app.gabvia&pcampaignid=web_share";
@@ -19,6 +20,9 @@ type IconName =
   | "check"
   | "menu"
   | "close"
+  | "shield"
+  | "bell"
+  | "zap"
   | "sun"
   | "moon";
 
@@ -35,7 +39,7 @@ function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
     "aria-hidden": true,
   };
 
-  const paths = {
+  const paths: Record<IconName, React.ReactNode> = {
     "arrow-up-right": (
       <>
         <path d="M7 17 17 7" />
@@ -91,15 +95,31 @@ function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
         <path d="m6 6 12 12M18 6 6 18" />
       </>
     ),
+    shield: (
+      <>
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      </>
+    ),
+    bell: (
+      <>
+        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+      </>
+    ),
+    zap: (
+      <>
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+      </>
+    ),
     sun: (
       <>
-        <circle cx="12" cy="12" r="3.5" />
-        <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42" />
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
       </>
     ),
     moon: (
       <>
-        <path d="M20.5 14.7A8.5 8.5 0 0 1 9.3 3.5 8.5 8.5 0 0 0 20.5 14.7Z" />
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
       </>
     ),
   };
@@ -137,551 +157,842 @@ function GooglePlayIcon({ size = 20 }: { size?: number }) {
   );
 }
 
-function GabviaMark({ compact = false }: { compact?: boolean }) {
-  return (
-    <a className={`brand ${compact ? "brand-compact" : ""}`} href="#top" aria-label="Gabvia home">
-      <Image className="brand-image" src="/logo.png" alt="" width={32} height={32} priority={!compact} />
-      <span>Gabvia</span>
-    </a>
-  );
-}
-
-const featureCards = [
+const FAQS = [
   {
-    number: "01",
-    icon: "globe" as IconName,
-    title: "Talk naturally",
-    text: "Write in the language you think in. Gabvia makes sure your meaning arrives clearly on the other side.",
-    color: "blue",
+    q: "When does Gabvia Web officially open?",
+    a: "Gabvia Web will launch for everyone on Monday morning. You will be able to log in or create an account directly in your web browser with zero downloads.",
   },
   {
-    number: "02",
-    icon: "mic" as IconName,
-    title: "Keep your voice",
-    text: "Send voice notes when text is not enough. Get clear transcriptions that make every thought easy to follow.",
-    color: "lime",
+    q: "Can I use Gabvia on my phone right now?",
+    a: "Yes! Gabvia is fully available right now for Android users. You can download it directly from Google Play to chat and translate immediately.",
   },
   {
-    number: "03",
-    icon: "users" as IconName,
-    title: "Bring everyone in",
-    text: "Create group conversations where language fades into the background and people stay at the center.",
-    color: "violet",
-  },
-];
-
-const faqItems = [
-  {
-    question: "Can I use Gabvia on the web without installing the app?",
-    answer:
-      "Yes! You can register, sign in, and chat directly in your web browser. All direct conversations on the web are protected with client-side end-to-end encryption so your privacy is preserved whether on web or mobile.",
+    q: "Are my messages and voice notes private?",
+    a: "Yes. All conversations are protected by end-to-end encryption. That means only you and the person you're chatting with can read your messages or listen to your voice notes.",
   },
   {
-    question: "Where can I download Gabvia?",
-    answer:
-      "Gabvia is officially live on Google Play! You can download the app directly to your Android device, or simply chat online right here on Gabvia Web.",
+    q: "Do I need to download or install anything on my computer?",
+    a: "No downloads or extensions required. Gabvia Web runs natively inside Google Chrome, Apple Safari, Mozilla Firefox, Microsoft Edge, and modern mobile browsers.",
   },
   {
-    question: "What is Gabvia?",
-    answer:
-      "Gabvia is an AI-powered multilingual communication app that helps people message, speak, and connect across language barriers.",
-  },
-  {
-    question: "What can I use Gabvia for?",
-    answer:
-      "Use text chat, voice notes, instant translations, and group conversations with friends, family, communities, or international work teams.",
-  },
-  {
-    question: "Are my conversations private?",
-    answer:
-      "Private conversations are designed with end-to-end encryption. Translation and transcription only process content when you request those features.",
-  },
-  {
-    question: "How do GAB POINTS work?",
-    answer:
-      "GAB POINTS are usage credits for features such as translations. You can earn some through product missions or purchase more when needed directly in the app.",
+    q: "How many languages are supported?",
+    a: "Gabvia supports more than 40 languages with natural, context-aware translation that preserves tone, expressions, and meaning.",
   },
 ];
 
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [activeFaq, setActiveFaq] = useState<number | null>(null);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      const savedTheme = window.localStorage.getItem("gabvia-promo-theme");
-      if (savedTheme === "light" || savedTheme === "dark") setTheme(savedTheme);
-    }, 0);
-    return () => window.clearTimeout(timer);
+    const saved = localStorage.getItem("gabvia-theme");
+    if (saved === "dark" || saved === "light") {
+      setTheme(saved);
+    }
   }, []);
 
-  const toggleTheme = () =>
-    setTheme((current) => {
-      const nextTheme = current === "dark" ? "light" : "dark";
-      window.localStorage.setItem("gabvia-promo-theme", nextTheme);
-      return nextTheme;
+  const toggleTheme = () => {
+    setTheme((prev) => {
+      const next = prev === "light" ? "dark" : "light";
+      localStorage.setItem("gabvia-theme", next);
+      return next;
     });
+  };
 
-  const closeMenu = () => setMenuOpen(false);
+  const isDark = theme === "dark";
 
   return (
-    <main id="top" className={`promo-site theme-${theme}`}>
-      <a className="skip-link" href="#main-content">
-        Skip to content
-      </a>
-      <nav className="site-nav shell" aria-label="Main navigation">
-        <GabviaMark />
-        <div className={`nav-links ${menuOpen ? "is-open" : ""}`}>
-          <a href="#why-gabvia" onClick={closeMenu}>
-            Why Gabvia
-          </a>
-          <a href="#features" onClick={closeMenu}>
-            Features
-          </a>
-          <a href="#how-it-works" onClick={closeMenu}>
-            How it works
-          </a>
-          <a href="#download" onClick={closeMenu}>
-            Download
-          </a>
-          <Link href="/translator" onClick={closeMenu} className="font-semibold text-slate-300 hover:text-emerald-400">
-            Translator
-          </Link>
-          <Link href="/chat" onClick={closeMenu} className="nav-link-chat font-semibold text-emerald-400">
-            Chat on Web
-          </Link>
-        </div>
-        <button
-          className="theme-toggle"
-          type="button"
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-          aria-pressed={theme === "light"}
-        >
-          <Icon name={theme === "dark" ? "sun" : "moon"} size={16} />
-          <span>{theme === "dark" ? "Light" : "Dark"}</span>
-        </button>
-        <Link
-          className="nav-cta"
-          href="/chat"
-        >
-          Chat on Web <Icon name="arrow-right" size={15} />
-        </Link>
-        <button
-          className="menu-toggle"
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
-          onClick={() => setMenuOpen(!menuOpen)}
-        >
-          <Icon name={menuOpen ? "close" : "menu"} />
-        </button>
-      </nav>
-
-      <section className="hero shell" id="main-content">
-        <div className="hero-copy">
-          <div className="eyebrow">
-            <span className="eyebrow-dot" /> Now Live on Web &amp; Google Play
-          </div>
-          <h1>
-            Say it in your language. <em>Feel it in theirs.</em>
-          </h1>
-          <p className="hero-text">
-            Gabvia is the multilingual chat app for conversations that cross borders, time
-            zones, and everything in between. Chat directly in your browser or download the app.
-          </p>
-          <div className="hero-actions">
-            <Link
-              className="button button-accent"
-              href="/chat"
-              style={{ display: "inline-flex", alignItems: "center", gap: "8px", fontWeight: "700" }}
+    <div
+      className={`min-h-screen font-sans antialiased transition-colors duration-300 ${isDark
+        ? "bg-[#09090b] text-[#f4f4f5] selection:bg-zinc-800"
+        : "bg-[#fafafa] text-[#09090b] selection:bg-zinc-200"
+        }`}
+    >
+      {/* 1. Top Announcement Bar */}
+      <div
+        className={`border-b sticky top-0 z-50 transition-colors backdrop-blur-md ${isDark
+          ? "border-zinc-800/80 bg-zinc-950/90 text-zinc-300"
+          : "border-zinc-200/80 bg-white/95 text-zinc-950"
+          }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 text-xs font-mono">
+          <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap">
+            <span className="flex h-2 w-2 relative flex-shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span
+              className={`font-semibold uppercase tracking-wider ${isDark ? "text-zinc-100" : "text-zinc-950"
+                }`}
             >
-              <Icon name="spark" size={15} /> Chat on Web
-            </Link>
-            <a
-              className="button button-playstore"
-              href={PLAY_STORE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Download Gabvia on Google Play Store"
+              [ OFFICIAL ANNOUNCEMENT ]
+            </span>
+            <span className="text-zinc-500 hidden sm:inline">—</span>
+            <span className={`${isDark ? "text-zinc-400" : "text-zinc-600"} truncate`}>
+              Gabvia Web Platform launches Monday · Direct in-browser multilingual communication.
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span
+              className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${isDark
+                ? "bg-emerald-950/50 text-emerald-400 border-emerald-800/60"
+                : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                }`}
             >
-              <GooglePlayIcon size={22} />
-              <span className="playstore-text">
-                <small>GET IT ON</small>
-                <strong>Google Play</strong>
-              </span>
-            </a>
-            <a className="button button-quiet" href="#how-it-works">
-              <span className="play-icon">
-                <Icon name="play" size={13} />
-              </span>{" "}
-              See how it works
-            </a>
-          </div>
-          <div className="hero-note">
-            <span className="avatar-stack">
-              <i>J</i>
-              <i>M</i>
-              <i>A</i>
-            </span>
-            <span>Now on Web &amp; Android · Free to register</span>
-          </div>
-        </div>
-
-        <div className="hero-visual" aria-label="Gabvia chat preview">
-          <div className="visual-orbit orbit-one" />
-          <div className="visual-orbit orbit-two" />
-          <div className="floating-card floating-card-top">
-            <span className="floating-icon blue-icon">
-              <Icon name="globe" size={16} />
-            </span>
-            <span>
-              <strong>Meaning, not just words.</strong>
-              <small>Translation in context</small>
+              LAUNCHING MONDAY
             </span>
           </div>
-          <div className="floating-card floating-card-bottom">
-            <span className="status-pulse" />
-            <span>
-              <strong>Private by design</strong>
-              <small>
-                <Icon name="lock" size={11} /> Your chats stay yours
-              </small>
-            </span>
-          </div>
-          <div className="phone-shell">
-            <div className="phone-speaker" />
-            <div className="phone-screen">
-              <div className="phone-topbar">
-                <span className="phone-time">9:41</span>
-                <span className="phone-signal">
-                  <i />
-                  <i />
-                  <i />
-                </span>
-              </div>
-              <div className="chat-heading">
-                <div className="back-arrow">‹</div>
-                <div className="chat-user">
-                  <span className="person-avatar">N</span>
-                  <span>
-                    <b>Nadia</b>
-                    <small>
-                      <i /> online now
-                    </small>
-                  </span>
-                </div>
-                <span className="more-dots">•••</span>
-              </div>
-              <div className="date-divider">
-                <span>Today, 10:24 AM</span>
-              </div>
-              <div className="message-row received">
-                <span className="mini-avatar">N</span>
-                <div className="message-group">
-                  <div className="message-bubble white-bubble">
-                    Hey! Are we still on for tonight?
-                  </div>
-                  <span className="message-time">10:24 AM</span>
-                </div>
-              </div>
-              <div className="message-row sent">
-                <div className="message-group">
-                  <div className="message-bubble gradient-bubble">
-                    Yes! I can&apos;t wait to see you
-                  </div>
-                  <div className="translated-line">
-                    <Icon name="spark" size={11} /> Translated to French
-                  </div>
-                  <span className="message-time">
-                    10:25 AM <b>✓✓</b>
-                  </span>
-                </div>
-              </div>
-              <div className="message-row received later">
-                <span className="mini-avatar">N</span>
-                <div className="message-group">
-                  <div className="message-bubble white-bubble">
-                    Parfait, à tout à l&apos;heure! <span className="wave-emoji">✦</span>
-                  </div>
-                  <span className="message-time">10:25 AM</span>
-                </div>
-              </div>
-              <div className="voice-card">
-                <span className="voice-play">
-                  <Icon name="play" size={13} />
-                </span>
-                <span className="waveform">
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                  <i />
-                </span>
-                <span className="voice-length">0:18</span>
-                <span className="voice-translate">
-                  <Icon name="spark" size={11} /> Transcript ready
-                </span>
-              </div>
-              <div className="composer">
-                <span>Message...</span>
-                <span className="composer-icons">
-                  <Icon name="mic" size={16} />
-                  <b>↑</b>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="marquee-band" aria-label="Gabvia benefits">
-        <div className="marquee-content">
-          <span>One conversation</span>
-          <b>✦</b>
-          <span>Every language</span>
-          <b>✦</b>
-          <span>More understanding</span>
-          <b>✦</b>
-          <span>One conversation</span>
-          <b>✦</b>
-          <span>Every language</span>
-          <b>✦</b>
         </div>
       </div>
 
-      <section className="intro-section shell" id="why-gabvia">
-        <div className="section-kicker">The world is already talking</div>
-        <div className="intro-grid">
-          <h2>
-            Language should never be the reason you <span>stay strangers.</span>
-          </h2>
-          <div className="intro-side">
-            <p>
-              Gabvia brings translation into the flow of your conversation, so you can spend
-              less time decoding and more time connecting.
-            </p>
-            <a className="text-link" href="#features">
-              Explore the difference <Icon name="arrow-up-right" size={15} />
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <section className="features-section shell" id="features">
-        <div className="section-heading">
-          <div>
-            <div className="section-kicker">Made for connection</div>
-            <h2>
-              Everything you need to <span>meet in the middle.</span>
-            </h2>
-          </div>
-          <p>
-            Simple enough for everyday messages. Powerful enough for the conversations that
-            matter most.
-          </p>
-        </div>
-        <div className="feature-grid">
-          {featureCards.map((feature) => (
-            <article className={`feature-card ${feature.color}`} key={feature.number}>
-              <div className="feature-top">
-                <span className="feature-number">{feature.number}</span>
-                <span className="feature-icon">
-                  <Icon name={feature.icon} size={21} />
-                </span>
-              </div>
-              <h3>{feature.title}</h3>
-              <p>{feature.text}</p>
-              <a
-                href={PLAY_STORE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`Get Gabvia on Google Play to ${feature.title.toLowerCase()}`}
+      {/* 2. Main Header */}
+      <header
+        className={`border-b transition-colors backdrop-blur-md ${isDark ? "border-zinc-800/80 bg-zinc-950/80" : "border-zinc-200/80 bg-white/80"
+          }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+          {/* Logo */}
+          <div className="flex items-center gap-4">
+            <Link href="/" className="flex items-center gap-3 group">
+              <div
+                className={`w-10 h-10 rounded-xl border flex items-center justify-center p-1 shadow-sm transition-colors ${isDark
+                  ? "bg-zinc-900 border-zinc-800 group-hover:border-zinc-700"
+                  : "bg-white border-zinc-200 group-hover:border-zinc-400"
+                  }`}
               >
-                <Icon name="arrow-up-right" size={17} />
-              </a>
-            </article>
-          ))}
-        </div>
-      </section>
+                <Image src="/logo.png" alt="Gabvia" width={32} height={32} priority className="object-contain" />
+              </div>
+              <div>
+                <span
+                  className={`font-bold text-xl tracking-tight block leading-tight ${isDark ? "text-white" : "text-zinc-950"
+                    }`}
+                >
+                  Gabvia
+                </span>
+                {/* <span className="font-mono text-[10px] text-zinc-400 uppercase tracking-widest block">
+                  COMMUNICATION PLATFORM
+                </span> */}
+              </div>
+            </Link>
+          </div>
 
-      <section className="showcase-section shell" id="how-it-works">
-        <div className="showcase-panel">
-          <div className="showcase-copy">
-            <div className="section-kicker light-kicker">The Gabvia way</div>
-            <h2>
-              Translation that understands the <span>conversation.</span>
-            </h2>
-            <p>
-              Gabvia is built to keep your voice, your tone, and your intent in the room. It is
-              not about replacing connection. It is about making more of it possible.
-            </p>
-            <div className="check-list">
-              <div>
-                <span>
-                  <Icon name="check" size={14} />
-                </span>{" "}
-                Your language, your way
-              </div>
-              <div>
-                <span>
-                  <Icon name="check" size={14} />
-                </span>{" "}
-                Context-aware translations
-              </div>
-              <div>
-                <span>
-                  <Icon name="check" size={14} />
-                </span>{" "}
-                Text, voice, and group chat
-              </div>
-            </div>
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
             <a
-              className="button button-light"
+              href="#features"
+              className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"
+                } transition-colors`}
+            >
+              Features
+            </a>
+            <a
+              href="#how-it-works"
+              className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"
+                } transition-colors`}
+            >
+              How It Works
+            </a>
+            <a
+              href="#timeline"
+              className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"
+                } transition-colors`}
+            >
+              Roadmap
+            </a>
+            <a
+              href="#faq"
+              className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"
+                } transition-colors`}
+            >
+              FAQ
+            </a>
+            <Link
+              href="/translator"
+              className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"
+                } transition-colors flex items-center gap-1.5`}
+            >
+              <span>Translator</span>
+              <span
+                className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${isDark ? "bg-zinc-900 text-zinc-400 border-zinc-800" : "bg-zinc-100 text-zinc-600 border-zinc-200"
+                  }`}
+              >
+                TOOL
+              </span>
+            </Link>
+          </nav>
+
+          {/* Actions & Theme Toggle */}
+          <div className="hidden sm:flex items-center gap-3">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              type="button"
+              className={`p-2 px-3 rounded-xl border flex items-center gap-2 text-xs font-mono transition-colors ${isDark
+                ? "border-zinc-800 bg-zinc-900/80 text-zinc-300 hover:text-white hover:bg-zinc-800"
+                : "border-zinc-200 bg-zinc-100 text-zinc-700 hover:text-zinc-950 hover:bg-zinc-200"
+                }`}
+              aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
+              title={`Switch to ${isDark ? "light" : "dark"} theme`}
+            >
+              <Icon name={isDark ? "sun" : "moon"} size={15} />
+              <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+            </button>
+
+            <a
               href={PLAY_STORE_URL}
               target="_blank"
               rel="noopener noreferrer"
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-colors border ${isDark
+                ? "text-zinc-200 bg-zinc-900 hover:bg-zinc-800 border-zinc-800"
+                : "text-zinc-800 bg-zinc-100 hover:bg-zinc-200 border-zinc-200"
+                }`}
             >
-              Download on Google Play <Icon name="arrow-up-right" size={17} />
+              <GooglePlayIcon size={16} />
+              <span>Android App</span>
             </a>
-          </div>
-          <div className="translation-art">
-            <div className="art-glow" />
-            <div className="translation-card translation-card-back">
-              <small>Original</small>
-              <strong>Let&apos;s make it happen.</strong>
-              <span>English</span>
-            </div>
-            <div className="translation-card translation-card-front">
-              <div>
-                <span className="spark-badge">
-                  <Icon name="spark" size={13} />
-                </span>
-                <small>Gabvia translation</small>
-              </div>
-              <strong>Faisons-le.</strong>
-              <span>French · in context</span>
-            </div>
-            <div className="art-label">
-              <span className="art-label-dot" /> Meaning preserved
+
+            {/* Web Platform Locked Badge for Monday Launch */}
+            <div
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono font-medium border cursor-not-allowed select-none ${isDark
+                ? "text-zinc-500 bg-zinc-900/40 border-zinc-800"
+                : "text-zinc-400 bg-zinc-50 border border-zinc-200"
+                }`}
+              title="Web platform opens for public use on Monday morning"
+            >
+              <Icon name="lock" size={13} />
+              <span>Web Platform: Monday</span>
             </div>
           </div>
-        </div>
-      </section>
 
-      <section className="steps-section shell">
-        <div className="section-heading steps-heading">
-          <div>
-            <div className="section-kicker">It just works</div>
-            <h2>
-              Three steps to a <span>better conversation.</span>
-            </h2>
+          {/* Mobile Menu Button */}
+          <div className="flex md:hidden items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-lg border ${isDark ? "border-zinc-800 text-zinc-300" : "border-zinc-200 text-zinc-600"
+                }`}
+              aria-label="Toggle theme"
+            >
+              <Icon name={isDark ? "sun" : "moon"} size={18} />
+            </button>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className={`p-2 rounded-lg border ${isDark ? "border-zinc-800 text-zinc-300 hover:text-white" : "border-zinc-200 text-zinc-600 hover:text-zinc-950"
+                }`}
+              aria-label="Toggle menu"
+            >
+              <Icon name={menuOpen ? "close" : "menu"} size={20} />
+            </button>
           </div>
         </div>
-        <div className="steps-grid">
-          <div className="step">
-            <span className="step-number">01</span>
-            <h3>Choose your language</h3>
-            <p>Set your preferred language once. Gabvia takes care of the rest.</p>
-          </div>
-          <div className="step-connector" />
-          <div className="step">
-            <span className="step-number">02</span>
-            <h3>Say what you mean</h3>
-            <p>Type a message, send a voice note, or start a group chat.</p>
-          </div>
-          <div className="step-connector" />
-          <div className="step">
-            <span className="step-number">03</span>
-            <h3>Connect naturally</h3>
-            <p>Everyone receives the conversation in the language they know best.</p>
-          </div>
-        </div>
-      </section>
 
-      <section className="faq-section shell" id="faq">
-        <div className="section-heading steps-heading">
-          <div>
-            <div className="section-kicker">Good questions</div>
-            <h2>
-              Everything you need to know <span>getting started.</span>
-            </h2>
-          </div>
-        </div>
-        <div className="faq-list">
-          {faqItems.map((item) => (
-            <details className="faq-item" key={item.question}>
-              <summary>
-                {item.question}
-                <span>+</span>
-              </summary>
-              <p>{item.answer}</p>
-            </details>
-          ))}
-        </div>
-      </section>
-
-      <section className="download-section shell" id="download">
-        <div className="download-panel">
-          <div className="download-copy">
-            <div className="section-kicker light-kicker">Available Now on Google Play</div>
-            <h2>
-              Start a conversation that goes <span>everywhere.</span>
-            </h2>
-            <p>
-              Gabvia is officially live on Google Play and free to download. Bring your
-              people—we&apos;ll handle the language.
-            </p>
-            <div className="download-actions">
+        {/* Mobile Dropdown */}
+        {menuOpen && (
+          <div
+            className={`md:hidden border-t px-4 py-6 space-y-4 ${isDark ? "border-zinc-800 bg-zinc-950" : "border-zinc-200 bg-white"
+              }`}
+          >
+            <a
+              href="#features"
+              onClick={() => setMenuOpen(false)}
+              className={`block text-sm font-medium ${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+            >
+              Features
+            </a>
+            <a
+              href="#how-it-works"
+              onClick={() => setMenuOpen(false)}
+              className={`block text-sm font-medium ${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+            >
+              How It Works
+            </a>
+            <a
+              href="#timeline"
+              onClick={() => setMenuOpen(false)}
+              className={`block text-sm font-medium ${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+            >
+              Roadmap
+            </a>
+            <a
+              href="#faq"
+              onClick={() => setMenuOpen(false)}
+              className={`block text-sm font-medium ${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+            >
+              FAQ
+            </a>
+            <Link
+              href="/translator"
+              onClick={() => setMenuOpen(false)}
+              className={`block text-sm font-medium ${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+            >
+              Translator Tool
+            </Link>
+            <div className={`pt-4 border-t flex flex-col gap-2 ${isDark ? "border-zinc-800" : "border-zinc-100"}`}>
               <a
-                className="button button-playstore button-playstore-light"
                 href={PLAY_STORE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Get Gabvia on Google Play"
+                className={`w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold border ${isDark
+                  ? "text-white bg-zinc-900 border-zinc-800"
+                  : "text-zinc-900 bg-zinc-100 border-zinc-200"
+                  }`}
               >
-                <GooglePlayIcon size={26} />
-                <span className="playstore-text">
-                  <small>GET IT ON</small>
-                  <strong>Google Play</strong>
-                </span>
+                <GooglePlayIcon size={16} />
+                <span>Get Android App</span>
               </a>
+              <div
+                className={`w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-mono border ${isDark ? "text-zinc-500 bg-zinc-900/50 border-zinc-800" : "text-zinc-400 bg-zinc-50 border-zinc-200"
+                  }`}
+              >
+                <Icon name="lock" size={13} />
+                <span>Web Platform Opens Monday</span>
+              </div>
             </div>
           </div>
-          <div className="download-mark">
-            <span className="download-orbit" />
-            <span className="download-g" />
-            <small>gabvia</small>
+        )}
+      </header>
+
+      {/* 3. Hero Section */}
+      <section
+        className={`relative overflow-hidden border-b transition-colors pt-12 pb-20 lg:pt-20 lg:pb-28 ${isDark ? "border-zinc-800/80 bg-zinc-950" : "border-zinc-200/80 bg-white"
+          }`}
+      >
+        {/* Architectural Grid Lines */}
+        <div
+          className={`absolute inset-0 bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none ${isDark
+            ? "bg-[linear-gradient(to_right,#18181b_1px,transparent_1px),linear-gradient(to_bottom,#18181b_1px,transparent_1px)] opacity-40"
+            : "bg-[linear-gradient(to_right,#f1f1f4_1px,transparent_1px),linear-gradient(to_bottom,#f1f1f4_1px,transparent_1px)] opacity-60"
+            }`}
+        />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+            {/* Left Column: Announcement & Value Proposition */}
+            <div className="lg:col-span-7 space-y-8">
+              {/* Badge */}
+              <div
+                className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border font-mono text-xs ${isDark
+                  ? "border-zinc-800 bg-zinc-900/70 text-zinc-300"
+                  : "border-zinc-200 bg-zinc-50 text-zinc-700"
+                  }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span className={`font-semibold ${isDark ? "text-zinc-100" : "text-zinc-950"}`}>COMING MONDAY</span>
+                <span className="text-zinc-500">|</span>
+                <span className="text-zinc-400">GLOBAL PLATFORM RELEASE</span>
+              </div>
+
+              {/* Headline */}
+              <div className="space-y-4">
+                <h1
+                  className={`text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] ${isDark ? "text-white" : "text-zinc-950"
+                    }`}
+                >
+                  The multilingual communication platform. <br />
+                  {/* <span className="text-zinc-400 font-normal"></span> */}
+                </h1>
+                <p
+                  className={`text-base sm:text-lg max-w-2xl leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"
+                    }`}
+                >
+                  Gabvia is the real-time multilingual communication platform. Starting this Monday, message, talk, and share voice notes with anyone across 40+ languages with in-flow AI translation and end-to-end privacy — directly from Chrome, Safari, Firefox, and Edge.
+                </p>
+              </div>
+
+              {/* Hero Action Buttons */}
+              <div className="flex flex-wrap items-center gap-4 pt-2">
+                <a
+                  href={PLAY_STORE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full text-sm font-semibold tracking-wide transition-all shadow-sm hover:shadow ${isDark
+                    ? "bg-white hover:bg-zinc-100"
+                    : "bg-zinc-950 hover:bg-zinc-800"
+                    }`}
+                >
+                  <GooglePlayIcon size={18} />
+                  <span className={`${!isDark ? "text-white" : "text-black"}`}>Get for Android (Google Play)</span>
+                </a>
+
+                <div
+                  className={`inline-flex items-center gap-2 px-5 py-3.5 rounded-full border font-mono text-xs select-none ${isDark
+                    ? "border-zinc-800 bg-zinc-900/50 text-zinc-400"
+                    : "border-zinc-200 bg-zinc-100/70 text-zinc-500"
+                    }`}
+                >
+                  <Icon name="lock" size={13} />
+                  <span>Web Platform Opens Monday</span>
+                </div>
+              </div>
+
+              {/* Minimal Value Points */}
+              <div className="flex flex-wrap items-center gap-6 pt-2 text-xs font-mono text-zinc-400">
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  Zero Installation Required
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
+                  100% Private &amp; Encrypted
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
+                  40+ Languages
+                </span>
+              </div>
+            </div>
+
+            {/* Right Column: SpaceFS Interactive 3D Canvas */}
+            <div className="lg:col-span-5">
+              <div
+                className={`relative rounded-3xl border p-2 shadow-sm transition-colors ${isDark ? "border-zinc-800 bg-zinc-900/50" : "border-zinc-200 bg-white"
+                  }`}
+              >
+                {/* SpaceFS Corner Crosshairs (+) */}
+                <span className="absolute -top-2 -left-2 text-zinc-500 font-mono text-sm select-none">+</span>
+                <span className="absolute -top-2 -right-2 text-zinc-500 font-mono text-sm select-none">+</span>
+                <span className="absolute -bottom-2 -left-2 text-zinc-500 font-mono text-sm select-none">+</span>
+                <span className="absolute -bottom-2 -right-2 text-zinc-500 font-mono text-sm select-none">+</span>
+
+                {/* Card Header */}
+                <div
+                  className={`flex items-center justify-between px-4 py-3 border-b font-mono text-[11px] ${isDark ? "border-zinc-800 text-zinc-400" : "border-zinc-100 text-zinc-400"
+                    }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className={isDark ? "text-zinc-200 font-medium" : "text-zinc-700 font-medium"}>
+                      GLOBAL NETWORK
+                    </span>
+                  </div>
+                  <span>INTERACTIVE 3D</span>
+                </div>
+
+                {/* 3D Canvas */}
+                <div
+                  className={`h-[400px] sm:h-[460px] w-full rounded-2xl flex items-center justify-center overflow-hidden transition-colors ${isDark ? "bg-[#0c0d12]" : "bg-[#fcfcfd]"
+                    }`}
+                >
+                  <SpaceGlobe theme={theme} />
+                </div>
+
+                {/* Card Footer Telemetry */}
+                <div
+                  className={`grid grid-cols-3 border-t px-4 py-3 font-mono text-[10px] ${isDark ? "border-zinc-800 text-zinc-400" : "border-zinc-100 text-zinc-400"
+                    }`}
+                >
+                  <div>
+                    <span className="block text-zinc-500">SECURITY</span>
+                    <span className={isDark ? "text-zinc-200 font-semibold" : "text-zinc-700 font-semibold"}>
+                      100% Private
+                    </span>
+                  </div>
+                  <div className="text-center">
+                    <span className="block text-zinc-500">LANGUAGES</span>
+                    <span className={isDark ? "text-emerald-400 font-semibold" : "text-emerald-700 font-semibold"}>
+                      40+ Supported
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="block text-zinc-500">ACCESS</span>
+                    <span className={isDark ? "text-zinc-200 font-semibold" : "text-zinc-700 font-semibold"}>
+                      Opens Monday
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <footer className="site-footer shell">
-        <GabviaMark compact />
-        <div className="footer-links">
-          <a href="#why-gabvia">Why Gabvia</a>
-          <a href="#features">Features</a>
-          <Link href="/translator">Translator</Link>
-          <a href="#faq">FAQ</a>
-          <a href="/privacy">Privacy</a>
-          <a href="/terms">Terms</a>
-          <a href="/delete-account">Delete account</a>
-          <a href="mailto:officialgabvia@gmail.com">Contact</a>
-          <a href={PLAY_STORE_URL} target="_blank" rel="noopener noreferrer">
-            Get on Google Play
-          </a>
+      {/* 4. Features Section */}
+      <section
+        id="features"
+        className={`py-24 border-b transition-colors ${isDark ? "border-zinc-800/80 bg-zinc-950" : "border-zinc-200/80 bg-white"
+          }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
+            <div>
+              <span className="font-mono text-xs text-zinc-400 uppercase tracking-widest block mb-2">
+                01 // MULTILINGUAL FEATURES
+              </span>
+              <h2
+                className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${isDark ? "text-white" : "text-zinc-950"
+                  }`}
+              >
+                AI translation &amp; seamless messaging.
+              </h2>
+            </div>
+            <p className="text-sm font-mono text-zinc-400 max-w-md">
+              Everything you need for natural cross-language communication, optimized for Google Chrome, Safari, Firefox, and Edge.
+            </p>
+          </div>
+
+          <div
+            className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 border rounded-3xl overflow-hidden divide-y md:divide-y-0 md:divide-x shadow-sm ${isDark
+              ? "border-zinc-800 divide-zinc-800 bg-zinc-900/40"
+              : "border-zinc-200 divide-zinc-200 bg-white"
+              }`}
+          >
+            {/* Feature 01 */}
+            <div className={`p-8 space-y-4 transition-colors group ${isDark ? "hover:bg-zinc-800/40" : "hover:bg-zinc-50/80"}`}>
+              <span className="font-mono text-xs text-zinc-400 font-semibold block">01 / ACCESS</span>
+              <div
+                className={`w-10 h-10 rounded-xl border flex items-center justify-center group-hover:scale-105 transition-transform ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-100 border-zinc-200 text-zinc-800"
+                  }`}
+              >
+                <Icon name="globe" size={20} />
+              </div>
+              <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>Zero-Install Web</h3>
+              <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                Connect instantly from any browser. No downloads, installations, or storage space taken on your computer.
+              </p>
+            </div>
+
+            {/* Feature 02 */}
+            <div className={`p-8 space-y-4 transition-colors group ${isDark ? "hover:bg-zinc-800/40" : "hover:bg-zinc-50/80"}`}>
+              <span className="font-mono text-xs text-zinc-400 font-semibold block">02 / TRANSLATION</span>
+              <div
+                className={`w-10 h-10 rounded-xl border flex items-center justify-center group-hover:scale-105 transition-transform ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-100 border-zinc-200 text-zinc-800"
+                  }`}
+              >
+                <Icon name="spark" size={20} />
+              </div>
+              <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>Real-Time AI Translation</h3>
+              <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                Seamless in-thread translation across 40+ world languages that preserves your natural tone, emotion, and context.
+              </p>
+            </div>
+
+            {/* Feature 03 */}
+            <div className={`p-8 space-y-4 transition-colors group ${isDark ? "hover:bg-zinc-800/40" : "hover:bg-zinc-50/80"}`}>
+              <span className="font-mono text-xs text-zinc-400 font-semibold block">03 / PRIVACY</span>
+              <div
+                className={`w-10 h-10 rounded-xl border flex items-center justify-center group-hover:scale-105 transition-transform ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-100 border-zinc-200 text-zinc-800"
+                  }`}
+              >
+                <Icon name="shield" size={20} />
+              </div>
+              <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>End-to-End Encrypted</h3>
+              <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                Your conversations stay between you and the person you are chatting with. Nobody in between can read them.
+              </p>
+            </div>
+
+            {/* Feature 04 */}
+            <div className={`p-8 space-y-4 transition-colors group ${isDark ? "hover:bg-zinc-800/40" : "hover:bg-zinc-50/80"}`}>
+              <span className="font-mono text-xs text-zinc-400 font-semibold block">04 / AUDIO</span>
+              <div
+                className={`w-10 h-10 rounded-xl border flex items-center justify-center group-hover:scale-105 transition-transform ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-100 border-zinc-200 text-zinc-800"
+                  }`}
+              >
+                <Icon name="mic" size={20} />
+              </div>
+              <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>Voice Notes &amp; Alerts</h3>
+              <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                Record crisp voice messages with instant automated text transcripts, plus desktop alerts so you never miss a reply.
+              </p>
+            </div>
+          </div>
         </div>
-        <p>© 2026 Gabvia. Made for every voice.</p>
+      </section>
+
+      {/* 5. How It Works */}
+      <section
+        id="how-it-works"
+        className={`py-24 border-b transition-colors ${isDark ? "border-zinc-800/80 bg-[#0c0d12]" : "border-zinc-200/80 bg-[#fafafa]"
+          }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mb-16">
+            <span className="font-mono text-xs text-zinc-400 uppercase tracking-widest block mb-2">
+              02 // HOW IT WORKS
+            </span>
+            <h2
+              className={`text-3xl sm:text-4xl font-extrabold tracking-tight mb-4 ${isDark ? "text-white" : "text-zinc-950"
+                }`}
+            >
+              Simple, natural, and effortless.
+            </h2>
+            <p className={`text-base leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+              Three simple steps to communicate with anyone across the globe without language barriers.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div
+              className={`p-8 rounded-3xl border space-y-4 shadow-sm ${isDark ? "border-zinc-800 bg-zinc-900/60" : "border-zinc-200 bg-white"
+                }`}
+            >
+              <span className="font-mono text-xs font-bold text-zinc-400">STEP 01</span>
+              <div
+                className={`w-10 h-10 rounded-xl border flex items-center justify-center ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-100 border-zinc-200 text-zinc-900"
+                  }`}
+              >
+                <Icon name="globe" size={20} />
+              </div>
+              <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>Open in Any Browser</h3>
+              <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                Visit gabvia.app from any computer, tablet, or mobile device. Sign in or register in seconds with zero downloads.
+              </p>
+            </div>
+
+            <div
+              className={`p-8 rounded-3xl border space-y-4 shadow-sm ${isDark ? "border-zinc-800 bg-zinc-900/60" : "border-zinc-200 bg-white"
+                }`}
+            >
+              <span className="font-mono text-xs font-bold text-zinc-400">STEP 02</span>
+              <div
+                className={`w-10 h-10 rounded-xl border flex items-center justify-center ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-100 border-zinc-200 text-zinc-900"
+                  }`}
+              >
+                <Icon name="spark" size={20} />
+              </div>
+              <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>Talk in Your Language</h3>
+              <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                Write or record audio in your native language. Gabvia automatically translates your messages into your recipient&apos;s language.
+              </p>
+            </div>
+
+            <div
+              className={`p-8 rounded-3xl border space-y-4 shadow-sm ${isDark ? "border-zinc-800 bg-zinc-900/60" : "border-zinc-200 bg-white"
+                }`}
+            >
+              <span className="font-mono text-xs font-bold text-zinc-400">STEP 03</span>
+              <div
+                className={`w-10 h-10 rounded-xl border flex items-center justify-center ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-100 border-zinc-200 text-zinc-900"
+                  }`}
+              >
+                <Icon name="shield" size={20} />
+              </div>
+              <h3 className={`text-xl font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>Fully Private &amp; Secure</h3>
+              <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                Full end-to-end encryption ensures that your conversations stay confidential. Only the intended recipient can read your chats.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Release Timeline */}
+      <section
+        id="timeline"
+        className={`py-24 border-b transition-colors ${isDark ? "border-zinc-800/80 bg-zinc-950" : "border-zinc-200/80 bg-white"
+          }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-3xl mb-16">
+            <span className="font-mono text-xs text-zinc-400 uppercase tracking-widest block mb-2">
+              03 // AVAILABILITY
+            </span>
+            <h2
+              className={`text-3xl sm:text-4xl font-extrabold tracking-tight mb-4 ${isDark ? "text-white" : "text-zinc-950"
+                }`}
+            >
+              Multilingual Access Everywhere
+            </h2>
+            <p className={`text-base ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+              Communicate across borders and languages on Android today and universal web starting Monday.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Phase 1 */}
+            <div
+              className={`p-8 rounded-2xl border space-y-4 ${isDark ? "border-zinc-800 bg-zinc-900/40" : "border-zinc-200 bg-zinc-50/50"
+                }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-bold text-zinc-400">PHASE 01</span>
+                <span
+                  className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${isDark
+                    ? "bg-emerald-950/50 text-emerald-400 border-emerald-800/60"
+                    : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    }`}
+                >
+                  AVAILABLE NOW
+                </span>
+              </div>
+              <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>Android Mobile App</h3>
+              <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                Full native mobile application available today on Google Play Store with real-time translation and voice messages.
+              </p>
+              <div className="pt-2">
+                <a
+                  href={PLAY_STORE_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-xs font-mono font-semibold hover:underline inline-flex items-center gap-1 ${isDark ? "text-emerald-400" : "text-zinc-900"
+                    }`}
+                >
+                  <span>Download on Google Play</span>
+                  <Icon name="arrow-up-right" size={12} />
+                </a>
+              </div>
+            </div>
+
+            {/* Phase 2 */}
+            <div
+              className={`p-8 rounded-2xl border-2 space-y-4 shadow-sm relative ${isDark ? "border-emerald-500/70 bg-zinc-900/80" : "border-zinc-900 bg-white"
+                }`}
+            >
+              <span
+                className={`absolute -top-3 right-6 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider ${isDark ? "bg-emerald-500 text-zinc-950" : "bg-zinc-950 text-white"
+                  }`}
+              >
+                MONDAY LAUNCH
+              </span>
+              <div className="flex items-center justify-between">
+                <span className={`font-mono text-xs font-bold ${isDark ? "text-emerald-400" : "text-zinc-900"}`}>
+                  PHASE 02
+                </span>
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              </div>
+              <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>Universal Web Platform</h3>
+              <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                Browser-based web client for desktop and laptop computers with real-time translation, voice audio, and notifications.
+              </p>
+              <div className="pt-2 text-xs font-mono text-zinc-400">Doors open worldwide Monday morning</div>
+            </div>
+
+            {/* Phase 3 */}
+            <div
+              className={`p-8 rounded-2xl border space-y-4 opacity-75 ${isDark ? "border-zinc-800 bg-zinc-900/40" : "border-zinc-200 bg-zinc-50/50"
+                }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-bold text-zinc-500">PHASE 03</span>
+                <span
+                  className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${isDark ? "bg-zinc-800 text-zinc-400 border-zinc-700" : "bg-zinc-100 text-zinc-500 border border-zinc-200"
+                    }`}
+                >
+                  UPCOMING
+                </span>
+              </div>
+              <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>Standalone Desktop Apps</h3>
+              <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                Dedicated native desktop applications for macOS, Windows, and Linux with system tray integration and offline tools.
+              </p>
+              <div className="pt-2 text-xs font-mono text-zinc-400">Planned for later this year</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 7. FAQ Section */}
+      <section
+        id="faq"
+        className={`py-24 border-b transition-colors ${isDark ? "border-zinc-800/80 bg-[#0c0d12]" : "border-zinc-200/80 bg-[#fafafa]"
+          }`}
+      >
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="font-mono text-xs text-zinc-400 uppercase tracking-widest block mb-2">
+              04 // QUESTIONS
+            </span>
+            <h2
+              className={`text-3xl sm:text-4xl font-extrabold tracking-tight ${isDark ? "text-white" : "text-zinc-950"
+                }`}
+            >
+              Multilingual Communication Platform FAQ
+            </h2>
+          </div>
+
+          <div className="space-y-4">
+            {FAQS.map((item, idx) => {
+              const isOpen = activeFaq === idx;
+              return (
+                <div
+                  key={idx}
+                  className={`rounded-2xl border overflow-hidden transition-all shadow-sm ${isDark ? "border-zinc-800 bg-zinc-900/60" : "border-zinc-200 bg-white"
+                    }`}
+                >
+                  <button
+                    onClick={() => setActiveFaq(isOpen ? null : idx)}
+                    className={`w-full p-6 text-left flex items-center justify-between gap-4 font-semibold transition-colors ${isDark
+                      ? "text-zinc-100 hover:bg-zinc-800/50"
+                      : "text-zinc-950 hover:bg-zinc-50/60"
+                      }`}
+                  >
+                    <span className="text-base sm:text-lg">{item.q}</span>
+                    <span className="font-mono text-zinc-400 text-lg flex-shrink-0">
+                      {isOpen ? "−" : "+"}
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <div
+                      className={`px-6 pb-6 text-sm leading-relaxed border-t pt-4 ${isDark ? "border-zinc-800 text-zinc-400" : "border-zinc-100 text-zinc-600"
+                        }`}
+                    >
+                      {item.a}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 8. Minimalist Footer */}
+      <footer className={`py-16 transition-colors ${isDark ? "bg-zinc-950" : "bg-white"}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div
+            className={`flex flex-col md:flex-row items-center justify-between gap-8 pb-12 border-b ${isDark ? "border-zinc-800" : "border-zinc-200/80"
+              }`}
+          >
+            <div className="flex items-center gap-3">
+              <Image src="/logo.png" alt="Gabvia" width={28} height={28} className="object-contain" />
+              <span className={`font-bold text-lg tracking-tight ${isDark ? "text-white" : "text-zinc-950"}`}>
+                Gabvia
+              </span>
+              <span className="font-mono text-xs text-zinc-400 ml-2">
+                / Different languages. One conversation.
+              </span>
+            </div>
+
+            <div className="flex items-center gap-6 text-xs font-mono">
+              <Link
+                href="/privacy"
+                className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"} transition-colors`}
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                href="/terms"
+                className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"} transition-colors`}
+              >
+                Terms of Service
+              </Link>
+              <Link
+                href="/translator"
+                className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"} transition-colors`}
+              >
+                Translator
+              </Link>
+              <a
+                href={PLAY_STORE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"} transition-colors`}
+              >
+                Google Play
+              </a>
+            </div>
+          </div>
+
+          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-zinc-400">
+            <div>© {new Date().getFullYear()} Gabvia Technologies Inc. All rights reserved.</div>
+            <div className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>MONDAY LAUNCH · READY</span>
+            </div>
+          </div>
+        </div>
       </footer>
-    </main>
+    </div>
   );
 }
