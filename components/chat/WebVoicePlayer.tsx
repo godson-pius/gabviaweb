@@ -165,7 +165,7 @@ export function WebVoicePlayer({
             onClick={() => setActiveSource("translated")}
             className={`flex items-center gap-1 px-2 py-0.5 rounded-full font-medium transition-colors ${
               activeSource === "translated"
-                ? "bg-emerald-500/30 text-emerald-200 shadow-xs"
+                ? "bg-sky-500/30 text-sky-200 shadow-xs"
                 : "text-white/60 hover:text-white"
             }`}
           >
@@ -182,8 +182,8 @@ export function WebVoicePlayer({
           onClick={togglePlay}
           className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-transform active:scale-95 shadow-md ${
             isMine
-              ? "bg-white text-emerald-700 hover:bg-white/90"
-              : "bg-emerald-500 text-white hover:bg-emerald-400"
+              ? "bg-white text-blue-700 hover:bg-white/90"
+              : "bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:from-sky-400 hover:to-blue-500"
           }`}
           title={isPlaying ? "Pause" : "Play"}
         >
@@ -213,7 +213,7 @@ export function WebVoicePlayer({
                   isFilled
                     ? isMine
                       ? "bg-white"
-                      : "bg-emerald-400"
+                      : "bg-sky-400"
                     : isMine
                     ? "bg-white/30 group-hover:bg-white/50"
                     : "bg-slate-600/60 group-hover:bg-slate-500/80"

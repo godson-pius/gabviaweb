@@ -243,7 +243,7 @@ export function FormattedSummary({ content }: FormattedSummaryProps) {
             key={sIndex}
             className={`rounded-2xl transition-all ${
               isStatusSection
-                ? "bg-emerald-950/30 border border-emerald-500/20 p-3.5"
+                ? "bg-sky-950/30 border border-sky-500/20 p-3.5"
                 : "bg-slate-900/50 border border-slate-800/80 p-3.5"
             }`}
           >
@@ -254,7 +254,7 @@ export function FormattedSummary({ content }: FormattedSummaryProps) {
                   <ListChecks className="w-4 h-4 text-amber-400" />
                 )}
                 {section.iconType === "status" && (
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <CheckCircle2 className="w-4 h-4 text-sky-400" />
                 )}
                 {section.iconType === "event" && (
                   <Calendar className="w-4 h-4 text-sky-400" />
@@ -267,7 +267,7 @@ export function FormattedSummary({ content }: FormattedSummaryProps) {
                 )}
                 <h5
                   className={`text-xs font-bold tracking-wide uppercase ${
-                    isStatusSection ? "text-emerald-400" : "text-slate-300"
+                    isStatusSection ? "text-sky-400" : "text-slate-300"
                   }`}
                 >
                   {section.title}
@@ -287,7 +287,7 @@ export function FormattedSummary({ content }: FormattedSummaryProps) {
                       {/* Bullet Indicator */}
                       <div className="mt-1 shrink-0">
                         {isStatusSection ? (
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]" />
                         ) : (
                           <div className="w-1.5 h-1.5 rounded-full bg-amber-400/80" />
                         )}

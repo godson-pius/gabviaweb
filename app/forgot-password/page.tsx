@@ -36,19 +36,19 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b111e] text-slate-100 flex flex-col justify-between selection:bg-emerald-500/30 selection:text-emerald-200">
+    <div className="min-h-screen bg-[#0b111e] text-slate-100 flex flex-col justify-between selection:bg-sky-500/30 selection:text-sky-200">
       <header className="p-6 max-w-7xl mx-auto w-full flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg border border-slate-700/50 bg-slate-900 group-hover:scale-105 transition-transform">
             <Image src="/logo.png" alt="Gabvia Logo" width={40} height={40} className="w-full h-full object-cover" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-white group-hover:text-emerald-400 transition-colors">
+          <span className="text-xl font-bold tracking-tight text-white group-hover:text-sky-400 transition-colors">
             Gabvia
           </span>
         </Link>
         <Link
           href="/login"
-          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-400 hover:text-emerald-400 transition-colors bg-slate-800/60 border border-slate-700/50 px-4 py-2 rounded-full backdrop-blur-md"
+          className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-slate-400 hover:text-sky-400 transition-colors bg-slate-800/60 border border-slate-700/50 px-4 py-2 rounded-full backdrop-blur-md"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Sign In
         </Link>
@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
         <div className="w-full max-w-md">
           <div className="relative rounded-3xl bg-slate-900/90 border border-slate-800/80 p-8 shadow-2xl backdrop-blur-xl">
             <div className="relative text-center mb-8">
-              <div className="inline-flex p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 mb-4">
+              <div className="inline-flex p-3 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-400 mb-4">
                 <KeyRound className="w-6 h-6" />
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
@@ -70,17 +70,17 @@ export default function ForgotPasswordPage() {
             </div>
 
             {success ? (
-              <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-200 text-sm flex flex-col items-center text-center gap-3">
-                <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+              <div className="p-5 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-sky-200 text-sm flex flex-col items-center text-center gap-3">
+                <CheckCircle2 className="w-8 h-8 text-sky-400" />
                 <div>
                   <h3 className="font-bold text-white text-base">Check your inbox</h3>
                   <p className="text-slate-300 text-xs mt-1">
-                    If an account exists for <span className="font-semibold text-emerald-400">{email}</span>, you will receive password reset instructions shortly.
+                    If an account exists for <span className="font-semibold text-sky-400">{email}</span>, you will receive password reset instructions shortly.
                   </p>
                 </div>
                 <Link
                   href="/login"
-                  className="mt-2 text-xs font-semibold text-emerald-400 hover:underline inline-flex items-center gap-1"
+                  className="mt-2 text-xs font-semibold text-sky-400 hover:underline inline-flex items-center gap-1"
                 >
                   Return to sign in <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
@@ -98,7 +98,7 @@ export default function ForgotPasswordPage() {
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
                     Email Address
                   </label>
-                  <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-emerald-500/60 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                  <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-sky-500/60 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                       <Mail className="w-4 h-4" />
                     </div>
@@ -116,7 +116,7 @@ export default function ForgotPasswordPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.99] text-slate-950 font-bold text-sm tracking-wide shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="w-full py-3.5 px-4 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 active:scale-[0.99] text-white font-bold text-sm tracking-wide shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>

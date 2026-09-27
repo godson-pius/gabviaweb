@@ -220,8 +220,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 text-xs font-mono">
           <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap">
             <span className="flex h-2 w-2 relative flex-shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
             </span>
             <span
               className={`font-semibold uppercase tracking-wider ${isDark ? "text-zinc-100" : "text-zinc-950"
@@ -238,8 +238,8 @@ export default function Home() {
           <div className="flex items-center gap-2 flex-shrink-0">
             <span
               className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${isDark
-                ? "bg-emerald-950/50 text-emerald-400 border-emerald-800/60"
-                : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                ? "bg-sky-950/50 text-sky-400 border-sky-800/60"
+                : "bg-sky-50 text-sky-700 border-sky-200"
                 }`}
             >
               LAUNCHING MONDAY
@@ -443,7 +443,7 @@ export default function Home() {
                 <span>Get Android App</span>
               </a>
               <div
-                className={`w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-mono border ${isDark ? "text-zinc-500 bg-zinc-900/50 border-zinc-800" : "text-zinc-400 bg-zinc-50 border-zinc-200"
+                className={`w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-mono border ${isDark ? "text-zinc-500 bg-zinc-900/50 border-zinc-800" : "text-zinc-600 bg-zinc-50 border-zinc-200"
                   }`}
               >
                 <Icon name="lock" size={13} />
@@ -478,10 +478,10 @@ export default function Home() {
                   : "border-zinc-200 bg-zinc-50 text-zinc-700"
                   }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
                 <span className={`font-semibold ${isDark ? "text-zinc-100" : "text-zinc-950"}`}>COMING MONDAY</span>
                 <span className="text-zinc-500">|</span>
-                <span className="text-zinc-400">GLOBAL PLATFORM RELEASE</span>
+                <span className={isDark ? "text-zinc-400" : "text-zinc-600"}>GLOBAL PLATFORM RELEASE</span>
               </div>
 
               {/* Headline */}
@@ -519,7 +519,7 @@ export default function Home() {
                 <div
                   className={`inline-flex items-center gap-2 px-5 py-3.5 rounded-full border font-mono text-xs select-none ${isDark
                     ? "border-zinc-800 bg-zinc-900/50 text-zinc-400"
-                    : "border-zinc-200 bg-zinc-100/70 text-zinc-500"
+                    : "border-zinc-200 bg-zinc-100/70 text-zinc-600"
                     }`}
                 >
                   <Icon name="lock" size={13} />
@@ -528,17 +528,17 @@ export default function Home() {
               </div>
 
               {/* Minimal Value Points */}
-              <div className="flex flex-wrap items-center gap-6 pt-2 text-xs font-mono text-zinc-400">
+              <div className={`flex flex-wrap items-center gap-6 pt-2 text-xs font-mono ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
                   Zero Installation Required
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
+                  <span className={`w-1.5 h-1.5 rounded-full ${isDark ? "bg-zinc-400" : "bg-zinc-500"}`}></span>
                   100% Private &amp; Encrypted
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-400"></span>
+                  <span className={`w-1.5 h-1.5 rounded-full ${isDark ? "bg-zinc-400" : "bg-zinc-500"}`}></span>
                   40+ Languages
                 </span>
               </div>
@@ -558,12 +558,12 @@ export default function Home() {
 
                 {/* Card Header */}
                 <div
-                  className={`flex items-center justify-between px-4 py-3 border-b font-mono text-[11px] ${isDark ? "border-zinc-800 text-zinc-400" : "border-zinc-100 text-zinc-400"
+                  className={`flex items-center justify-between px-4 py-3 border-b font-mono text-[11px] ${isDark ? "border-zinc-800 text-zinc-400" : "border-zinc-200 text-zinc-600"
                     }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className={isDark ? "text-zinc-200 font-medium" : "text-zinc-700 font-medium"}>
+                    <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
+                    <span className={isDark ? "text-zinc-200 font-medium" : "text-zinc-800 font-medium"}>
                       GLOBAL NETWORK
                     </span>
                   </div>
@@ -580,24 +580,24 @@ export default function Home() {
 
                 {/* Card Footer Telemetry */}
                 <div
-                  className={`grid grid-cols-3 border-t px-4 py-3 font-mono text-[10px] ${isDark ? "border-zinc-800 text-zinc-400" : "border-zinc-100 text-zinc-400"
+                  className={`grid grid-cols-3 border-t px-4 py-3 font-mono text-[10px] ${isDark ? "border-zinc-800 text-zinc-400" : "border-zinc-200 text-zinc-600"
                     }`}
                 >
                   <div>
-                    <span className="block text-zinc-500">SECURITY</span>
-                    <span className={isDark ? "text-zinc-200 font-semibold" : "text-zinc-700 font-semibold"}>
+                    <span className={`block ${isDark ? "text-zinc-500" : "text-zinc-600"}`}>SECURITY</span>
+                    <span className={isDark ? "text-zinc-200 font-semibold" : "text-zinc-800 font-semibold"}>
                       100% Private
                     </span>
                   </div>
                   <div className="text-center">
-                    <span className="block text-zinc-500">LANGUAGES</span>
-                    <span className={isDark ? "text-emerald-400 font-semibold" : "text-emerald-700 font-semibold"}>
+                    <span className={`block ${isDark ? "text-zinc-500" : "text-zinc-600"}`}>LANGUAGES</span>
+                    <span className={isDark ? "text-sky-400 font-semibold" : "text-blue-600 font-semibold"}>
                       40+ Supported
                     </span>
                   </div>
                   <div className="text-right">
-                    <span className="block text-zinc-500">ACCESS</span>
-                    <span className={isDark ? "text-zinc-200 font-semibold" : "text-zinc-700 font-semibold"}>
+                    <span className={`block ${isDark ? "text-zinc-500" : "text-zinc-600"}`}>ACCESS</span>
+                    <span className={isDark ? "text-zinc-200 font-semibold" : "text-zinc-800 font-semibold"}>
                       Opens Monday
                     </span>
                   </div>
@@ -617,7 +617,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
             <div>
-              <span className="font-mono text-xs text-zinc-400 uppercase tracking-widest block mb-2">
+              <span className={`font-mono text-xs uppercase tracking-widest block mb-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
                 01 // MULTILINGUAL FEATURES
               </span>
               <h2
@@ -627,7 +627,7 @@ export default function Home() {
                 AI translation &amp; seamless messaging.
               </h2>
             </div>
-            <p className="text-sm font-mono text-zinc-400 max-w-md">
+            <p className={`text-sm font-mono max-w-md ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
               Everything you need for natural cross-language communication, optimized for Google Chrome, Safari, Firefox, and Edge.
             </p>
           </div>
@@ -640,7 +640,7 @@ export default function Home() {
           >
             {/* Feature 01 */}
             <div className={`p-8 space-y-4 transition-colors group ${isDark ? "hover:bg-zinc-800/40" : "hover:bg-zinc-50/80"}`}>
-              <span className="font-mono text-xs text-zinc-400 font-semibold block">01 / ACCESS</span>
+              <span className={`font-mono text-xs font-semibold block ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>01 / ACCESS</span>
               <div
                 className={`w-10 h-10 rounded-xl border flex items-center justify-center group-hover:scale-105 transition-transform ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-100 border-zinc-200 text-zinc-800"
                   }`}
@@ -655,7 +655,7 @@ export default function Home() {
 
             {/* Feature 02 */}
             <div className={`p-8 space-y-4 transition-colors group ${isDark ? "hover:bg-zinc-800/40" : "hover:bg-zinc-50/80"}`}>
-              <span className="font-mono text-xs text-zinc-400 font-semibold block">02 / TRANSLATION</span>
+              <span className={`font-mono text-xs font-semibold block ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>02 / TRANSLATION</span>
               <div
                 className={`w-10 h-10 rounded-xl border flex items-center justify-center group-hover:scale-105 transition-transform ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-100 border-zinc-200 text-zinc-800"
                   }`}
@@ -670,7 +670,7 @@ export default function Home() {
 
             {/* Feature 03 */}
             <div className={`p-8 space-y-4 transition-colors group ${isDark ? "hover:bg-zinc-800/40" : "hover:bg-zinc-50/80"}`}>
-              <span className="font-mono text-xs text-zinc-400 font-semibold block">03 / PRIVACY</span>
+              <span className={`font-mono text-xs font-semibold block ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>03 / PRIVACY</span>
               <div
                 className={`w-10 h-10 rounded-xl border flex items-center justify-center group-hover:scale-105 transition-transform ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-100 border-zinc-200 text-zinc-800"
                   }`}
@@ -685,7 +685,7 @@ export default function Home() {
 
             {/* Feature 04 */}
             <div className={`p-8 space-y-4 transition-colors group ${isDark ? "hover:bg-zinc-800/40" : "hover:bg-zinc-50/80"}`}>
-              <span className="font-mono text-xs text-zinc-400 font-semibold block">04 / AUDIO</span>
+              <span className={`font-mono text-xs font-semibold block ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>04 / AUDIO</span>
               <div
                 className={`w-10 h-10 rounded-xl border flex items-center justify-center group-hover:scale-105 transition-transform ${isDark ? "bg-zinc-800 border-zinc-700 text-zinc-200" : "bg-zinc-100 border-zinc-200 text-zinc-800"
                   }`}
@@ -709,7 +709,7 @@ export default function Home() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-12">
-            <span className="font-mono text-xs text-zinc-400 uppercase tracking-widest block mb-2">
+            <span className={`font-mono text-xs uppercase tracking-widest block mb-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
               02 // HOW TO USE GABVIA
             </span>
           </div>
@@ -727,7 +727,7 @@ export default function Home() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-16">
-            <span className="font-mono text-xs text-zinc-400 uppercase tracking-widest block mb-2">
+            <span className={`font-mono text-xs uppercase tracking-widest block mb-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
               03 // AVAILABILITY
             </span>
             <h2
@@ -748,11 +748,11 @@ export default function Home() {
                 }`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-zinc-400">PHASE 01</span>
+                <span className={`font-mono text-xs font-bold ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>PHASE 01</span>
                 <span
                   className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${isDark
-                    ? "bg-emerald-950/50 text-emerald-400 border-emerald-800/60"
-                    : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    ? "bg-sky-950/50 text-sky-400 border-sky-800/60"
+                    : "bg-sky-50 text-sky-700 border border-sky-200"
                     }`}
                 >
                   AVAILABLE NOW
@@ -767,7 +767,7 @@ export default function Home() {
                   href={PLAY_STORE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`text-xs font-mono font-semibold hover:underline inline-flex items-center gap-1 ${isDark ? "text-emerald-400" : "text-zinc-900"
+                  className={`text-xs font-mono font-semibold hover:underline inline-flex items-center gap-1 ${isDark ? "text-sky-400" : "text-blue-600"
                     }`}
                 >
                   <span>Download on Google Play</span>
@@ -778,26 +778,25 @@ export default function Home() {
 
             {/* Phase 2 */}
             <div
-              className={`p-8 rounded-2xl border-2 space-y-4 shadow-sm relative ${isDark ? "border-emerald-500/70 bg-zinc-900/80" : "border-zinc-900 bg-white"
+              className={`p-8 rounded-2xl border-2 space-y-4 shadow-sm relative ${isDark ? "border-sky-500/70 bg-zinc-900/80 shadow-lg shadow-sky-950/20" : "border-blue-600 bg-white shadow-lg shadow-blue-500/10"
                 }`}
             >
               <span
-                className={`absolute -top-3 right-6 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider ${isDark ? "bg-emerald-500 text-zinc-950" : "bg-zinc-950 text-white"
-                  }`}
+                className="absolute -top-3 right-6 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-sm"
               >
                 MONDAY LAUNCH
               </span>
               <div className="flex items-center justify-between">
-                <span className={`font-mono text-xs font-bold ${isDark ? "text-emerald-400" : "text-zinc-900"}`}>
+                <span className={`font-mono text-xs font-bold ${isDark ? "text-sky-400" : "text-blue-600"}`}>
                   PHASE 02
                 </span>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
               </div>
               <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>Universal Web Platform</h3>
               <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
                 Browser-based web client for desktop and laptop computers with real-time translation, voice audio, and notifications.
               </p>
-              <div className="pt-2 text-xs font-mono text-zinc-400">Doors open worldwide Monday morning</div>
+              <div className={`pt-2 text-xs font-mono ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Doors open worldwide Monday morning</div>
             </div>
 
             {/* Phase 3 */}
@@ -806,7 +805,7 @@ export default function Home() {
                 }`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-zinc-500">PHASE 03</span>
+                <span className={`font-mono text-xs font-bold ${isDark ? "text-zinc-500" : "text-zinc-600"}`}>PHASE 03</span>
                 <span
                   className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${isDark ? "bg-zinc-800 text-zinc-400 border-zinc-700" : "bg-zinc-100 text-zinc-500 border border-zinc-200"
                     }`}
@@ -818,7 +817,7 @@ export default function Home() {
               <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
                 Dedicated native desktop applications for macOS, Windows, and Linux with system tray integration and offline tools.
               </p>
-              <div className="pt-2 text-xs font-mono text-zinc-400">Planned for later this year</div>
+              <div className={`pt-2 text-xs font-mono ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Planned for later this year</div>
             </div>
           </div>
         </div>
@@ -832,7 +831,7 @@ export default function Home() {
       >
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="font-mono text-xs text-zinc-400 uppercase tracking-widest block mb-2">
+            <span className={`font-mono text-xs uppercase tracking-widest block mb-2 ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
               04 // QUESTIONS
             </span>
             <h2
@@ -860,7 +859,7 @@ export default function Home() {
                       }`}
                   >
                     <span className="text-base sm:text-lg">{item.q}</span>
-                    <span className="font-mono text-zinc-400 text-lg flex-shrink-0">
+                    <span className={`font-mono text-lg flex-shrink-0 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
                       {isOpen ? "−" : "+"}
                     </span>
                   </button>
@@ -891,7 +890,7 @@ export default function Home() {
               <span className={`font-bold text-lg tracking-tight ${isDark ? "text-white" : "text-zinc-950"}`}>
                 Gabvia
               </span>
-              <span className="font-mono text-xs text-zinc-400 ml-2">
+              <span className={`font-mono text-xs ml-2 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
                 / Different languages. One conversation.
               </span>
             </div>
@@ -926,10 +925,10 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-zinc-400">
+          <div className={`pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
             <div>© {new Date().getFullYear()} Gabvia Technologies Inc. All rights reserved.</div>
             <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
               <span>MONDAY LAUNCH · READY</span>
             </div>
           </div>

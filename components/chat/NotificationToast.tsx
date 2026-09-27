@@ -39,12 +39,12 @@ export function NotificationToast({
         isVisible ? "opacity-100 translate-y-0 scale-100" : "opacity-0 -translate-y-4 scale-95 pointer-events-none"
       }`}
     >
-      <div className="bg-slate-900/95 backdrop-blur-md border border-emerald-500/30 rounded-2xl p-3.5 shadow-2xl shadow-emerald-950/40 flex items-start gap-3 relative overflow-hidden group">
+      <div className="bg-slate-900/95 backdrop-blur-md border border-sky-500/30 rounded-2xl p-3.5 shadow-2xl shadow-blue-950/40 flex items-start gap-3 relative overflow-hidden group">
         {/* Subtle accent highlight bar */}
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-400 to-teal-500" />
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-sky-400 to-blue-600" />
 
         {/* Sender Avatar / Icon */}
-        <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center font-bold text-emerald-400 text-sm shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/25 flex items-center justify-center font-bold text-sky-400 text-sm shrink-0">
           {toast.senderName.charAt(0).toUpperCase() || <MessageSquare className="w-4 h-4" />}
         </div>
 
@@ -67,7 +67,7 @@ export function NotificationToast({
           <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
             {toast.messageText}
           </p>
-          <div className="flex items-center gap-1 text-[11px] text-emerald-400 font-semibold mt-1.5 hover:underline">
+          <div className="flex items-center gap-1 text-[11px] text-sky-400 font-semibold mt-1.5 hover:underline">
             <span>Open chat</span>
             <ArrowRight className="w-3 h-3" />
           </div>

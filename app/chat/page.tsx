@@ -42,6 +42,8 @@ import {
   Shield,
   ShieldCheck,
   Sparkles,
+  Sun,
+  Moon,
   Trash2,
   User,
   UserMinus,
@@ -81,6 +83,24 @@ export default function ChatPage() {
     recoverKeys,
     updateLanguage,
   } = useAuth();
+
+  // SpaceFS Theme Synchronization
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("gabvia-theme") as "light" | "dark" | null;
+    if (saved === "dark" || saved === "light") {
+      setTheme(saved);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("gabvia-theme", next);
+  };
+
+  const isDark = theme === "dark";
 
   const {
     conversations,
@@ -680,15 +700,21 @@ export default function ChatPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0b111e] flex flex-col items-center justify-center text-slate-400 gap-3">
-        <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
-        <span className="text-sm font-medium tracking-wide">Initializing secure session...</span>
+      <div className={`min-h-screen flex flex-col items-center justify-center gap-3 transition-colors ${
+        isDark ? "bg-[#09090b] text-zinc-400" : "bg-[#fafafa] text-zinc-600"
+      }`}>
+        <Loader2 className={`w-8 h-8 animate-spin ${isDark ? "text-sky-400" : "text-blue-600"}`} />
+        <span className="text-xs font-mono tracking-widest uppercase">INITIALIZING SECURE SESSION...</span>
       </div>
     );
   }
 
   return (
-    <div className="h-[100dvh] max-h-[100dvh] w-full overflow-hidden bg-[#0b111e] text-slate-100 flex flex-col overscroll-none">
+    <div
+      className={`chat-workspace h-[100dvh] max-h-[100dvh] w-full overflow-hidden flex flex-col overscroll-none transition-colors duration-200 ${
+        isDark ? "chat-theme-dark bg-[#09090b] text-[#f4f4f5]" : "chat-theme-light bg-[#fafafa] text-[#09090b]"
+      }`}
+    >
       {/* Recovery Banner if needed */}
       {needsKeyRecovery && (
         <div className="bg-amber-500/10 border-b border-amber-500/20 px-3 sm:px-4 py-2 sm:py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-200 shrink-0">
@@ -715,22 +741,35 @@ export default function ChatPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* SIDEBAR */}
         <aside
-          className={`w-full md:w-80 lg:w-96 border-r border-slate-800/80 bg-slate-900/60 flex flex-col backdrop-blur-xl shrink-0 transition-transform ${mobileShowChat ? "hidden md:flex" : "flex"
-            }`}
+          className={`w-full md:w-80 lg:w-96 border-r flex flex-col backdrop-blur-xl shrink-0 transition-transform ${
+            isDark ? "border-zinc-800/80 bg-zinc-950/80" : "border-zinc-200 bg-white/95"
+          } ${mobileShowChat ? "hidden md:flex" : "flex"}`}
         >
           {/* Header */}
-          <div className="p-3.5 border-b border-slate-800/80 bg-slate-900/40 flex flex-col gap-3">
+          <div
+            className={`p-3.5 border-b flex flex-col gap-3 ${
+              isDark ? "border-zinc-800/80 bg-zinc-950/40" : "border-zinc-200/80 bg-white/60"
+            }`}
+          >
             {/* Top Row: Brand & Primary Controls */}
             <div className="flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2.5 group">
-                <div className="w-8 h-8 rounded-xl overflow-hidden border border-slate-700/60 bg-slate-950 shadow-sm flex items-center justify-center">
+                <div
+                  className={`w-8 h-8 rounded-xl overflow-hidden border shadow-xs flex items-center justify-center transition-colors ${
+                    isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-white"
+                  }`}
+                >
                   <Image src="/logo.png" alt="Gabvia" width={32} height={32} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-extrabold text-base tracking-tight text-white group-hover:text-emerald-400 transition-colors leading-none">
+                  <span
+                    className={`font-bold text-base tracking-tight leading-none transition-colors ${
+                      isDark ? "text-white group-hover:text-sky-400" : "text-zinc-950 group-hover:text-blue-600"
+                    }`}
+                  >
                     Gabvia
                   </span>
-                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mt-0.5">
+                  <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest mt-0.5">
                     Messages
                   </span>
                 </div>
@@ -738,10 +777,29 @@ export default function ChatPage() {
 
               {/* Action Buttons Group */}
               <div className="flex items-center gap-1.5">
+                {/* Theme Toggle Button */}
+                <button
+                  onClick={toggleTheme}
+                  type="button"
+                  className={`p-2 rounded-xl border transition-colors ${
+                    isDark
+                      ? "bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800"
+                      : "bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-zinc-950 hover:bg-zinc-200"
+                  }`}
+                  title={`Switch to ${isDark ? "light" : "dark"} theme`}
+                  aria-label="Toggle theme"
+                >
+                  {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                </button>
+
                 {/* Dedicated Translator Tool */}
                 <Link
                   href="/translator"
-                  className="p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-emerald-400 border border-slate-700/40 transition-colors"
+                  className={`p-2 rounded-xl border transition-colors ${
+                    isDark
+                      ? "bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-sky-400 hover:bg-zinc-800"
+                      : "bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-blue-600 hover:bg-zinc-200"
+                  }`}
                   title="Open Dedicated Translator"
                 >
                   <Languages className="w-4 h-4" />
@@ -750,7 +808,11 @@ export default function ChatPage() {
                 {/* Settings / Profile Button */}
                 <button
                   onClick={() => setIsSettingsOpen(true)}
-                  className="p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-700/40 transition-colors cursor-pointer"
+                  className={`p-2 rounded-xl border transition-colors ${
+                    isDark
+                      ? "bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800"
+                      : "bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-zinc-950 hover:bg-zinc-200"
+                  }`}
                   title="Settings & Profile"
                 >
                   <Settings className="w-4 h-4" />
@@ -759,7 +821,7 @@ export default function ChatPage() {
                 {/* Start New Chat Button */}
                 <button
                   onClick={() => setIsNewChatModalOpen(true)}
-                  className="p-2 rounded-xl bg-emerald-500 text-slate-950 hover:bg-emerald-400 active:scale-95 transition-all shadow-md shadow-emerald-500/20 cursor-pointer font-bold"
+                  className="p-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:from-sky-400 hover:to-blue-500 active:scale-95 transition-all shadow-sm shadow-blue-500/20 cursor-pointer font-bold"
                   title="Start New Chat"
                 >
                   <Plus className="w-4 h-4 stroke-[2.5]" />
@@ -772,9 +834,13 @@ export default function ChatPage() {
               {/* Gab Points Badge */}
               <div
                 title="Your available Gab Points for translations"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold shadow-inner"
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shadow-inner ${
+                  isDark
+                    ? "bg-sky-500/10 border border-sky-500/20 text-sky-400"
+                    : "bg-blue-50 border border-blue-200 text-blue-700"
+                }`}
               >
-                <Coins className="w-3.5 h-3.5 text-emerald-400" />
+                <Coins className={`w-3.5 h-3.5 ${isDark ? "text-sky-400" : "text-blue-600"}`} />
                 <span>{profile?.gab_points ?? 500} pts</span>
               </div>
 
@@ -782,7 +848,7 @@ export default function ChatPage() {
               <button
                 onClick={() => setIsMilestoneModalOpen(true)}
                 title="Early Adopter 1,000 Points Plan"
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/15 to-emerald-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold hover:border-amber-500/60 hover:bg-amber-500/20 transition-all cursor-pointer shadow-sm"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/15 to-sky-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold hover:border-amber-500/60 hover:bg-amber-500/20 transition-all cursor-pointer shadow-sm"
               >
                 <Gift className="w-3.5 h-3.5 text-amber-400" />
                 <span>1,000 Plan</span>
@@ -792,7 +858,11 @@ export default function ChatPage() {
 
           {/* Search Bar */}
           <div className="p-3 border-b border-slate-800/40">
-            <div className="relative rounded-xl bg-slate-950/60 border border-slate-800/80 focus-within:border-emerald-500/50 transition-all">
+            <div className={`relative rounded-xl border transition-all ${
+              isDark
+                ? "bg-zinc-900/60 border-zinc-800 focus-within:border-sky-500/60"
+                : "bg-zinc-50 border-zinc-200 focus-within:border-blue-500"
+            }`}>
               <Search className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
               <input
                 type="text"
@@ -817,9 +887,13 @@ export default function ChatPage() {
 
           {/* Group Invitations Banner */}
           {invitations.length > 0 && (
-            <div className="p-3 bg-emerald-500/10 border-b border-emerald-500/20">
+            <div className={`p-3 border-b ${
+              isDark ? "bg-sky-500/10 border-sky-500/20" : "bg-blue-50/80 border-blue-100"
+            }`}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+                <span className={`text-xs font-bold flex items-center gap-1.5 ${
+                  isDark ? "text-sky-400" : "text-blue-700"
+                }`}>
                   <Users className="w-3.5 h-3.5" /> Group Invitations ({invitations.length})
                 </span>
               </div>
@@ -827,13 +901,15 @@ export default function ChatPage() {
                 {invitations.map((inv) => (
                   <div
                     key={inv.id}
-                    className="p-2.5 rounded-xl bg-slate-900/90 border border-emerald-500/30 flex items-center justify-between gap-2 shadow-sm"
+                    className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 shadow-sm ${
+                      isDark ? "bg-zinc-900/90 border-sky-500/30" : "bg-white border-blue-200"
+                    }`}
                   >
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold text-white truncate">
+                      <p className={`text-xs font-semibold truncate ${isDark ? "text-white" : "text-zinc-950"}`}>
                         {inv.name || "Group Invitation"}
                       </p>
-                      <p className="text-[10px] text-slate-400 truncate">
+                      <p className={`text-[10px] truncate ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
                         You were invited to join
                       </p>
                     </div>
@@ -847,7 +923,7 @@ export default function ChatPage() {
                             alert("Failed to accept invite");
                           }
                         }}
-                        className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-colors cursor-pointer"
+                        className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white text-xs font-bold transition-colors cursor-pointer shadow-xs"
                       >
                         Accept
                       </button>
@@ -874,7 +950,7 @@ export default function ChatPage() {
           <div className="flex-1 overflow-y-auto divide-y divide-slate-800/30">
             {loadingConversations ? (
               <div className="p-6 text-center text-xs text-slate-500 flex flex-col items-center gap-2">
-                <Loader2 className="w-5 h-5 animate-spin text-emerald-500" />
+                <Loader2 className={`w-5 h-5 animate-spin ${isDark ? "text-sky-400" : "text-blue-600"}`} />
                 <span>Syncing conversations...</span>
               </div>
             ) : filteredConversations.length === 0 ? (
@@ -888,7 +964,7 @@ export default function ChatPage() {
                 </p>
                 <button
                   onClick={() => setIsNewChatModalOpen(true)}
-                  className="mt-4 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-md transition-colors"
+                  className="mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs shadow-md transition-colors"
                 >
                   Find someone to chat
                 </button>
@@ -910,16 +986,35 @@ export default function ChatPage() {
                       setMobileShowChat(true);
                       setTimeout(() => textareaRef.current?.focus(), 150);
                     }}
-                    className={`w-full text-left p-3.5 flex items-start gap-3 transition-colors ${isActive ? "bg-emerald-500/10 border-l-2 border-emerald-400" : "hover:bg-slate-800/40"
-                      }`}
+                    className={`w-full text-left p-3.5 flex items-start gap-3 transition-colors ${
+                      isActive
+                        ? isDark
+                          ? "bg-sky-500/10 border-l-2 border-sky-400"
+                          : "bg-blue-50 border-l-2 border-blue-600"
+                        : isDark
+                          ? "hover:bg-zinc-800/40"
+                          : "hover:bg-zinc-100/70"
+                    }`}
                   >
                     {/* Avatar */}
-                    <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/60 flex items-center justify-center text-slate-300 font-bold text-sm shrink-0 overflow-hidden shadow">
-                      {displayName.charAt(0).toUpperCase()}
+                    <div
+                      className={`relative w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden shadow-xs transition-colors chat-avatar ${
+                        isDark
+                          ? "bg-zinc-800/90 border border-zinc-700/60 text-sky-200"
+                          : "bg-gradient-to-br from-sky-50 to-blue-100 border border-blue-200 text-blue-700"
+                      }`}
+                    >
+                      <span className={isDark ? "text-sky-200" : "text-blue-700"}>
+                        {displayName.charAt(0).toUpperCase()}
+                      </span>
                       {convo.type !== "group" && (
                         <div
                           title="Protected with End-to-End Encryption"
-                          className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-slate-950 border border-emerald-500/40 flex items-center justify-center text-[9px] text-emerald-400"
+                          className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border flex items-center justify-center text-[9px] ${
+                            isDark
+                              ? "bg-zinc-950 border-sky-500/40 text-sky-400"
+                              : "bg-white border-blue-300 text-blue-600 shadow-xs"
+                          }`}
                         >
                           <Lock className="w-2.5 h-2.5" />
                         </div>
@@ -930,7 +1025,13 @@ export default function ChatPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1 mb-0.5">
                         <div className="flex items-center gap-1.5 min-w-0">
-                          <span className={`text-sm font-semibold truncate ${isActive ? "text-emerald-400" : "text-white"}`}>
+                          <span
+                            className={`text-sm font-semibold truncate ${
+                              isActive
+                                ? isDark ? "text-sky-400" : "text-blue-600 font-bold"
+                                : isDark ? "text-white" : "text-zinc-950"
+                            }`}
+                          >
                             {displayName}
                           </span>
                           {userLang && (
@@ -951,7 +1052,7 @@ export default function ChatPage() {
                           {convo.last_message ? (
                             convo.last_message.startsWith("{") ? (
                               <span className="inline-flex items-center gap-1 text-slate-400">
-                                <Lock className="w-3 h-3 text-emerald-400/80" /> Encrypted message
+                                <Lock className={`w-3 h-3 ${isDark ? "text-sky-400/80" : "text-blue-500"}`} /> Encrypted message
                               </span>
                             ) : (
                               convo.last_message
@@ -961,7 +1062,7 @@ export default function ChatPage() {
                           )}
                         </p>
                         {unread > 0 && (
-                          <span className="px-1.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-bold shadow-sm shadow-emerald-500/40">
+                          <span className="px-1.5 py-0.5 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white text-[10px] font-bold shadow-sm shadow-blue-500/30">
                             {unread}
                           </span>
                         )}
@@ -974,22 +1075,34 @@ export default function ChatPage() {
           </div>
 
           {/* User profile footer */}
-          <div className="p-3 border-t border-slate-800/80 bg-slate-950/40 flex items-center justify-between pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className={`p-3 border-t flex items-center justify-between pb-[max(0.75rem,env(safe-area-inset-bottom))] ${
+            isDark ? "border-zinc-800/80 bg-zinc-950/40" : "border-zinc-200/80 bg-white"
+          }`}>
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center font-bold text-xs text-emerald-400 shrink-0">
-                {profile?.full_name?.charAt(0).toUpperCase() || profile?.username?.charAt(0).toUpperCase() || "U"}
+              <div
+                className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border transition-colors chat-avatar ${
+                  isDark
+                    ? "bg-sky-500/20 border-sky-500/40 text-sky-300"
+                    : "bg-gradient-to-br from-sky-500 to-blue-600 text-white border-blue-600 shadow-xs"
+                }`}
+              >
+                <span className={isDark ? "text-sky-300" : "text-white"}>
+                  {profile?.full_name?.charAt(0).toUpperCase() || profile?.username?.charAt(0).toUpperCase() || "U"}
+                </span>
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-white truncate leading-tight">
+                <p className={`text-xs font-bold truncate leading-tight ${isDark ? "text-white" : "text-zinc-950"}`}>
                   {profile?.full_name || profile?.username || "You"}
                 </p>
-                <p className="text-[10px] text-slate-400 truncate">@{profile?.username || "username"}</p>
+                <p className={`text-[10px] truncate ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>@{profile?.username || "username"}</p>
               </div>
             </div>
 
             <button
               onClick={() => setIsSecurityModalOpen(true)}
-              className="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                isDark ? "text-sky-400 hover:bg-sky-500/10" : "text-blue-600 hover:bg-blue-50"
+              }`}
               title="End-to-End Encryption Security Verified"
             >
               <ShieldCheck className="w-4 h-4" />
@@ -998,11 +1111,19 @@ export default function ChatPage() {
         </aside>
 
         {/* CHAT AREA */}
-        <section className={`flex-1 flex flex-col bg-[#0b111e] overflow-hidden ${mobileShowChat ? "flex" : "hidden md:flex"}`}>
+        <section
+          className={`chat-main flex-1 flex flex-col overflow-hidden transition-colors ${
+            isDark ? "bg-[#09090b]" : "bg-[#fafafa]"
+          } ${mobileShowChat ? "flex" : "hidden md:flex"}`}
+        >
           {activeConversation ? (
             <>
               {/* Chat Top Bar */}
-              <div className="h-16 px-3 sm:px-6 border-b border-slate-800/80 bg-slate-900/70 backdrop-blur-md flex items-center justify-between shrink-0 gap-2 relative">
+              <div
+                className={`chat-header h-16 px-3 sm:px-6 border-b backdrop-blur-md flex items-center justify-between shrink-0 gap-2 relative transition-colors ${
+                  isDark ? "border-zinc-800/80 bg-zinc-950/80" : "border-zinc-200 bg-white/95"
+                }`}
+              >
                 <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                   {/* Mobile Back Button */}
                   <button
@@ -1010,35 +1131,53 @@ export default function ChatPage() {
                       setMobileShowChat(false);
                       setMobileMenuOpen(false);
                     }}
-                    className="md:hidden w-10 h-10 -ml-1 rounded-xl flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-800 active:scale-95 transition-all shrink-0 cursor-pointer"
+                    className={`md:hidden w-10 h-10 -ml-1 rounded-xl flex items-center justify-center active:scale-95 transition-all shrink-0 cursor-pointer ${
+                      isDark ? "text-zinc-300 hover:text-white hover:bg-zinc-800" : "text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100"
+                    }`}
                     aria-label="Back to conversations"
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
 
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/60 flex items-center justify-center text-slate-300 font-bold text-sm shrink-0 shadow">
+                  <div
+                    className={`w-10 h-10 rounded-2xl border flex items-center justify-center font-bold text-sm shrink-0 shadow-xs transition-colors chat-avatar ${
+                      isDark
+                        ? "bg-zinc-900 border-zinc-800 text-sky-200"
+                        : "bg-gradient-to-br from-sky-50 to-blue-100 border-blue-200 text-blue-700"
+                    }`}
+                  >
                     {activeConversation.type === "group" ? (
-                      <Users className="w-5 h-5 text-emerald-400" />
+                      <Users className={`w-5 h-5 ${isDark ? "text-sky-400" : "text-blue-600"}`} />
                     ) : (
-                      (otherParticipant?.full_name || otherParticipant?.username || "U").charAt(0).toUpperCase()
+                      <span className={isDark ? "text-sky-200" : "text-blue-700"}>
+                        {(otherParticipant?.full_name || otherParticipant?.username || "U").charAt(0).toUpperCase()}
+                      </span>
                     )}
                   </div>
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <h3 className="text-sm font-bold text-white truncate max-w-[130px] xs:max-w-[180px] sm:max-w-[260px] md:max-w-xs">
+                      <h3 className={`text-sm font-bold truncate max-w-[130px] xs:max-w-[180px] sm:max-w-[260px] md:max-w-xs ${
+                        isDark ? "text-white" : "text-zinc-950"
+                      }`}>
                         {activeConversation.type === "group"
                           ? activeConversation.name || "Group Chat"
                           : otherParticipant?.full_name || otherParticipant?.username || "Direct Chat"}
                       </h3>
                       {activeConversation.type === "group" ? (
-                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold shrink-0">
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${
+                          isDark ? "bg-sky-500/10 border border-sky-500/20 text-sky-400" : "bg-blue-50 border border-blue-200 text-blue-700"
+                        }`}>
                           <Users className="w-2.5 h-2.5" /> Group
                         </span>
                       ) : (
                         <button
                           onClick={() => setIsSecurityModalOpen(true)}
-                          className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-semibold hover:bg-emerald-500/20 transition-colors shrink-0 cursor-pointer"
+                          className={`inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors shrink-0 cursor-pointer ${
+                            isDark
+                              ? "bg-sky-500/10 border border-sky-500/20 text-sky-400 hover:bg-sky-500/20"
+                              : "bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100"
+                          }`}
                         >
                           <Lock className="w-2.5 h-2.5" /> E2EE
                         </button>
@@ -1054,7 +1193,7 @@ export default function ChatPage() {
                           {otherParticipant?.native_language && (
                             <>
                               <span>•</span>
-                              <span className="flex items-center gap-1 text-emerald-400/90 shrink-0">
+                              <span className={`flex items-center gap-1 shrink-0 ${isDark ? "text-sky-400/90" : "text-blue-600"}`}>
                                 <Globe className="w-3 h-3" /> Speaks {otherParticipant.native_language}
                               </span>
                             </>
@@ -1070,7 +1209,11 @@ export default function ChatPage() {
                   {/* Quick Translator Tool */}
                   <button
                     onClick={() => setIsQuickTranslatorOpen(true)}
-                    className="px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                    className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
+                      isDark
+                        ? "bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/25"
+                        : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
+                    }`}
                     title="Quick Translator Tool"
                   >
                     <Languages className="w-3.5 h-3.5" />
@@ -1092,7 +1235,11 @@ export default function ChatPage() {
                     <>
                       <button
                         onClick={() => setIsEventModalOpen(true)}
-                        className="px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/25 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                        className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
+                          isDark
+                            ? "bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/25"
+                            : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
+                        }`}
                         title="Schedule Group Event"
                       >
                         <CalendarPlus className="w-3.5 h-3.5" />
@@ -1101,10 +1248,14 @@ export default function ChatPage() {
 
                       <button
                         onClick={() => setIsGroupDetailsOpen(true)}
-                        className="px-2.5 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                        className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
+                          isDark
+                            ? "bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/60"
+                            : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 hover:text-zinc-950 border border-zinc-200"
+                        }`}
                         title="Group Details & Members"
                       >
-                        <Users className="w-3.5 h-3.5 text-emerald-400" />
+                        <Users className={`w-3.5 h-3.5 ${isDark ? "text-sky-400" : "text-blue-600"}`} />
                         <span>Members ({activeConversation.participants.length})</span>
                       </button>
                     </>
@@ -1112,7 +1263,11 @@ export default function ChatPage() {
 
                   <button
                     onClick={() => setIsSecurityModalOpen(true)}
-                    className="p-2 rounded-xl bg-slate-800/40 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 transition-colors cursor-pointer"
+                    className={`p-2 rounded-xl transition-colors cursor-pointer ${
+                      isDark
+                        ? "bg-zinc-800/40 hover:bg-zinc-800 text-zinc-300 hover:text-sky-400"
+                        : "bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-blue-600"
+                    }`}
                     title="Security Details"
                   >
                     <Shield className="w-4 h-4" />
@@ -1123,7 +1278,11 @@ export default function ChatPage() {
                 <div className="flex md:hidden items-center gap-1 shrink-0 relative">
                   <button
                     onClick={() => setIsQuickTranslatorOpen(true)}
-                    className="w-9 h-9 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition-all cursor-pointer active:scale-95"
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
+                      isDark
+                        ? "bg-sky-500/15 hover:bg-sky-500/25 text-sky-400 border border-sky-500/30"
+                        : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
+                    }`}
                     title="Quick Translator"
                   >
                     <Languages className="w-4 h-4" />
@@ -1131,7 +1290,11 @@ export default function ChatPage() {
 
                   <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className="w-9 h-9 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/50 flex items-center justify-center transition-all cursor-pointer active:scale-95"
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
+                      isDark
+                        ? "bg-zinc-800/60 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/50"
+                        : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 hover:text-zinc-950 border border-zinc-200"
+                    }`}
                     title="More actions"
                   >
                     <MoreVertical className="w-4 h-4" />
@@ -1165,9 +1328,9 @@ export default function ChatPage() {
                                 setMobileMenuOpen(false);
                                 setIsEventModalOpen(true);
                               }}
-                              className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-emerald-400 hover:bg-slate-800/80 rounded-xl transition-colors text-left cursor-pointer"
+                              className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-sky-400 hover:bg-slate-800/80 rounded-xl transition-colors text-left cursor-pointer"
                             >
-                              <CalendarPlus className="w-4 h-4 text-emerald-400 shrink-0" />
+                              <CalendarPlus className="w-4 h-4 text-sky-400 shrink-0" />
                               <span>Schedule Event</span>
                             </button>
 
@@ -1178,7 +1341,7 @@ export default function ChatPage() {
                               }}
                               className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800/80 rounded-xl transition-colors text-left cursor-pointer"
                             >
-                              <Users className="w-4 h-4 text-emerald-400 shrink-0" />
+                              <Users className="w-4 h-4 text-sky-400 shrink-0" />
                               <span>Members ({activeConversation.participants.length})</span>
                             </button>
                           </>
@@ -1193,7 +1356,7 @@ export default function ChatPage() {
                           }}
                           className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800/80 rounded-xl transition-colors text-left cursor-pointer"
                         >
-                          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <ShieldCheck className="w-4 h-4 text-sky-400 shrink-0" />
                           <span>E2EE Security Info</span>
                         </button>
                       </div>
@@ -1204,7 +1367,7 @@ export default function ChatPage() {
 
               {/* Pinned Event Banner (if any) */}
               {activeConversation.pinned_event && (
-                <div className="mx-4 sm:mx-6 mt-3 p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-slate-900 border border-amber-500/30 flex items-center justify-between gap-3 shadow-md shrink-0 animate-fadeIn">
+                <div className="mx-4 sm:mx-6 mt-3 p-3 rounded-2xl bg-gradient-to-r from-amber-500/15 via-sky-500/10 to-slate-900 border border-amber-500/30 flex items-center justify-between gap-3 shadow-md shrink-0 animate-fadeIn">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
                       <Pin className="w-4 h-4" />
@@ -1273,8 +1436,12 @@ export default function ChatPage() {
               {/* Messages Stream */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
                 {/* Security Announcement Card */}
-                <div className="max-w-md mx-auto p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800/80 text-center text-xs text-slate-400 flex flex-col items-center gap-1.5">
-                  <div className="inline-flex items-center gap-1 text-emerald-400 font-bold">
+                <div className={`max-w-md mx-auto p-3.5 rounded-2xl border text-center text-xs flex flex-col items-center gap-1.5 ${
+                  isDark ? "bg-zinc-900/60 border-zinc-800 text-zinc-400" : "bg-white border-zinc-200 text-zinc-600 shadow-xs"
+                }`}>
+                  <div className={`inline-flex items-center gap-1 font-bold ${
+                    isDark ? "text-sky-400" : "text-blue-600"
+                  }`}>
                     {activeConversation.type === "group" ? (
                       <>
                         <Globe className="w-4 h-4" /> Multilingual Group Chat
@@ -1294,7 +1461,7 @@ export default function ChatPage() {
 
                 {loadingMessages ? (
                   <div className="flex justify-center p-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+                    <Loader2 className={`w-6 h-6 animate-spin ${isDark ? "text-sky-400" : "text-blue-600"}`} />
                   </div>
                 ) : messages.length === 0 ? (
                   <div className="text-center py-12 text-slate-500 text-xs">
@@ -1316,8 +1483,10 @@ export default function ChatPage() {
                         {msg.reply_to && (
                           <div
                             className={`text-[11px] mb-1 px-3 py-1 rounded-lg border max-w-sm truncate ${isMe
-                                ? "bg-emerald-950/40 border-emerald-800/40 text-emerald-300"
-                                : "bg-slate-800/60 border-slate-700/60 text-slate-300"
+                                ? "bg-white/15 border-white/20 text-sky-100"
+                                : isDark
+                                  ? "bg-zinc-800/60 border-zinc-700/60 text-zinc-300"
+                                  : "bg-blue-50/80 border-blue-200 text-blue-900"
                               }`}
                           >
                             <span className="font-semibold">{msg.reply_to.sender_name}: </span>
@@ -1329,12 +1498,14 @@ export default function ChatPage() {
                           {/* Message Bubble */}
                           <div
                             className={`rounded-2xl px-4 py-2.5 text-sm shadow-md transition-all ${isMe
-                                ? "bg-emerald-600 text-white rounded-br-xs"
-                                : "bg-slate-800/90 text-slate-100 border border-slate-700/60 rounded-bl-xs"
+                                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-br-xs shadow-blue-500/15"
+                                : isDark
+                                  ? "bg-slate-800/90 text-slate-100 border border-slate-700/60 rounded-bl-xs"
+                                  : "bg-white text-zinc-950 border border-zinc-200/90 shadow-xs rounded-bl-xs"
                               }`}
                           >
                             {!isMe && activeConversation.type === "group" && (
-                              <p className="text-[10px] font-bold text-emerald-400 mb-1">
+                              <p className={`text-[11px] font-bold mb-1 ${isDark ? "text-sky-400" : "text-blue-600"}`}>
                                 {msg.sender_name}
                               </p>
                             )}
@@ -1353,13 +1524,17 @@ export default function ChatPage() {
                                       Cancelled
                                     </span>
                                   ) : (
-                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold shrink-0">
+                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${
+                                      isMe ? "bg-white/20 text-white" : isDark ? "bg-sky-500/20 text-sky-300" : "bg-blue-100 text-blue-700"
+                                    }`}>
                                       Active
                                     </span>
                                   )}
                                 </div>
                                 {msg.event_data?.date && (
-                                  <p className="text-[11px] text-emerald-300 font-medium mb-1 flex items-center gap-1">
+                                  <p className={`text-[11px] font-medium mb-1 flex items-center gap-1 ${
+                                    isMe ? "text-sky-100" : isDark ? "text-sky-300" : "text-blue-700"
+                                  }`}>
                                     <span>⏰</span>
                                     <span>{new Date(msg.event_data.date).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</span>
                                   </p>
@@ -1426,26 +1601,63 @@ export default function ChatPage() {
                               </p>
                             )}
 
-                            {/* Translated content preview if present */}
+                            {/* Translated content preview - Clear, prominent, and high-contrast */}
                             {msg.translated_content && msg.translated_content !== msg.content && (
-                              <div className="mt-2 pt-2 border-t border-white/20 text-xs text-emerald-100 italic">
-                                <div className="flex items-center gap-1 text-[10px] font-semibold text-emerald-200 uppercase tracking-wider mb-0.5">
-                                  <Sparkles className="w-2.5 h-2.5" /> Translated
+                              <div
+                                className={`mt-2.5 pt-2.5 border-t ${
+                                  isMe
+                                    ? "border-white/25 text-white"
+                                    : isDark
+                                      ? "border-slate-700/60 text-slate-100"
+                                      : "border-blue-100 text-zinc-950"
+                                }`}
+                              >
+                                <div
+                                  className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider mb-1 ${
+                                    isMe
+                                      ? "text-sky-100"
+                                      : isDark
+                                        ? "text-sky-400"
+                                        : "text-blue-600"
+                                  }`}
+                                >
+                                  <Sparkles className="w-3.5 h-3.5" />
+                                  <span>Translated</span>
                                 </div>
-                                {msg.translated_content}
+                                <div
+                                  className={`text-sm sm:text-base font-semibold leading-relaxed ${
+                                    isMe
+                                      ? "text-white"
+                                      : isDark
+                                        ? "text-zinc-100"
+                                        : "text-zinc-950"
+                                  }`}
+                                >
+                                  {msg.translated_content}
+                                </div>
                               </div>
                             )}
 
                             {/* Translating indicator */}
                             {msg.is_translation_loading && !msg.translated_content && (
-                              <div className="mt-2 pt-2 border-t border-white/20 text-xs text-emerald-100/70 italic flex items-center gap-1.5">
-                                <Loader2 className="w-3 h-3 animate-spin text-emerald-300" />
-                                <span className="text-[10px]">Translating...</span>
+                              <div
+                                className={`mt-2.5 pt-2 border-t flex items-center gap-2 text-xs font-medium ${
+                                  isMe
+                                    ? "border-white/20 text-sky-100"
+                                    : isDark
+                                      ? "border-slate-700/60 text-sky-400"
+                                      : "border-blue-100 text-blue-600"
+                                }`}
+                              >
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                <span>Translating to your language...</span>
                               </div>
                             )}
 
                             {/* Bubble footer with time & status */}
-                            <div className="flex items-center justify-end gap-1 mt-1 text-[10px] text-white/70">
+                            <div className={`flex items-center justify-end gap-1 mt-1 text-[10px] ${
+                              isMe ? "text-white/80" : isDark ? "text-slate-400" : "text-zinc-500"
+                            }`}>
                               {msg.is_edited && (
                                 <span className="italic opacity-80 mr-0.5 text-[9px]">(edited)</span>
                               )}
@@ -1455,7 +1667,7 @@ export default function ChatPage() {
                                   {msg.status === "sending" ? (
                                     <Loader2 className="w-3 h-3 animate-spin" />
                                   ) : msg.status === "delivered" || msg.status === "read" ? (
-                                    <CheckCheck className="w-3.5 h-3.5 text-emerald-200" />
+                                    <CheckCheck className="w-3.5 h-3.5 text-sky-200" />
                                   ) : (
                                     <Check className="w-3.5 h-3.5" />
                                   )}
@@ -1477,11 +1689,11 @@ export default function ChatPage() {
                               </button>
                               <button
                                 onClick={() => handleCopyMessage(msg)}
-                                className="p-1 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                                className="p-1 rounded-lg text-slate-400 hover:text-sky-400 hover:bg-slate-800 transition-colors cursor-pointer"
                                 title="Copy Text"
                               >
                                 {copiedMessageId === msg.id ? (
-                                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                                  <Check className="w-3.5 h-3.5 text-sky-400" />
                                 ) : (
                                   <Copy className="w-3.5 h-3.5" />
                                 )}
@@ -1536,7 +1748,7 @@ export default function ChatPage() {
                                     }}
                                     className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors text-left cursor-pointer"
                                   >
-                                    <Reply className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                    <Reply className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                                     <span>Reply</span>
                                   </button>
                                   <button
@@ -1598,7 +1810,7 @@ export default function ChatPage() {
               {replyTo && (
                 <div className="px-3 sm:px-4 py-2 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs shrink-0">
                   <div className="flex items-center gap-2 text-slate-300 truncate">
-                    <Reply className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <Reply className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                     <span className="truncate">Replying to <strong>{replyTo.sender_name}</strong>: </span>
                     <span className="text-slate-400 truncate max-w-xs sm:max-w-sm">{replyTo.content}</span>
                   </div>
@@ -1617,7 +1829,7 @@ export default function ChatPage() {
                   </div>
                 )}
                 <form onSubmit={handleSendMessage} className="flex items-end gap-1.5 sm:gap-2">
-                  <div className="flex-1 relative rounded-2xl bg-slate-950/80 border border-slate-800 focus-within:border-emerald-500/60 transition-all">
+                  <div className="flex-1 relative rounded-2xl bg-slate-950/80 border border-slate-800 focus-within:border-sky-500/60 transition-all">
                     <textarea
                       ref={textareaRef}
                       value={messageText}
@@ -1636,7 +1848,7 @@ export default function ChatPage() {
                   <button
                     type="button"
                     onClick={() => setIsQuickTranslatorOpen(true)}
-                    className="w-11 h-11 rounded-2xl bg-slate-950/80 hover:bg-slate-800 text-slate-400 hover:text-emerald-400 border border-slate-800 flex items-center justify-center transition-all cursor-pointer active:scale-95 shrink-0"
+                    className="w-11 h-11 rounded-2xl bg-slate-950/80 hover:bg-slate-800 text-slate-400 hover:text-sky-400 border border-slate-800 flex items-center justify-center transition-all cursor-pointer active:scale-95 shrink-0"
                     title="Translate text or voice"
                   >
                     <Languages className="w-5 h-5" />
@@ -1645,7 +1857,7 @@ export default function ChatPage() {
                   <button
                     type="submit"
                     disabled={!messageText.trim() || isSending}
-                    className="w-11 h-11 rounded-2xl bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-400 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all shadow-md shadow-emerald-500/20 cursor-pointer shrink-0"
+                    className="w-11 h-11 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-all shadow-md shadow-blue-500/25 cursor-pointer shrink-0"
                   >
                     {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                   </button>
@@ -1653,7 +1865,7 @@ export default function ChatPage() {
 
                 <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500 px-1">
                   <span className="flex items-center gap-1">
-                    <Lock className="w-3 h-3 text-emerald-400" />
+                    <Lock className={`w-3 h-3 ${isDark ? "text-sky-400" : "text-blue-500"}`} />
                     End-to-End Encrypted
                   </span>
                   <span className="hidden sm:inline">Shift+Enter for new line</span>
@@ -1663,17 +1875,21 @@ export default function ChatPage() {
             </>
           ) : (
             /* No conversation selected */
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-              <div className="w-16 h-16 rounded-3xl bg-slate-900 border border-slate-800 flex items-center justify-center text-emerald-400 mb-4 shadow-xl">
+            <div className={`flex-1 flex flex-col items-center justify-center p-8 text-center transition-colors ${
+              isDark ? "bg-[#09090b]" : "bg-[#fafafa]"
+            }`}>
+              <div className={`w-16 h-16 rounded-3xl border flex items-center justify-center mb-4 shadow-sm transition-colors ${
+                isDark ? "bg-zinc-900 border-zinc-800 text-sky-400" : "bg-sky-50 border-sky-200 text-blue-600"
+              }`}>
                 <MessageSquare className="w-8 h-8" />
               </div>
-              <h2 className="text-xl font-bold text-white tracking-tight">Your Conversations</h2>
-              <p className="text-sm text-slate-400 mt-1 max-w-sm">
+              <h2 className={`text-xl font-bold tracking-tight ${isDark ? "text-white" : "text-zinc-950"}`}>Your Conversations</h2>
+              <p className={`text-sm mt-1 max-w-sm ${isDark ? "text-zinc-400" : "text-zinc-500"}`}>
                 Select a conversation from the sidebar or click &ldquo;+&rdquo; to find and start talking to someone in any language.
               </p>
               <button
                 onClick={() => setIsNewChatModalOpen(true)}
-                className="mt-6 px-5 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2"
+                className="mt-6 px-5 py-2.5 rounded-2xl text-xs font-bold font-mono transition-all flex items-center gap-2 shadow-sm bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white cursor-pointer"
               >
                 <Plus className="w-4 h-4" /> Start a New Chat
               </button>
@@ -1692,7 +1908,7 @@ export default function ChatPage() {
                   type="button"
                   onClick={() => setNewChatTab("direct")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${newChatTab === "direct"
-                      ? "bg-emerald-500 text-slate-950 shadow-md"
+                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-blue-500/20"
                       : "text-slate-400 hover:text-white"
                     }`}
                 >
@@ -1702,7 +1918,7 @@ export default function ChatPage() {
                   type="button"
                   onClick={() => setNewChatTab("group")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${newChatTab === "group"
-                      ? "bg-emerald-500 text-slate-950 shadow-md"
+                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-blue-500/20"
                       : "text-slate-400 hover:text-white"
                     }`}
                 >
@@ -1727,7 +1943,7 @@ export default function ChatPage() {
                     value={userSearchTerm}
                     onChange={(e) => handleUserSearchChange(e.target.value)}
                     placeholder="Search by @username or email..."
-                    className="w-full rounded-2xl bg-slate-950 border border-slate-800 pl-10 pr-4 py-2.5 sm:py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/60"
+                    className="w-full rounded-2xl bg-slate-950 border border-slate-800 pl-10 pr-4 py-2.5 sm:py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500/60"
                     autoFocus
                   />
                 </div>
@@ -1735,7 +1951,7 @@ export default function ChatPage() {
                 <div className="flex-1 overflow-y-auto divide-y divide-slate-800/40 pr-1">
                   {isSearchingUsers ? (
                     <div className="p-4 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-emerald-400" /> Searching users...
+                      <Loader2 className="w-4 h-4 animate-spin text-sky-400" /> Searching users...
                     </div>
                   ) : userSearchResults.length === 0 ? (
                     <div className="p-6 text-center text-xs text-slate-500">
@@ -1748,8 +1964,12 @@ export default function ChatPage() {
                         className="p-3 flex items-center justify-between hover:bg-slate-800/40 rounded-xl transition-colors"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 font-bold text-xs shrink-0">
-                            {(target.full_name || target.username).charAt(0).toUpperCase()}
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 chat-avatar ${
+                            isDark
+                              ? "bg-slate-800 border border-slate-700 text-sky-200"
+                              : "bg-gradient-to-br from-sky-50 to-blue-100 border border-blue-200 text-blue-700"
+                          }`}>
+                            <span>{(target.full_name || target.username).charAt(0).toUpperCase()}</span>
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-semibold text-white truncate">
@@ -1760,7 +1980,7 @@ export default function ChatPage() {
                         </div>
                         <button
                           onClick={() => handleStartChatWithUser(target.id)}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold hover:bg-emerald-400 transition-colors cursor-pointer shrink-0 ml-2"
+                          className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white text-xs font-bold transition-all cursor-pointer shrink-0 ml-2 shadow-sm"
                         >
                           Chat
                         </button>
@@ -1787,7 +2007,7 @@ export default function ChatPage() {
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
                     placeholder="e.g. Design Team, Family, Global Project"
-                    className="w-full rounded-2xl bg-slate-950 border border-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/60"
+                    className="w-full rounded-2xl bg-slate-950 border border-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500/60"
                     required
                   />
                 </div>
@@ -1802,7 +2022,7 @@ export default function ChatPage() {
                       {selectedGroupMembers.map((m) => (
                         <span
                           key={m.id}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-medium"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-300 text-xs font-medium"
                         >
                           <span>{m.full_name || `@${m.username}`}</span>
                           <button
@@ -1830,7 +2050,7 @@ export default function ChatPage() {
                       value={userSearchTerm}
                       onChange={(e) => handleUserSearchChange(e.target.value)}
                       placeholder="Search users to add..."
-                      className="w-full rounded-2xl bg-slate-950 border border-slate-800 pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/60"
+                      className="w-full rounded-2xl bg-slate-950 border border-slate-800 pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500/60"
                     />
                   </div>
                 </div>
@@ -1839,7 +2059,7 @@ export default function ChatPage() {
                 <div className="max-h-40 overflow-y-auto divide-y divide-slate-800/40 border border-slate-800/60 rounded-2xl bg-slate-950/40">
                   {isSearchingUsers ? (
                     <div className="p-3 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" /> Searching...
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-400" /> Searching...
                     </div>
                   ) : userSearchResults.length === 0 ? (
                     <div className="p-4 text-center text-xs text-slate-500">
@@ -1854,8 +2074,12 @@ export default function ChatPage() {
                           className="p-2.5 flex items-center justify-between hover:bg-slate-800/30 transition-colors"
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 font-bold text-xs shrink-0">
-                              {(target.full_name || target.username).charAt(0).toUpperCase()}
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 chat-avatar ${
+                              isDark
+                                ? "bg-slate-800 border border-slate-700 text-sky-200"
+                                : "bg-gradient-to-br from-sky-50 to-blue-100 border border-blue-200 text-blue-700"
+                            }`}>
+                              <span>{(target.full_name || target.username).charAt(0).toUpperCase()}</span>
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-semibold text-white truncate">
@@ -1868,7 +2092,7 @@ export default function ChatPage() {
                             type="button"
                             onClick={() => toggleSelectGroupMember(target)}
                             className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${isSelected
-                                ? "bg-emerald-500 text-slate-950"
+                                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xs"
                                 : "bg-slate-800 hover:bg-slate-700 text-slate-300"
                               }`}
                           >
@@ -1883,7 +2107,7 @@ export default function ChatPage() {
                 <button
                   type="submit"
                   disabled={isCreatingGroup || !groupName.trim()}
-                  className="w-full py-3 rounded-2xl bg-emerald-500 text-slate-950 font-bold text-sm hover:bg-emerald-400 transition-colors disabled:opacity-50 cursor-pointer shadow-lg shadow-emerald-500/20"
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-sm transition-all disabled:opacity-50 cursor-pointer shadow-lg shadow-blue-500/25"
                 >
                   {isCreatingGroup ? (
                     <span className="flex items-center justify-center gap-2">
@@ -1905,7 +2129,7 @@ export default function ChatPage() {
           <div className="w-full max-w-md max-h-[90dvh] flex flex-col rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between mb-4 sm:mb-6 shrink-0">
               <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                <Settings className="w-5 h-5 text-emerald-400" /> Profile & Settings
+                <Settings className="w-5 h-5 text-sky-400" /> Profile & Settings
               </h3>
               <button onClick={() => setIsSettingsOpen(false)} className="text-slate-500 hover:text-white p-2 rounded-xl transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
@@ -1915,8 +2139,12 @@ export default function ChatPage() {
             <div className="flex-1 overflow-y-auto pr-1 space-y-4">
               {/* Profile Info */}
               <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center font-bold text-emerald-400 text-base shrink-0">
-                  {profile?.full_name?.charAt(0).toUpperCase() || "U"}
+                <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center font-bold text-base shrink-0 chat-avatar ${
+                  isDark
+                    ? "bg-sky-500/20 border-sky-500/40 text-sky-300"
+                    : "bg-gradient-to-br from-sky-50 to-blue-100 border-blue-200 text-blue-700"
+                }`}>
+                  <span>{profile?.full_name?.charAt(0).toUpperCase() || "U"}</span>
                 </div>
                 <div className="min-w-0">
                   <h4 className="font-bold text-white text-sm truncate">{profile?.full_name}</h4>
@@ -1953,9 +2181,9 @@ export default function ChatPage() {
               <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold text-white flex items-center gap-1.5">
-                    <KeyRound className="w-4 h-4 text-emerald-400" /> E2EE Backup PIN
+                    <KeyRound className="w-4 h-4 text-sky-400" /> E2EE Backup PIN
                   </span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${hasBackup ? "bg-emerald-500/10 text-emerald-400" : "bg-amber-500/10 text-amber-400"}`}>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${hasBackup ? "bg-sky-500/10 text-sky-400 border border-sky-500/20" : "bg-amber-500/10 text-amber-400"}`}>
                     {hasBackup ? "Backed Up" : "Not Set"}
                   </span>
                 </div>
@@ -1980,12 +2208,12 @@ export default function ChatPage() {
               <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-3.5">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-white flex items-center gap-1.5">
-                    <Bell className="w-4 h-4 text-emerald-400" /> Notifications & Sound
+                    <Bell className="w-4 h-4 text-sky-400" /> Notifications & Sound
                   </span>
                   <span
                     className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
                       browserPermission === "granted"
-                        ? "bg-emerald-500/10 text-emerald-400"
+                        ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
                         : browserPermission === "denied"
                         ? "bg-rose-500/10 text-rose-400"
                         : "bg-amber-500/10 text-amber-400"
@@ -2003,7 +2231,7 @@ export default function ChatPage() {
                 <div className="flex items-center justify-between pt-1">
                   <div className="flex items-center gap-2">
                     {soundActive ? (
-                      <Volume2 className="w-4 h-4 text-emerald-400" />
+                      <Volume2 className="w-4 h-4 text-sky-400" />
                     ) : (
                       <VolumeX className="w-4 h-4 text-slate-500" />
                     )}
@@ -2020,7 +2248,7 @@ export default function ChatPage() {
                       if (next) playMessageSound();
                     }}
                     className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors cursor-pointer ${
-                      soundActive ? "bg-emerald-500" : "bg-slate-800"
+                      soundActive ? "bg-gradient-to-r from-sky-500 to-blue-600" : "bg-slate-800"
                     }`}
                   >
                     <div
@@ -2035,7 +2263,7 @@ export default function ChatPage() {
                 <div className="flex items-center justify-between pt-1">
                   <div className="flex items-center gap-2">
                     {notifActive && browserPermission === "granted" ? (
-                      <Bell className="w-4 h-4 text-emerald-400" />
+                      <Bell className="w-4 h-4 text-sky-400" />
                     ) : (
                       <BellOff className="w-4 h-4 text-slate-500" />
                     )}
@@ -2059,7 +2287,7 @@ export default function ChatPage() {
                         setNotificationsEnabled(next);
                       }}
                       className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors cursor-pointer ${
-                        notifActive ? "bg-emerald-500" : "bg-slate-800"
+                        notifActive ? "bg-gradient-to-r from-sky-500 to-blue-600" : "bg-slate-800"
                       }`}
                     >
                       <div
@@ -2083,7 +2311,7 @@ export default function ChatPage() {
                         }
                       }}
                       disabled={browserPermission === "denied"}
-                      className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
                     >
                       {browserPermission === "denied" ? "Blocked" : "Enable"}
                     </button>
@@ -2102,7 +2330,7 @@ export default function ChatPage() {
                   }}
                   className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium border border-slate-800 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
-                  <Bell className="w-3.5 h-3.5 text-emerald-400" />
+                  <Bell className="w-3.5 h-3.5 text-sky-400" />
                   <span>Test Notification Sound & Alert</span>
                 </button>
               </div>
@@ -2129,7 +2357,7 @@ export default function ChatPage() {
           <div className="w-full max-w-sm max-h-[90dvh] flex flex-col rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl overflow-y-auto">
             <div className="flex items-center justify-between mb-4 shrink-0">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <KeyRound className="w-4 h-4 text-emerald-400" />
+                <KeyRound className="w-4 h-4 text-sky-400" />
                 {needsKeyRecovery ? "Recover E2EE Keys" : "Set Backup PIN"}
               </h3>
               <button onClick={() => setIsBackupModalOpen(false)} className="text-slate-500 hover:text-white p-2 rounded-xl transition-colors cursor-pointer">
@@ -2151,8 +2379,8 @@ export default function ChatPage() {
             )}
 
             {backupSuccess && (
-              <div className="mb-3 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-center gap-2">
-                <Check className="w-4 h-4 shrink-0 text-emerald-400" />
+              <div className="mb-3 p-2.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-300 text-xs flex items-center gap-2">
+                <Check className="w-4 h-4 shrink-0 text-sky-400" />
                 <span>{needsKeyRecovery ? "Keys recovered successfully!" : "PIN backup saved successfully!"}</span>
               </div>
             )}
@@ -2168,7 +2396,7 @@ export default function ChatPage() {
                   onChange={(e) => setBackupPin(e.target.value)}
                   placeholder="••••"
                   maxLength={8}
-                  className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2.5 text-center text-lg tracking-widest text-white focus:outline-none focus:border-emerald-500/60"
+                  className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3.5 py-2.5 text-center text-lg tracking-widest text-white focus:outline-none focus:border-sky-500/60"
                   required
                 />
               </div>
@@ -2176,7 +2404,7 @@ export default function ChatPage() {
               <button
                 type="submit"
                 disabled={isBackingUp || backupPin.length < 4}
-                className="w-full py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-bold text-xs hover:bg-emerald-400 transition-colors disabled:opacity-50 cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs transition-all disabled:opacity-50 cursor-pointer shadow-md shadow-blue-500/20"
               >
                 {isBackingUp ? (
                   <span className="flex items-center justify-center gap-2">
@@ -2199,7 +2427,7 @@ export default function ChatPage() {
           <div className="w-full max-w-md max-h-[90dvh] flex flex-col rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl overflow-hidden">
             <div className="flex items-center justify-between mb-4 shrink-0">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-400" /> Gabvia Security Architecture
+                <ShieldCheck className="w-5 h-5 text-sky-400" /> Gabvia Security Architecture
               </h3>
               <button onClick={() => setIsSecurityModalOpen(false)} className="text-slate-500 hover:text-white p-2 rounded-xl transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
@@ -2208,7 +2436,7 @@ export default function ChatPage() {
 
             <div className="space-y-3.5 text-xs text-slate-300 flex-1 overflow-y-auto pr-1">
               <div className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80">
-                <h4 className="font-bold text-emerald-400 flex items-center gap-1.5 mb-1">
+                <h4 className="font-bold text-sky-400 flex items-center gap-1.5 mb-1">
                   <Lock className="w-3.5 h-3.5" /> Military-Grade End-to-End Encryption
                 </h4>
                 <p className="text-slate-400 leading-relaxed">
@@ -2257,11 +2485,11 @@ export default function ChatPage() {
 
       {/* FLOATING MILESTONE CELEBRATION TOAST */}
       {milestoneToast && (
-        <div className="fixed top-4 right-4 z-50 animate-bounce p-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-emerald-500 text-slate-950 font-bold text-xs shadow-2xl flex items-center gap-3 max-w-[calc(100vw-2rem)]">
-          <Award className="w-6 h-6 text-slate-950 shrink-0" />
+        <div className="fixed top-4 right-4 z-50 animate-bounce p-3.5 rounded-2xl bg-gradient-to-r from-amber-500 via-sky-500 to-blue-600 text-white font-bold text-xs shadow-2xl flex items-center gap-3 max-w-[calc(100vw-2rem)]">
+          <Award className="w-6 h-6 text-amber-200 shrink-0" />
           <div>
             <p className="text-xs font-black">🎉 Milestone Unlocked!</p>
-            <p className="text-[11px] font-semibold text-slate-900">
+            <p className="text-[11px] font-semibold text-white/90">
               +{milestoneToast.points} GAB Points added to your account!
             </p>
           </div>
@@ -2305,7 +2533,7 @@ export default function ChatPage() {
                   >
                     {summaryCopied ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-emerald-400" /> Copied!
+                        <Check className="w-3.5 h-3.5 text-sky-400" /> Copied!
                       </>
                     ) : (
                       <>
@@ -2316,7 +2544,7 @@ export default function ChatPage() {
 
                   <button
                     onClick={() => setIsSummarizeOpen(false)}
-                    className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold transition-colors cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white text-xs font-bold transition-all cursor-pointer shadow-md shadow-blue-500/20"
                   >
                     Done
                   </button>
@@ -2333,7 +2561,7 @@ export default function ChatPage() {
           <div className="w-full max-w-lg rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl animate-scaleUp max-h-[90dvh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between mb-4 shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <div className="w-10 h-10 rounded-2xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400">
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
@@ -2359,8 +2587,8 @@ export default function ChatPage() {
             </div>
 
             {groupActionMessage && (
-              <div className="mb-3 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs flex items-center gap-2 shrink-0">
-                <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+              <div className="mb-3 p-2.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-300 text-xs flex items-center gap-2 shrink-0">
+                <Check className="w-4 h-4 text-sky-400 shrink-0" />
                 <span>{groupActionMessage}</span>
               </div>
             )}
@@ -2381,9 +2609,9 @@ export default function ChatPage() {
                   setIsGroupDetailsOpen(false);
                   setIsEventModalOpen(true);
                 }}
-                className="p-2.5 rounded-xl bg-slate-950/60 hover:bg-slate-950 border border-slate-800 text-emerald-300 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                className="p-2.5 rounded-xl bg-slate-950/60 hover:bg-slate-950 border border-slate-800 text-sky-300 text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
               >
-                <CalendarPlus className="w-4 h-4 text-emerald-400" /> Schedule Event
+                <CalendarPlus className="w-4 h-4 text-sky-400" /> Schedule Event
               </button>
             </div>
 
@@ -2392,7 +2620,7 @@ export default function ChatPage() {
               <div className="mb-4 shrink-0">
                 <button
                   onClick={() => setIsAddingGroupMember(!isAddingGroupMember)}
-                  className="w-full py-2 px-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/25 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  className="w-full py-2 px-3 rounded-xl bg-sky-500/15 border border-sky-500/30 text-sky-300 hover:bg-sky-500/25 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
                   <UserPlus className="w-4 h-4" />
                   {isAddingGroupMember ? "Hide Add Member" : "Add Members (Owner)"}
@@ -2407,7 +2635,7 @@ export default function ChatPage() {
                         value={groupMemberSearchTerm}
                         onChange={(e) => setGroupMemberSearchTerm(e.target.value)}
                         placeholder="Search users to add to group..."
-                        className="w-full rounded-xl bg-slate-900 border border-slate-700/60 pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/60"
+                        className="w-full rounded-xl bg-slate-900 border border-slate-700/60 pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500/60"
                         autoFocus
                       />
                     </div>
@@ -2415,7 +2643,7 @@ export default function ChatPage() {
                     <div className="max-h-36 overflow-y-auto divide-y divide-slate-800/40">
                       {isSearchingGroupMembers ? (
                         <div className="p-2 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" /> Searching...
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-400" /> Searching...
                         </div>
                       ) : groupMemberSearchResults.length === 0 ? (
                         <div className="p-3 text-center text-xs text-slate-500">
@@ -2436,7 +2664,7 @@ export default function ChatPage() {
                             <button
                               disabled={groupActionLoading}
                               onClick={() => handleInviteMemberToGroup(target.id)}
-                              className="px-2.5 py-1 rounded-lg bg-emerald-500 text-slate-950 text-xs font-bold hover:bg-emerald-400 transition-colors disabled:opacity-50 cursor-pointer"
+                              className="px-3 py-1 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-xs"
                             >
                               Invite
                             </button>
@@ -2463,8 +2691,12 @@ export default function ChatPage() {
                 return (
                   <div key={pId} className="py-2.5 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-slate-200 shrink-0">
-                        {displayName.charAt(0).toUpperCase()}
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 chat-avatar ${
+                        isDark
+                          ? "bg-slate-800 border border-slate-700 text-sky-200"
+                          : "bg-gradient-to-br from-sky-50 to-blue-100 border border-blue-200 text-blue-700"
+                      }`}>
+                        <span>{displayName.charAt(0).toUpperCase()}</span>
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
@@ -2570,7 +2802,7 @@ export default function ChatPage() {
           <div className="w-full max-w-md max-h-[90dvh] flex flex-col rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl animate-scaleUp overflow-hidden">
             <div className="flex items-center justify-between mb-4 shrink-0">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <CalendarPlus className="w-5 h-5 text-emerald-400" />
+                <CalendarPlus className="w-5 h-5 text-sky-400" />
                 Schedule Group Event
               </h3>
               <button onClick={() => setIsEventModalOpen(false)} className="text-slate-500 hover:text-white p-2 rounded-xl transition-colors cursor-pointer">
@@ -2595,7 +2827,7 @@ export default function ChatPage() {
                   value={eventTitle}
                   onChange={(e) => setEventTitle(e.target.value)}
                   placeholder="e.g. Weekly Standup, Project Sync, Family Dinner"
-                  className="w-full rounded-2xl bg-slate-950 border border-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/60"
+                  className="w-full rounded-2xl bg-slate-950 border border-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500/60"
                   required
                 />
               </div>
@@ -2608,7 +2840,7 @@ export default function ChatPage() {
                   type="datetime-local"
                   value={eventDate}
                   onChange={(e) => setEventDate(e.target.value)}
-                  className="w-full rounded-2xl bg-slate-950 border border-slate-800 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500/60"
+                  className="w-full rounded-2xl bg-slate-950 border border-slate-800 px-4 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/60"
                   required
                 />
               </div>
@@ -2622,14 +2854,14 @@ export default function ChatPage() {
                   value={eventDescription}
                   onChange={(e) => setEventDescription(e.target.value)}
                   placeholder="Meeting agenda, location link, or details..."
-                  className="w-full rounded-2xl bg-slate-950 border border-slate-800 px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/60 resize-none"
+                  className="w-full rounded-2xl bg-slate-950 border border-slate-800 px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500/60 resize-none"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={isSchedulingEvent || !eventTitle.trim() || !eventDate}
-                className="w-full py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all disabled:opacity-50 cursor-pointer"
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/25 transition-all disabled:opacity-50 cursor-pointer"
               >
                 {isSchedulingEvent ? (
                   <span className="flex items-center justify-center gap-2">
@@ -2667,7 +2899,7 @@ export default function ChatPage() {
 
             <div className="flex-1 overflow-y-auto pr-1 space-y-4">
               {/* Progress Card */}
-              <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-slate-950 to-emerald-500/10 border border-amber-500/30">
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-slate-950 to-sky-500/10 border border-amber-500/30">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-bold text-white">Campaign Progress</span>
                   <span className="text-xs font-extrabold text-amber-400">
@@ -2676,7 +2908,7 @@ export default function ChatPage() {
                 </div>
                 <div className="w-full h-2.5 rounded-full bg-slate-800 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-amber-400 to-emerald-400 transition-all duration-500 rounded-full"
+                    className="h-full bg-gradient-to-r from-amber-400 to-sky-400 transition-all duration-500 rounded-full"
                     style={{ width: `${Math.min(100, (claimedMilestonesPoints / 1000) * 100)}%` }}
                   />
                 </div>
@@ -2694,18 +2926,18 @@ export default function ChatPage() {
                     <div
                       key={key}
                       className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-colors ${isClaimed
-                          ? "bg-emerald-500/10 border-emerald-500/30 text-white"
+                          ? "bg-sky-500/10 border-sky-500/30 text-white"
                           : "bg-slate-950/40 border-slate-800 text-slate-300"
                         }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         {isClaimed ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-sky-400 shrink-0" />
                         ) : (
                           <Circle className="w-4 h-4 text-slate-500 shrink-0" />
                         )}
                         <div className="min-w-0">
-                          <p className={`text-xs font-bold truncate ${isClaimed ? "text-emerald-300" : "text-white"}`}>
+                          <p className={`text-xs font-bold truncate ${isClaimed ? "text-sky-300" : "text-white"}`}>
                             {info.title}
                           </p>
                           <p className="text-[10px] text-slate-400 truncate">{info.desc}</p>
@@ -2713,7 +2945,7 @@ export default function ChatPage() {
                       </div>
                       <span
                         className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${isClaimed
-                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                            ? "bg-sky-500/20 text-sky-300 border border-sky-500/30"
                             : "bg-slate-800 text-slate-400"
                           }`}
                       >
@@ -2746,7 +2978,7 @@ export default function ChatPage() {
                 >
                   {referralCopied ? (
                     <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" /> Link Copied
+                      <Check className="w-3.5 h-3.5 text-sky-400" /> Link Copied
                     </>
                   ) : (
                     <>

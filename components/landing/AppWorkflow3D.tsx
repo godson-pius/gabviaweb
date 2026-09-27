@@ -143,7 +143,7 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
     const chassisColor = isDark ? 0x18181b : 0xe4e4e7;
     const edgeColor = isDark ? 0x27272a : 0xd4d4d8;
     const screenColor = isDark ? 0x09090b : 0xfcfcfd;
-    const accentColor = 0x10b981; // Emerald
+    const accentColor = 0x00d2ff; // Brand Electric Cyan
 
     // Root 3D device group
     const deviceGroup = new THREE.Group();
@@ -206,7 +206,7 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
     for (let i = 0; i < barCount; i++) {
       const barMat = new THREE.MeshStandardMaterial({
         color: i % 2 === 0 ? accentColor : isDark ? 0x38bdf8 : 0x2563eb,
-        emissive: i % 2 === 0 ? 0x064e3b : 0x0c4a6e,
+        emissive: i % 2 === 0 ? 0x0369a1 : 0x1d4ed8,
         roughness: 0.3,
         metalness: 0.4,
       });
@@ -230,10 +230,10 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
       positions[i * 3 + 1] = (Math.random() - 0.5) * 2.0;
       positions[i * 3 + 2] = phoneDepth / 2 + 0.12 + Math.random() * 0.4;
 
-      // Emerald & Cyan gradient
-      colors[i * 3] = 0.1;
-      colors[i * 3 + 1] = 0.75 + Math.random() * 0.25;
-      colors[i * 3 + 2] = 0.6 + Math.random() * 0.4;
+      // Cyan & Royal Blue gradient
+      colors[i * 3] = 0.0 + Math.random() * 0.1;
+      colors[i * 3 + 1] = 0.75 + Math.random() * 0.15;
+      colors[i * 3 + 2] = 0.95 + Math.random() * 0.05;
     }
 
     particleGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
@@ -433,10 +433,10 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
       {/* 1. Header & Live Scenario Language Switcher */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-mono mb-2 ${
-            isDark ? 'border-emerald-800/80 bg-emerald-950/40 text-emerald-400' : 'border-emerald-200 bg-emerald-50 text-emerald-700'
-          }">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border text-[11px] font-mono mb-2 ${
+            isDark ? "border-sky-800/80 bg-sky-950/40 text-sky-400" : "border-sky-300 bg-sky-50 text-blue-700"
+          }`}>
+            <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
             <span>INTERACTIVE 3D PLATFORM DEMO</span>
           </div>
           <h3 className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${isDark ? "text-white" : "text-zinc-950"}`}>
@@ -449,7 +449,7 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
 
         {/* Live Language Selector Pills */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-mono text-zinc-400 font-semibold mr-1">TRY LANGUAGE:</span>
+          <span className={`text-xs font-mono font-semibold mr-1 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>TRY LANGUAGE:</span>
           {SCENARIOS.map((sc) => (
             <button
               key={sc.id}
@@ -516,7 +516,7 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
                 className={`w-full text-left p-4 sm:p-5 rounded-2xl border transition-all relative overflow-hidden group ${
                   isCurrent
                     ? isDark
-                      ? "border-emerald-500/80 bg-zinc-900/90 shadow-lg shadow-emerald-950/30"
+                      ? "border-sky-500/80 bg-zinc-900/90 shadow-lg shadow-sky-950/30"
                       : "border-zinc-950 bg-white shadow-md shadow-zinc-200"
                     : isDark
                     ? "border-zinc-800/80 bg-zinc-900/40 hover:bg-zinc-900/70 hover:border-zinc-700"
@@ -525,7 +525,7 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
               >
                 {/* Active indicator bar */}
                 {isCurrent && (
-                  <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-emerald-500" />
+                  <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-gradient-to-b from-sky-500 to-blue-600" />
                 )}
 
                 <div className="flex items-center justify-between mb-1.5 pl-2">
@@ -533,7 +533,7 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
                     <span
                       className={`font-mono text-xs font-bold px-2 py-0.5 rounded ${
                         isCurrent
-                          ? "bg-emerald-500 text-zinc-950 font-semibold"
+                          ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold shadow-xs"
                           : isDark
                           ? "bg-zinc-800 text-zinc-400"
                           : "bg-zinc-200 text-zinc-700"
@@ -549,8 +549,8 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
                     className={`font-mono text-[11px] px-2 py-0.5 rounded border ${
                       isCurrent
                         ? isDark
-                          ? "border-emerald-800/60 text-emerald-400 bg-emerald-950/40"
-                          : "border-emerald-300 text-emerald-800 bg-emerald-50"
+                          ? "border-sky-800/60 text-sky-400 bg-sky-950/40"
+                          : "border-sky-300 text-blue-700 bg-sky-50"
                         : isDark
                         ? "border-zinc-800 text-zinc-500"
                         : "border-zinc-200 text-zinc-500"
@@ -579,17 +579,17 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
               className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${
                 isAutoPlaying
                   ? isDark
-                    ? "border-emerald-800 bg-emerald-950/50 text-emerald-400"
-                    : "border-emerald-300 bg-emerald-50 text-emerald-800"
+                    ? "border-sky-800 bg-sky-950/50 text-sky-400"
+                    : "border-sky-300 bg-sky-50 text-blue-700"
                   : isDark
                   ? "border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-white"
                   : "border-zinc-200 bg-zinc-100 text-zinc-700 hover:text-zinc-950"
               }`}
             >
-              <span className={`w-2 h-2 rounded-full ${isAutoPlaying ? "bg-emerald-500 animate-pulse" : "bg-zinc-400"}`} />
+              <span className={`w-2 h-2 rounded-full ${isAutoPlaying ? "bg-sky-500 animate-pulse" : "bg-zinc-400"}`} />
               <span>{isAutoPlaying ? "Auto-Play Active (Pause)" : "Resume Auto-Play"}</span>
             </button>
-            <span className="text-zinc-400">DRAG 3D MODEL TO ROTATE</span>
+            <span className={isDark ? "text-zinc-400" : "text-zinc-600"}>DRAG 3D MODEL TO ROTATE</span>
           </div>
         </div>
 
@@ -603,17 +603,17 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
             {/* Top Toolbar Telemetry */}
             <div
               className={`flex items-center justify-between px-5 py-3 border-b font-mono text-xs ${
-                isDark ? "border-zinc-800 text-zinc-400 bg-zinc-950/50" : "border-zinc-200 text-zinc-500 bg-white"
+                isDark ? "border-zinc-800 text-zinc-400 bg-zinc-950/50" : "border-zinc-200 text-zinc-700 bg-white"
               }`}
             >
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <span className="font-semibold text-zinc-300">GABVIA 3D PLATFORM SIMULATOR</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-sky-500" />
+                <span className={`font-semibold ${isDark ? "text-zinc-300" : "text-zinc-900"}`}>GABVIA 3D PLATFORM SIMULATOR</span>
               </div>
 
               {/* 3D Camera Angles */}
               <div className="flex items-center gap-1.5">
-                <span className="hidden sm:inline text-[10px] text-zinc-500 mr-1">PERSPECTIVE:</span>
+                <span className={`hidden sm:inline text-[10px] mr-1 ${isDark ? "text-zinc-500" : "text-zinc-600"}`}>PERSPECTIVE:</span>
                 {(["isometric", "front", "side"] as const).map((preset) => (
                   <button
                     key={preset}
@@ -625,7 +625,7 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
                           : "bg-zinc-950 text-white font-bold"
                         : isDark
                         ? "text-zinc-400 hover:text-white"
-                        : "text-zinc-500 hover:text-zinc-950"
+                        : "text-zinc-600 hover:text-zinc-950"
                     }`}
                   >
                     {preset}
@@ -652,17 +652,17 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
                       <div className="relative">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-zinc-950 font-bold text-xs">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-500 to-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-xs">
                           {scenario.partnerName.slice(0, 2).toUpperCase()}
                         </div>
-                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-zinc-950" />
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-sky-400 ring-2 ring-zinc-950" />
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
                           <span className="font-bold text-xs sm:text-sm">{scenario.partnerName}</span>
                           <span className="text-xs">{scenario.recipientFlag}</span>
                         </div>
-                        <span className="text-[10px] text-zinc-400 block font-mono">
+                        <span className={`text-[10px] block font-mono ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
                           {scenario.partnerLocation}
                         </span>
                       </div>
@@ -676,7 +676,7 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
                             : "bg-zinc-100 border-zinc-200 text-zinc-700"
                         }`}
                       >
-                        <span className="text-emerald-500">🔒</span>
+                        <span className="text-sky-400">🔒</span>
                         <span>E2EE</span>
                       </span>
                     </div>
@@ -690,7 +690,7 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
                     <div
                       className={`max-w-[85%] rounded-2xl rounded-tr-sm p-3.5 shadow-sm transition-all border ${
                         isDark
-                          ? "bg-emerald-600 text-white border-emerald-500/50"
+                          ? "bg-gradient-to-r from-sky-600 to-blue-600 text-white border-sky-500/50"
                           : "bg-zinc-950 text-white border-zinc-900"
                       }`}
                     >
@@ -715,7 +715,7 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
                           : "bg-white/95 text-zinc-950 border-zinc-200"
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-2 text-[10px] font-mono mb-1 text-emerald-500 font-semibold">
+                      <div className="flex items-center justify-between gap-2 text-[10px] font-mono mb-1 text-sky-400 font-semibold">
                         <span className="flex items-center gap-1">
                           <span>⚡ IN-FLOW AI TRANSLATION</span>
                           <span>({scenario.recipientLang} {scenario.recipientFlag})</span>
@@ -729,18 +729,18 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
                       {/* Real-time Voice Note Transcription Preview */}
                       <div
                         className={`mt-2.5 pt-2 border-t text-[11px] leading-relaxed font-mono ${
-                          isDark ? "border-zinc-800 text-zinc-400" : "border-zinc-100 text-zinc-500"
+                          isDark ? "border-zinc-800 text-zinc-400" : "border-zinc-100 text-zinc-600"
                         }`}
                       >
                         <div className="flex items-center justify-between text-xs mb-1">
                           <button
                             onClick={() => setIsPlayingAudio(!isPlayingAudio)}
-                            className="text-emerald-500 font-bold hover:underline flex items-center gap-1"
+                            className="text-sky-400 font-bold hover:underline flex items-center gap-1"
                           >
                             <span>{isPlayingAudio ? "⏸ PAUSE AUDIO" : "▶ PLAY VOICE NOTE"}</span>
                             <span>({scenario.audioDuration})</span>
                           </button>
-                          <span className="text-[10px] text-zinc-400">40+ LANGUAGES</span>
+                          <span className={`text-[10px] ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>40+ LANGUAGES</span>
                         </div>
                         <div className="italic">
                           {isPlayingAudio ? scenario.audioTranslation : scenario.audioTranscription}
@@ -756,8 +756,8 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
                     isDark ? "bg-zinc-900/90 border-zinc-800 text-white" : "bg-white/95 border-zinc-200 text-zinc-950"
                   }`}
                 >
-                  <div className="flex items-center gap-2 pl-2 text-xs text-zinc-400 flex-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <div className={`flex items-center gap-2 pl-2 text-xs flex-1 ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
+                    <span className="w-2 h-2 rounded-full bg-sky-500" />
                     <span className="truncate">Type or record in {scenario.senderLang}...</span>
                   </div>
                   <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -790,16 +790,16 @@ export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3D
             {/* Bottom Status Bar */}
             <div
               className={`px-5 py-3 border-t flex flex-wrap items-center justify-between gap-4 font-mono text-[11px] ${
-                isDark ? "border-zinc-800 text-zinc-400 bg-zinc-950/60" : "border-zinc-200 text-zinc-500 bg-white"
+                isDark ? "border-zinc-800 text-zinc-400 bg-zinc-950/60" : "border-zinc-200 text-zinc-700 bg-white"
               }`}
             >
               <div className="flex items-center gap-4">
-                <span>STAGE: <strong className="text-emerald-500">STEP 0{activeStep} / 04</strong></span>
-                <span>STATUS: <strong className="text-zinc-300">ACTIVE SIMULATION</strong></span>
+                <span>STAGE: <strong className="text-sky-400">STEP 0{activeStep} / 04</strong></span>
+                <span>STATUS: <strong className={isDark ? "text-zinc-300" : "text-zinc-900"}>ACTIVE SIMULATION</strong></span>
               </div>
               <div className="flex items-center gap-3">
-                <span>ENCRYPTION: 100% PRIVATE</span>
-                <span>SUPPORT: 40+ LANGUAGES</span>
+                <span className={isDark ? "text-zinc-400" : "text-zinc-700"}>ENCRYPTION: 100% PRIVATE</span>
+                <span className={isDark ? "text-zinc-400" : "text-zinc-700"}>SUPPORT: 40+ LANGUAGES</span>
               </div>
             </div>
           </div>

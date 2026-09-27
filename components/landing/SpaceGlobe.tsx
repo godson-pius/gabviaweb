@@ -139,7 +139,7 @@ export function SpaceGlobe({ className = "", theme = "light" }: SpaceGlobeProps)
     // Center Core Nucleus
     const nucleusGeo = new THREE.OctahedronGeometry(18, 1);
     const nucleusMat = new THREE.MeshBasicMaterial({
-      color: 0x10b981,
+      color: 0x00d2ff,
       wireframe: true,
       transparent: true,
       opacity: 0.6,
@@ -160,9 +160,9 @@ export function SpaceGlobe({ className = "", theme = "light" }: SpaceGlobeProps)
     rootGroup.add(ring1);
 
     const ringMat2 = new THREE.LineBasicMaterial({
-      color: 0x10b981,
+      color: 0x00d2ff,
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.45,
     });
     const ringGeo2 = new THREE.RingGeometry(104, 104.5, 64);
     const ring2 = new THREE.LineLoop(ringGeo2, ringMat2);
@@ -184,7 +184,7 @@ export function SpaceGlobe({ className = "", theme = "light" }: SpaceGlobeProps)
       if (c.isRwanda) {
         // Glowing base dot on Rwanda
         const markerGeo = new THREE.SphereGeometry(2.8, 16, 16);
-        const markerMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+        const markerMat = new THREE.MeshBasicMaterial({ color: 0x00d2ff });
         const markerMesh = new THREE.Mesh(markerGeo, markerMat);
         markerMesh.position.copy(pos);
         rootGroup.add(markerMesh);
@@ -193,14 +193,14 @@ export function SpaceGlobe({ className = "", theme = "light" }: SpaceGlobeProps)
         const stalkDir = pos.clone().normalize();
         const stalkEnd = pos.clone().add(stalkDir.clone().multiplyScalar(9));
         const stalkGeo = new THREE.BufferGeometry().setFromPoints([pos, stalkEnd]);
-        const stalkMat = new THREE.LineBasicMaterial({ color: 0x10b981, linewidth: 2 });
+        const stalkMat = new THREE.LineBasicMaterial({ color: 0x00d2ff, linewidth: 2 });
         const stalk = new THREE.Line(stalkGeo, stalkMat);
         rootGroup.add(stalk);
 
         // Radar Ripple on ground
         const rippleGeo = new THREE.RingGeometry(1.8, 4.2, 32);
         const rippleMat = new THREE.MeshBasicMaterial({
-          color: 0x10b981,
+          color: 0x00d2ff,
           side: THREE.DoubleSide,
           transparent: true,
           opacity: 0.75,
@@ -252,9 +252,9 @@ export function SpaceGlobe({ className = "", theme = "light" }: SpaceGlobeProps)
       const points = curve.getPoints(36);
       const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
       const lineMat = new THREE.LineBasicMaterial({
-        color: i % 2 === 0 ? 0x10b981 : 0xa1a1aa,
+        color: i % 2 === 0 ? 0x00d2ff : 0x2c6bed,
         transparent: true,
-        opacity: 0.3,
+        opacity: 0.35,
       });
       const arcLine = new THREE.Line(lineGeo, lineMat);
       rootGroup.add(arcLine);
@@ -262,7 +262,7 @@ export function SpaceGlobe({ className = "", theme = "light" }: SpaceGlobeProps)
       // Packet
       const packetGeo = new THREE.SphereGeometry(1.3, 8, 8);
       const packetMat = new THREE.MeshBasicMaterial({
-        color: i % 2 === 0 ? 0x10b981 : 0x09090b,
+        color: i % 2 === 0 ? 0x00d2ff : 0x2c6bed,
       });
       const packet = new THREE.Mesh(packetGeo, packetMat);
       rootGroup.add(packet);
@@ -471,14 +471,14 @@ export function SpaceGlobe({ className = "", theme = "light" }: SpaceGlobeProps)
                 {/* Elevated Rwanda Callout Pin - Floats ABOVE the coordinate so neighbors remain fully visible */}
                 <div className="flex flex-col items-center -translate-x-1/2 -translate-y-full pb-1">
                   {/* Glowing Badge */}
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 text-white font-mono text-[11px] font-bold shadow-lg shadow-emerald-600/35 border-2 border-white whitespace-nowrap">
-                    <span className="w-2 h-2 rounded-full bg-emerald-200 animate-ping inline-block" />
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white font-mono text-[11px] font-bold shadow-lg shadow-blue-500/35 border-2 border-white whitespace-nowrap">
+                    <span className="w-2 h-2 rounded-full bg-sky-200 animate-ping inline-block" />
                     <span className="text-xs">🇷🇼</span>
                     <span className="tracking-wider">RWANDA</span>
                   </div>
                   {/* Delicate indicator pointer line down to Rwanda ground point */}
-                  <div className="w-[2px] h-3 bg-emerald-500 shadow-xs" />
-                  <div className="w-2 h-2 rounded-full bg-emerald-600 ring-2 ring-white shadow-xs" />
+                  <div className="w-[2px] h-3 bg-sky-400 shadow-xs" />
+                  <div className="w-2 h-2 rounded-full bg-blue-600 ring-2 ring-white shadow-xs" />
                 </div>
               </div>
             );
@@ -524,7 +524,7 @@ export function SpaceGlobe({ className = "", theme = "light" }: SpaceGlobeProps)
             : "bg-white/90 text-zinc-600 border-zinc-200/80"
         }`}
       >
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+        <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse" />
         <span>GLOBAL MULTILINGUAL NETWORK</span>
       </div>
 
@@ -533,7 +533,7 @@ export function SpaceGlobe({ className = "", theme = "light" }: SpaceGlobeProps)
         className={`absolute bottom-4 right-4 pointer-events-none font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 rounded border backdrop-blur-xs ${
           isDark
             ? "bg-zinc-900/80 text-zinc-400 border-zinc-800"
-            : "bg-white/80 text-zinc-400 border-zinc-200/60"
+            : "bg-white/95 text-zinc-700 border-zinc-300 font-medium"
         }`}
       >
         <span>DRAG TO EXPLORE ALL REGIONS</span>

@@ -453,12 +453,12 @@ export default function TranslatorPage() {
   const toMeta = getLanguageMetadata(toLang);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200">
+    <div className="min-h-screen bg-slate-950 text-white flex flex-col selection:bg-sky-500/30 selection:text-sky-200">
       {/* Background ambient lighting */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-[140px]" />
-        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[130px]" />
-        <div className="absolute bottom-0 left-1/3 w-[600px] h-[500px] bg-amber-500/5 rounded-full blur-[150px]" />
+        <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] bg-sky-500/10 rounded-full blur-[140px]" />
+        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[130px]" />
+        <div className="absolute bottom-0 left-1/3 w-[600px] h-[500px] bg-cyan-500/5 rounded-full blur-[150px]" />
       </div>
 
       {/* TOP HEADER */}
@@ -469,9 +469,9 @@ export default function TranslatorPage() {
               <Image src="/logo.png" alt="Gabvia" width={36} height={36} className="w-full h-full object-cover" />
             </div>
             <div>
-              <span className="font-extrabold text-lg tracking-tight text-white group-hover:text-emerald-400 transition-colors flex items-center gap-1.5">
+              <span className="font-extrabold text-lg tracking-tight text-white group-hover:text-sky-400 transition-colors flex items-center gap-1.5">
                 Gabvia
-                <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                <span className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-md bg-sky-500/15 text-sky-400 border border-sky-500/30">
                   Translator
                 </span>
               </span>
@@ -484,9 +484,9 @@ export default function TranslatorPage() {
           {user && (
             <div
               title="Your available Gab Points"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold shadow-inner"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold shadow-inner"
             >
-              <Coins className="w-4 h-4 text-emerald-400" />
+              <Coins className="w-4 h-4 text-sky-400" />
               <span>{gabPoints} GAB Points</span>
             </div>
           )}
@@ -496,7 +496,7 @@ export default function TranslatorPage() {
             onClick={() => setShowHistory(!showHistory)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
               showHistory
-                ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300"
+                ? "bg-sky-500/20 border-sky-500/50 text-sky-300"
                 : "bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
             }`}
             title="Translation History"
@@ -504,7 +504,7 @@ export default function TranslatorPage() {
             <History className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">History</span>
             {history.length > 0 && (
-              <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-[10px] flex items-center justify-center text-emerald-400">
+              <span className="w-4 h-4 rounded-full bg-sky-500/20 text-[10px] flex items-center justify-center text-sky-400">
                 {history.length}
               </span>
             )}
@@ -513,7 +513,7 @@ export default function TranslatorPage() {
           {/* Back to Chat button */}
           <Link
             href="/chat"
-            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs sm:text-sm hover:from-emerald-400 hover:to-teal-400 transition-all shadow-md shadow-emerald-500/20"
+            className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold text-xs sm:text-sm hover:from-sky-400 hover:to-blue-500 transition-all shadow-md shadow-blue-500/20"
           >
             <MessageSquare className="w-4 h-4" />
             <span className="hidden sm:inline">Open Chat</span>
@@ -528,8 +528,8 @@ export default function TranslatorPage() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center justify-center md:justify-start gap-2.5">
               <span>Instant Multilingual Translator</span>
-              <span className="inline-flex p-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <Sparkles className="w-5 h-5 text-emerald-400" />
+              <span className="inline-flex p-1.5 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                <Sparkles className="w-5 h-5 text-sky-400" />
               </span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl">
@@ -555,7 +555,7 @@ export default function TranslatorPage() {
                   }}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
                     toLang === lang
-                      ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-semibold"
+                      ? "bg-sky-500/20 border-sky-500/50 text-sky-300 font-semibold"
                       : "bg-slate-900/60 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700"
                   }`}
                 >
@@ -580,11 +580,11 @@ export default function TranslatorPage() {
                   setPickerSearch("");
                   setActivePicker("from");
                 }}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700/80 hover:border-emerald-500/50 hover:bg-slate-800/80 text-white font-semibold text-sm transition-all cursor-pointer shadow-sm group"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700/80 hover:border-sky-500/50 hover:bg-slate-800/80 text-white font-semibold text-sm transition-all cursor-pointer shadow-sm group"
               >
                 <span className="text-lg">{fromMeta.flag}</span>
                 <span>{fromLang}</span>
-                <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-emerald-400 transition-colors" />
+                <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-sky-400 transition-colors" />
               </button>
             </div>
 
@@ -593,7 +593,7 @@ export default function TranslatorPage() {
               type="button"
               onClick={handleSwap}
               title="Swap languages"
-              className="p-2.5 rounded-full bg-slate-800 hover:bg-emerald-500 text-slate-300 hover:text-slate-950 border border-slate-700 hover:border-emerald-400 transition-all shadow-md active:scale-95 cursor-pointer group"
+              className="p-2.5 rounded-full bg-slate-800 hover:bg-gradient-to-r hover:from-sky-500 hover:to-blue-600 text-slate-300 hover:text-white border border-slate-700 hover:border-sky-400 transition-all shadow-md active:scale-95 cursor-pointer group"
             >
               <ArrowLeftRight className="w-4 h-4 transition-transform group-hover:rotate-180" />
             </button>
@@ -607,11 +607,11 @@ export default function TranslatorPage() {
                   setPickerSearch("");
                   setActivePicker("to");
                 }}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700/80 hover:border-emerald-500/50 hover:bg-slate-800/80 text-emerald-400 font-semibold text-sm transition-all cursor-pointer shadow-sm group"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700/80 hover:border-sky-500/50 hover:bg-slate-800/80 text-sky-400 font-semibold text-sm transition-all cursor-pointer shadow-sm group"
               >
                 <span className="text-lg">{toMeta.flag}</span>
                 <span>{toLang}</span>
-                <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-emerald-400 transition-colors" />
+                <ChevronDown className="w-4 h-4 text-slate-400 group-hover:text-sky-400 transition-colors" />
               </button>
             </div>
           </div>
@@ -619,7 +619,7 @@ export default function TranslatorPage() {
           {/* DUAL WORKSPACE: SOURCE & TARGET */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* SOURCE TEXT PANEL */}
-            <div className="flex flex-col rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-emerald-500/50 focus-within:ring-1 focus-within:ring-emerald-500/20 transition-all p-4 min-h-[260px] relative">
+            <div className="flex flex-col rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-sky-500/50 focus-within:ring-1 focus-within:ring-sky-500/20 transition-all p-4 min-h-[260px] relative">
               <div className="flex items-center justify-between text-xs text-slate-500 pb-2 border-b border-slate-800/40 mb-2">
                 <span className="font-semibold text-slate-400 flex items-center gap-1.5">
                   <span>{fromMeta.flag}</span>
@@ -663,7 +663,7 @@ export default function TranslatorPage() {
                         ? "bg-rose-500 text-white animate-pulse shadow-lg shadow-rose-500/30"
                         : isTranscribing
                         ? "bg-slate-800 text-slate-400 cursor-not-allowed"
-                        : "bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-emerald-400 border border-slate-700/60"
+                        : "bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-sky-400 border border-slate-700/60"
                     }`}
                     title={isRecording ? "Stop recording" : "Voice input"}
                   >
@@ -679,7 +679,7 @@ export default function TranslatorPage() {
                       </>
                     ) : (
                       <>
-                        <Mic className="w-3.5 h-3.5 text-emerald-400" />
+                        <Mic className="w-3.5 h-3.5 text-sky-400" />
                         <span>Voice</span>
                       </>
                     )}
@@ -704,7 +704,7 @@ export default function TranslatorPage() {
                       onClick={() => speakText(sourceText, fromLang, true)}
                       className={`p-2 rounded-xl border text-xs transition-all cursor-pointer ${
                         isPlayingSourceTTS
-                          ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 animate-pulse"
+                          ? "bg-sky-500/20 text-sky-400 border-sky-500/40 animate-pulse"
                           : "bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-white border-slate-700/40"
                       }`}
                       title={isPlayingSourceTTS ? "Stop voice" : "Listen to source"}
@@ -721,7 +721,7 @@ export default function TranslatorPage() {
                       className="p-2 rounded-xl bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-700/40 text-xs transition-colors cursor-pointer"
                       title="Copy source text"
                     >
-                      {copiedSource ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                      {copiedSource ? <Check className="w-4 h-4 text-sky-400" /> : <Copy className="w-4 h-4" />}
                     </button>
                   )}
                 </div>
@@ -731,7 +731,7 @@ export default function TranslatorPage() {
             {/* TARGET TRANSLATED PANEL */}
             <div className="flex flex-col rounded-2xl bg-gradient-to-b from-slate-900/90 to-slate-950/90 border border-slate-800 p-4 min-h-[260px] relative shadow-inner">
               <div className="flex items-center justify-between text-xs text-slate-500 pb-2 border-b border-slate-800/40 mb-2">
-                <span className="font-semibold text-emerald-400 flex items-center gap-1.5">
+                <span className="font-semibold text-sky-400 flex items-center gap-1.5">
                   <span>{toMeta.flag}</span>
                   <span>{toLang}</span>
                   {isTranslating && (
@@ -747,7 +747,7 @@ export default function TranslatorPage() {
               {/* Target Text Result */}
               <div className="flex-1 w-full overflow-y-auto text-base leading-relaxed text-white">
                 {translatedText ? (
-                  <p className="whitespace-pre-wrap select-text selection:bg-emerald-500/40 font-medium">
+                  <p className="whitespace-pre-wrap select-text selection:bg-sky-500/40 font-medium">
                     {translatedText}
                   </p>
                 ) : isTranslating ? (
@@ -773,14 +773,14 @@ export default function TranslatorPage() {
                     disabled={!translatedText}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                       isPlayingTTS
-                        ? "bg-emerald-500 text-slate-950 border-emerald-400 animate-pulse font-bold"
+                        ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-sky-400 animate-pulse font-bold"
                         : translatedText
                         ? "bg-slate-800 hover:bg-slate-700 text-white border-slate-700"
                         : "bg-slate-900 text-slate-600 border-slate-800 cursor-not-allowed"
                     }`}
                     title={isPlayingTTS ? "Stop voice" : "Listen to translation"}
                   >
-                    {isPlayingTTS ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5 text-emerald-400" />}
+                    {isPlayingTTS ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5 text-sky-400" />}
                     <span>{isPlayingTTS ? "Stop" : "Listen"}</span>
                   </button>
 
@@ -791,7 +791,7 @@ export default function TranslatorPage() {
                     disabled={!translatedText}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                       copiedTarget
-                        ? "bg-emerald-500/20 border-emerald-500 text-emerald-400"
+                        ? "bg-sky-500/20 border-sky-500 text-sky-400"
                         : translatedText
                         ? "bg-slate-800 hover:bg-slate-700 text-white border-slate-700"
                         : "bg-slate-900 text-slate-600 border-slate-800 cursor-not-allowed"
@@ -800,7 +800,7 @@ export default function TranslatorPage() {
                   >
                     {copiedTarget ? (
                       <>
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <Check className="w-3.5 h-3.5 text-sky-400" />
                         <span>Copied!</span>
                       </>
                     ) : (
@@ -816,7 +816,7 @@ export default function TranslatorPage() {
                 {translatedText && (
                   <Link
                     href={`/chat?insert=${encodeURIComponent(translatedText)}`}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 text-xs font-semibold transition-all cursor-pointer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-400 text-xs font-semibold transition-all cursor-pointer"
                     title="Take this translation into Chat"
                   >
                     <MessageSquare className="w-3.5 h-3.5" />
@@ -835,7 +835,7 @@ export default function TranslatorPage() {
                   type="checkbox"
                   checked={autoTranslate}
                   onChange={(e) => setAutoTranslate(e.target.checked)}
-                  className="rounded border-slate-700 text-emerald-500 focus:ring-emerald-500/20"
+                  className="rounded border-slate-700 text-sky-500 focus:ring-sky-500/20"
                 />
                 <span>Auto-translate while typing</span>
               </label>
@@ -856,16 +856,16 @@ export default function TranslatorPage() {
                 type="button"
                 onClick={() => handleTranslate(undefined, true)}
                 disabled={isTranslating || !sourceText.trim()}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 text-slate-950 font-extrabold text-sm hover:from-emerald-400 hover:to-teal-400 active:scale-[0.98] transition-all shadow-lg shadow-emerald-500/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-extrabold text-sm hover:from-sky-400 hover:to-blue-500 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isTranslating ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
                     <span>Translating...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4 text-slate-950" />
+                    <Sparkles className="w-4 h-4 text-white" />
                     <span>Translate Now</span>
                   </>
                 )}
@@ -879,7 +879,7 @@ export default function TranslatorPage() {
           <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-5 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-top-4 duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800/80 mb-3">
               <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-emerald-400" />
+                <History className="w-4 h-4 text-sky-400" />
                 <h3 className="font-bold text-sm text-white">Recent Translations</h3>
                 <span className="text-xs text-slate-500">({history.length})</span>
               </div>
@@ -907,7 +907,7 @@ export default function TranslatorPage() {
                       setSourceText(item.sourceText);
                       setTranslatedText(item.translatedText);
                     }}
-                    className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800 hover:border-emerald-500/40 hover:bg-slate-900/80 transition-all cursor-pointer group flex flex-col justify-between gap-2"
+                    className="p-3 rounded-2xl bg-slate-950/60 border border-slate-800 hover:border-sky-500/40 hover:bg-slate-900/80 transition-all cursor-pointer group flex flex-col justify-between gap-2"
                   >
                     <div className="flex items-center justify-between text-[11px] text-slate-500">
                       <div className="flex items-center gap-1 font-semibold text-slate-400">
@@ -915,7 +915,7 @@ export default function TranslatorPage() {
                         <span>{item.fromLang}</span>
                         <span>→</span>
                         <span>{getLanguageMetadata(item.toLang).flag}</span>
-                        <span className="text-emerald-400">{item.toLang}</span>
+                        <span className="text-sky-400">{item.toLang}</span>
                       </div>
                       <span className="text-[10px] text-slate-600">
                         {new Date(item.timestamp).toLocaleTimeString([], {
@@ -926,7 +926,7 @@ export default function TranslatorPage() {
                     </div>
 
                     <p className="text-xs text-slate-300 line-clamp-2">{item.sourceText}</p>
-                    <p className="text-xs text-emerald-300 font-medium line-clamp-2 bg-emerald-500/5 p-1.5 rounded-lg border border-emerald-500/10">
+                    <p className="text-xs text-sky-300 font-medium line-clamp-2 bg-sky-500/5 p-1.5 rounded-lg border border-sky-500/10">
                       {item.translatedText}
                     </p>
                   </div>
@@ -944,7 +944,7 @@ export default function TranslatorPage() {
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">
-                <Globe className="w-5 h-5 text-emerald-400" />
+                <Globe className="w-5 h-5 text-sky-400" />
                 <h3 className="font-extrabold text-base text-white">
                   Select {activePicker === "from" ? "Source" : "Target"} Language
                 </h3>
@@ -959,7 +959,7 @@ export default function TranslatorPage() {
 
             {/* Search Input */}
             <div className="pt-3 pb-2">
-              <div className="relative rounded-xl bg-slate-950 border border-slate-800 focus-within:border-emerald-500/50">
+              <div className="relative rounded-xl bg-slate-950 border border-slate-800 focus-within:border-sky-500/50">
                 <Search className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
                 <input
                   type="text"
@@ -987,7 +987,7 @@ export default function TranslatorPage() {
                     }}
                     className={`px-2 py-1 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-emerald-500 text-slate-950 font-bold border-emerald-400"
+                        ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white font-bold border-sky-400 shadow-sm"
                         : "bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700"
                     }`}
                   >
@@ -1015,7 +1015,7 @@ export default function TranslatorPage() {
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                       isSelected
-                        ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                        ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
                         : "hover:bg-slate-800/60 text-slate-300 hover:text-white"
                     }`}
                   >
@@ -1023,7 +1023,7 @@ export default function TranslatorPage() {
                       <span className="text-xl">{meta.flag}</span>
                       <span>{lang.label}</span>
                     </div>
-                    {isSelected && <Check className="w-4 h-4 text-emerald-400" />}
+                    {isSelected && <Check className="w-4 h-4 text-sky-400" />}
                   </button>
                 );
               })}

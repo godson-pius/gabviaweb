@@ -60,9 +60,9 @@ export function NotificationPermissionBanner() {
   if (!showBanner) return null;
 
   return (
-    <div className="mx-3 mt-3 p-3 rounded-2xl bg-gradient-to-r from-emerald-950/80 via-slate-900 to-slate-900 border border-emerald-500/30 flex items-center justify-between gap-3 shadow-lg animate-in slide-in-from-top duration-300">
+    <div className="mx-3 mt-3 p-3 rounded-2xl bg-gradient-to-r from-sky-950/80 via-slate-900 to-slate-900 border border-sky-500/30 flex items-center justify-between gap-3 shadow-lg animate-in slide-in-from-top duration-300">
       <div className="flex items-center gap-2.5 min-w-0">
-        <div className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 shrink-0">
+        <div className="p-2 rounded-xl bg-sky-500/20 text-sky-400 shrink-0">
           <Bell className="w-4 h-4" />
         </div>
         <div className="min-w-0">
@@ -79,7 +79,7 @@ export function NotificationPermissionBanner() {
         <button
           onClick={handleEnable}
           disabled={isRequesting}
-          className="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+          className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs transition-all shadow-sm cursor-pointer disabled:opacity-50"
         >
           {isRequesting ? "Enabling..." : "Enable"}
         </button>

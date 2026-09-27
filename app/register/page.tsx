@@ -119,20 +119,20 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b111e] text-slate-100 flex flex-col justify-between selection:bg-emerald-500/30 selection:text-emerald-200">
+    <div className="min-h-screen bg-[#0b111e] text-slate-100 flex flex-col justify-between selection:bg-sky-500/30 selection:text-sky-200">
       {/* Top Header */}
       <header className="p-6 max-w-7xl mx-auto w-full flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg border border-slate-700/50 bg-slate-900 group-hover:scale-105 transition-transform">
             <Image src="/logo.png" alt="Gabvia Logo" width={40} height={40} className="w-full h-full object-cover" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-white group-hover:text-emerald-400 transition-colors">
+          <span className="text-xl font-bold tracking-tight text-white group-hover:text-sky-400 transition-colors">
             Gabvia
           </span>
         </Link>
         <Link
           href="/login"
-          className="text-xs sm:text-sm font-medium text-slate-400 hover:text-emerald-400 transition-colors bg-slate-800/60 border border-slate-700/50 px-4 py-2 rounded-full backdrop-blur-md"
+          className="text-xs sm:text-sm font-medium text-slate-400 hover:text-sky-400 transition-colors bg-slate-800/60 border border-slate-700/50 px-4 py-2 rounded-full backdrop-blur-md"
         >
           Sign In
         </Link>
@@ -144,12 +144,12 @@ export default function RegisterPage() {
           {/* Card */}
           <div className="relative rounded-3xl bg-slate-900/90 border border-slate-800/80 p-8 shadow-2xl backdrop-blur-xl">
             {/* Glow accent */}
-            <div className="absolute -top-24 -right-20 w-52 h-52 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -top-24 -right-20 w-52 h-52 bg-sky-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute -bottom-24 -left-20 w-52 h-52 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
             {/* Title section */}
             <div className="relative text-center mb-6">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-3">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-semibold uppercase tracking-wider mb-3">
                 <ShieldCheck className="w-3.5 h-3.5" /> 500 GAB POINTS BONUS
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
@@ -176,7 +176,7 @@ export default function RegisterPage() {
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                     Full Name
                   </label>
-                  <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-emerald-500/60 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                  <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-sky-500/60 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                       <User className="w-4 h-4" />
                     </div>
@@ -195,7 +195,7 @@ export default function RegisterPage() {
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                     Username
                   </label>
-                  <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-emerald-500/60 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                  <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-sky-500/60 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                       <AtSign className="w-4 h-4" />
                     </div>
@@ -216,7 +216,7 @@ export default function RegisterPage() {
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                   Email Address
                 </label>
-                <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-emerald-500/60 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-sky-500/60 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                     <Mail className="w-4 h-4" />
                   </div>
@@ -236,7 +236,7 @@ export default function RegisterPage() {
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                   Native Language
                 </label>
-                <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-emerald-500/60 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-sky-500/60 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                     <Globe className="w-4 h-4" />
                   </div>
@@ -263,7 +263,7 @@ export default function RegisterPage() {
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                     Password
                   </label>
-                  <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-emerald-500/60 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                  <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-sky-500/60 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                       <Lock className="w-4 h-4" />
                     </div>
@@ -289,7 +289,7 @@ export default function RegisterPage() {
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                     Confirm Password
                   </label>
-                  <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-emerald-500/60 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                  <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-sky-500/60 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all">
                     <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                       <Lock className="w-4 h-4" />
                     </div>
@@ -314,19 +314,19 @@ export default function RegisterPage() {
 
               {/* Password strength indicators */}
               <div className="p-3 rounded-2xl bg-slate-950/40 border border-slate-800/60 grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                <div className={`flex items-center gap-1.5 ${pwdLengthValid ? "text-emerald-400" : "text-slate-500"}`}>
+                <div className={`flex items-center gap-1.5 ${pwdLengthValid ? "text-sky-400" : "text-slate-500"}`}>
                   <Check className="w-3.5 h-3.5" /> 8+ chars
                 </div>
-                <div className={`flex items-center gap-1.5 ${pwdUpperValid ? "text-emerald-400" : "text-slate-500"}`}>
+                <div className={`flex items-center gap-1.5 ${pwdUpperValid ? "text-sky-400" : "text-slate-500"}`}>
                   <Check className="w-3.5 h-3.5" /> Uppercase
                 </div>
-                <div className={`flex items-center gap-1.5 ${pwdLowerValid ? "text-emerald-400" : "text-slate-500"}`}>
+                <div className={`flex items-center gap-1.5 ${pwdLowerValid ? "text-sky-400" : "text-slate-500"}`}>
                   <Check className="w-3.5 h-3.5" /> Lowercase
                 </div>
-                <div className={`flex items-center gap-1.5 ${pwdDigitValid ? "text-emerald-400" : "text-slate-500"}`}>
+                <div className={`flex items-center gap-1.5 ${pwdDigitValid ? "text-sky-400" : "text-slate-500"}`}>
                   <Check className="w-3.5 h-3.5" /> Number
                 </div>
-                <div className={`flex items-center gap-1.5 col-span-2 sm:col-span-2 ${pwdMatches ? "text-emerald-400" : "text-slate-500"}`}>
+                <div className={`flex items-center gap-1.5 col-span-2 sm:col-span-2 ${pwdMatches ? "text-sky-400" : "text-slate-500"}`}>
                   <Check className="w-3.5 h-3.5" /> Passwords match
                 </div>
               </div>
@@ -336,7 +336,7 @@ export default function RegisterPage() {
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
                   Referral Code (Optional)
                 </label>
-                <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-emerald-500/60 focus-within:ring-2 focus-within:ring-emerald-500/20 transition-all">
+                <div className="relative rounded-2xl bg-slate-950/70 border border-slate-800 focus-within:border-sky-500/60 focus-within:ring-2 focus-within:ring-sky-500/20 transition-all">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
                     <Tag className="w-4 h-4" />
                   </div>
@@ -354,7 +354,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full mt-2 py-3.5 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.99] text-slate-950 font-bold text-sm tracking-wide shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full mt-2 py-3.5 px-4 rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 active:scale-[0.99] text-white font-bold text-sm tracking-wide shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
@@ -374,7 +374,7 @@ export default function RegisterPage() {
             <div className="mt-6 pt-5 border-t border-slate-800/80 text-center">
               <p className="text-xs sm:text-sm text-slate-400">
                 Already have an account?{" "}
-                <Link href="/login" className="font-semibold text-emerald-400 hover:text-emerald-300 transition-colors">
+                <Link href="/login" className="font-semibold text-sky-400 hover:text-sky-300 transition-colors">
                   Sign in
                 </Link>
               </p>
