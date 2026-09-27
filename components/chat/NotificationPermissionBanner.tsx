@@ -36,7 +36,7 @@ export function NotificationPermissionBanner() {
       const res = await requestNotificationPermission();
       if (res === "granted") {
         setShowBanner(false);
-        playMessageSound();
+        await playMessageSound();
         showWebNotification({
           title: "Notifications Enabled! 🔔",
           body: "You will now receive alerts whenever you receive new messages on Gabvia.",

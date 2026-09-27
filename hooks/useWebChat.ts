@@ -1388,5 +1388,6 @@ export function useWebChat() {
     activeParticipantProfiles,
     incomingToast,
     clearIncomingToast: () => setIncomingToast(null),
+    triggerInAppToast: (toast: InAppMessageToast) => setIncomingToast(toast),
   };
 }

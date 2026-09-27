@@ -1,6 +1,8 @@
 "use client";
 
 import { FormattedSummary } from "@/components/chat/FormattedSummary";
+import { NotificationPermissionBanner } from "@/components/chat/NotificationPermissionBanner";
+import { NotificationToast } from "@/components/chat/NotificationToast";
 import { QuickTranslatorModal } from "@/components/chat/QuickTranslatorModal";
 import { WebVoicePlayer } from "@/components/chat/WebVoicePlayer";
 import { useAuth } from "@/context/AuthContext";
@@ -8,6 +10,16 @@ import { useWebChat } from "@/hooks/useWebChat";
 import { LANGUAGES } from "@/lib/constants";
 import { ALL_MILESTONES, MILESTONE_LABELS, MILESTONE_POINTS } from "@/lib/rewards";
 import { summarizeMessages } from "@/lib/translation";
+import {
+  areNotificationsEnabled,
+  getNotificationPermission,
+  isSoundEnabled,
+  playMessageSound,
+  requestNotificationPermission,
+  setNotificationsEnabled,
+  setSoundEnabled,
+  showWebNotification,
+} from "@/lib/webNotifications";
 import { Message, Profile } from "@/types/chat";
 import {
   AlertTriangle,
@@ -31,6 +43,7 @@ import {
   Lock,
   LogOut,
   MessageSquare,
+  Moon,
   MoreVertical,
   Pencil,
   Pin,
@@ -43,7 +56,6 @@ import {
   ShieldCheck,
   Sparkles,
   Sun,
-  Moon,
   Trash2,
   User,
   UserMinus,
@@ -53,18 +65,6 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
-import { NotificationToast } from "@/components/chat/NotificationToast";
-import { NotificationPermissionBanner } from "@/components/chat/NotificationPermissionBanner";
-import {
-  isSoundEnabled,
-  setSoundEnabled,
-  areNotificationsEnabled,
-  setNotificationsEnabled,
-  getNotificationPermission,
-  requestNotificationPermission,
-  playMessageSound,
-  showWebNotification,
-} from "@/lib/webNotifications";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -131,6 +131,7 @@ export default function ChatPage() {
     activeParticipantProfiles,
     incomingToast,
     clearIncomingToast,
+    triggerInAppToast,
   } = useWebChat();
 
   const [messageText, setMessageText] = useState("");
@@ -700,9 +701,8 @@ export default function ChatPage() {
 
   if (authLoading) {
     return (
-      <div className={`min-h-screen flex flex-col items-center justify-center gap-3 transition-colors ${
-        isDark ? "bg-[#09090b] text-zinc-400" : "bg-[#fafafa] text-zinc-600"
-      }`}>
+      <div className={`min-h-screen flex flex-col items-center justify-center gap-3 transition-colors ${isDark ? "bg-[#09090b] text-zinc-400" : "bg-[#fafafa] text-zinc-600"
+        }`}>
         <Loader2 className={`w-8 h-8 animate-spin ${isDark ? "text-sky-400" : "text-blue-600"}`} />
         <span className="text-xs font-mono tracking-widest uppercase">INITIALIZING SECURE SESSION...</span>
       </div>
@@ -711,9 +711,8 @@ export default function ChatPage() {
 
   return (
     <div
-      className={`chat-workspace h-[100dvh] max-h-[100dvh] w-full overflow-hidden flex flex-col overscroll-none transition-colors duration-200 ${
-        isDark ? "chat-theme-dark bg-[#09090b] text-[#f4f4f5]" : "chat-theme-light bg-[#fafafa] text-[#09090b]"
-      }`}
+      className={`chat-workspace h-[100dvh] max-h-[100dvh] w-full overflow-hidden flex flex-col overscroll-none transition-colors duration-200 ${isDark ? "chat-theme-dark bg-[#09090b] text-[#f4f4f5]" : "chat-theme-light bg-[#fafafa] text-[#09090b]"
+        }`}
     >
       {/* Recovery Banner if needed */}
       {needsKeyRecovery && (
@@ -741,31 +740,27 @@ export default function ChatPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* SIDEBAR */}
         <aside
-          className={`w-full md:w-80 lg:w-96 border-r flex flex-col backdrop-blur-xl shrink-0 transition-transform ${
-            isDark ? "border-zinc-800/80 bg-zinc-950/80" : "border-zinc-200 bg-white/95"
-          } ${mobileShowChat ? "hidden md:flex" : "flex"}`}
+          className={`w-full md:w-80 lg:w-96 border-r flex flex-col backdrop-blur-xl shrink-0 transition-transform ${isDark ? "border-zinc-800/80 bg-zinc-950/80" : "border-zinc-200 bg-white/95"
+            } ${mobileShowChat ? "hidden md:flex" : "flex"}`}
         >
           {/* Header */}
           <div
-            className={`p-3.5 border-b flex flex-col gap-3 ${
-              isDark ? "border-zinc-800/80 bg-zinc-950/40" : "border-zinc-200/80 bg-white/60"
-            }`}
+            className={`p-3.5 border-b flex flex-col gap-3 ${isDark ? "border-zinc-800/80 bg-zinc-950/40" : "border-zinc-200/80 bg-white/60"
+              }`}
           >
             {/* Top Row: Brand & Primary Controls */}
             <div className="flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2.5 group">
                 <div
-                  className={`w-8 h-8 rounded-xl overflow-hidden border shadow-xs flex items-center justify-center transition-colors ${
-                    isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-white"
-                  }`}
+                  className={`w-8 h-8 rounded-xl overflow-hidden border shadow-xs flex items-center justify-center transition-colors ${isDark ? "border-zinc-800 bg-zinc-900" : "border-zinc-200 bg-white"
+                    }`}
                 >
                   <Image src="/logo.png" alt="Gabvia" width={32} height={32} className="w-full h-full object-cover" />
                 </div>
                 <div className="flex flex-col">
                   <span
-                    className={`font-bold text-base tracking-tight leading-none transition-colors ${
-                      isDark ? "text-white group-hover:text-sky-400" : "text-zinc-950 group-hover:text-blue-600"
-                    }`}
+                    className={`font-bold text-base tracking-tight leading-none transition-colors ${isDark ? "text-white group-hover:text-sky-400" : "text-zinc-950 group-hover:text-blue-600"
+                      }`}
                   >
                     Gabvia
                   </span>
@@ -781,11 +776,10 @@ export default function ChatPage() {
                 <button
                   onClick={toggleTheme}
                   type="button"
-                  className={`p-2 rounded-xl border transition-colors ${
-                    isDark
-                      ? "bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800"
-                      : "bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-zinc-950 hover:bg-zinc-200"
-                  }`}
+                  className={`p-2 rounded-xl border transition-colors ${isDark
+                    ? "bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800"
+                    : "bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-zinc-950 hover:bg-zinc-200"
+                    }`}
                   title={`Switch to ${isDark ? "light" : "dark"} theme`}
                   aria-label="Toggle theme"
                 >
@@ -795,11 +789,10 @@ export default function ChatPage() {
                 {/* Dedicated Translator Tool */}
                 <Link
                   href="/translator"
-                  className={`p-2 rounded-xl border transition-colors ${
-                    isDark
-                      ? "bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-sky-400 hover:bg-zinc-800"
-                      : "bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-blue-600 hover:bg-zinc-200"
-                  }`}
+                  className={`p-2 rounded-xl border transition-colors ${isDark
+                    ? "bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-sky-400 hover:bg-zinc-800"
+                    : "bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-blue-600 hover:bg-zinc-200"
+                    }`}
                   title="Open Dedicated Translator"
                 >
                   <Languages className="w-4 h-4" />
@@ -808,11 +801,10 @@ export default function ChatPage() {
                 {/* Settings / Profile Button */}
                 <button
                   onClick={() => setIsSettingsOpen(true)}
-                  className={`p-2 rounded-xl border transition-colors ${
-                    isDark
-                      ? "bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800"
-                      : "bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-zinc-950 hover:bg-zinc-200"
-                  }`}
+                  className={`p-2 rounded-xl border transition-colors ${isDark
+                    ? "bg-zinc-900 border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800"
+                    : "bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-zinc-950 hover:bg-zinc-200"
+                    }`}
                   title="Settings & Profile"
                 >
                   <Settings className="w-4 h-4" />
@@ -834,11 +826,10 @@ export default function ChatPage() {
               {/* Gab Points Badge */}
               <div
                 title="Your available Gab Points for translations"
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shadow-inner ${
-                  isDark
-                    ? "bg-sky-500/10 border border-sky-500/20 text-sky-400"
-                    : "bg-blue-50 border border-blue-200 text-blue-700"
-                }`}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold shadow-inner ${isDark
+                  ? "bg-sky-500/10 border border-sky-500/20 text-sky-400"
+                  : "bg-blue-50 border border-blue-200 text-blue-700"
+                  }`}
               >
                 <Coins className={`w-3.5 h-3.5 ${isDark ? "text-sky-400" : "text-blue-600"}`} />
                 <span>{profile?.gab_points ?? 500} pts</span>
@@ -858,11 +849,10 @@ export default function ChatPage() {
 
           {/* Search Bar */}
           <div className="p-3 border-b border-slate-800/40">
-            <div className={`relative rounded-xl border transition-all ${
-              isDark
-                ? "bg-zinc-900/60 border-zinc-800 focus-within:border-sky-500/60"
-                : "bg-zinc-50 border-zinc-200 focus-within:border-blue-500"
-            }`}>
+            <div className={`relative rounded-xl border transition-all ${isDark
+              ? "bg-zinc-900/60 border-zinc-800 focus-within:border-sky-500/60"
+              : "bg-zinc-50 border-zinc-200 focus-within:border-blue-500"
+              }`}>
               <Search className="w-4 h-4 text-slate-500 absolute left-3 top-3 pointer-events-none" />
               <input
                 type="text"
@@ -887,13 +877,11 @@ export default function ChatPage() {
 
           {/* Group Invitations Banner */}
           {invitations.length > 0 && (
-            <div className={`p-3 border-b ${
-              isDark ? "bg-sky-500/10 border-sky-500/20" : "bg-blue-50/80 border-blue-100"
-            }`}>
+            <div className={`p-3 border-b ${isDark ? "bg-sky-500/10 border-sky-500/20" : "bg-blue-50/80 border-blue-100"
+              }`}>
               <div className="flex items-center justify-between mb-2">
-                <span className={`text-xs font-bold flex items-center gap-1.5 ${
-                  isDark ? "text-sky-400" : "text-blue-700"
-                }`}>
+                <span className={`text-xs font-bold flex items-center gap-1.5 ${isDark ? "text-sky-400" : "text-blue-700"
+                  }`}>
                   <Users className="w-3.5 h-3.5" /> Group Invitations ({invitations.length})
                 </span>
               </div>
@@ -901,9 +889,8 @@ export default function ChatPage() {
                 {invitations.map((inv) => (
                   <div
                     key={inv.id}
-                    className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 shadow-sm ${
-                      isDark ? "bg-zinc-900/90 border-sky-500/30" : "bg-white border-blue-200"
-                    }`}
+                    className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 shadow-sm ${isDark ? "bg-zinc-900/90 border-sky-500/30" : "bg-white border-blue-200"
+                      }`}
                   >
                     <div className="min-w-0">
                       <p className={`text-xs font-semibold truncate ${isDark ? "text-white" : "text-zinc-950"}`}>
@@ -986,23 +973,21 @@ export default function ChatPage() {
                       setMobileShowChat(true);
                       setTimeout(() => textareaRef.current?.focus(), 150);
                     }}
-                    className={`w-full text-left p-3.5 flex items-start gap-3 transition-colors ${
-                      isActive
-                        ? isDark
-                          ? "bg-sky-500/10 border-l-2 border-sky-400"
-                          : "bg-blue-50 border-l-2 border-blue-600"
-                        : isDark
-                          ? "hover:bg-zinc-800/40"
-                          : "hover:bg-zinc-100/70"
-                    }`}
+                    className={`w-full text-left p-3.5 flex items-start gap-3 transition-colors ${isActive
+                      ? isDark
+                        ? "bg-sky-500/10 border-l-2 border-sky-400"
+                        : "bg-blue-50 border-l-2 border-blue-600"
+                      : isDark
+                        ? "hover:bg-zinc-800/40"
+                        : "hover:bg-zinc-100/70"
+                      }`}
                   >
                     {/* Avatar */}
                     <div
-                      className={`relative w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden shadow-xs transition-colors chat-avatar ${
-                        isDark
-                          ? "bg-zinc-800/90 border border-zinc-700/60 text-sky-200"
-                          : "bg-gradient-to-br from-sky-50 to-blue-100 border border-blue-200 text-blue-700"
-                      }`}
+                      className={`relative w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden shadow-xs transition-colors chat-avatar ${isDark
+                        ? "bg-zinc-800/90 border border-zinc-700/60 text-sky-200"
+                        : "bg-gradient-to-br from-sky-50 to-blue-100 border border-blue-200 text-blue-700"
+                        }`}
                     >
                       <span className={isDark ? "text-sky-200" : "text-blue-700"}>
                         {displayName.charAt(0).toUpperCase()}
@@ -1010,11 +995,10 @@ export default function ChatPage() {
                       {convo.type !== "group" && (
                         <div
                           title="Protected with End-to-End Encryption"
-                          className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border flex items-center justify-center text-[9px] ${
-                            isDark
-                              ? "bg-zinc-950 border-sky-500/40 text-sky-400"
-                              : "bg-white border-blue-300 text-blue-600 shadow-xs"
-                          }`}
+                          className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border flex items-center justify-center text-[9px] ${isDark
+                            ? "bg-zinc-950 border-sky-500/40 text-sky-400"
+                            : "bg-white border-blue-300 text-blue-600 shadow-xs"
+                            }`}
                         >
                           <Lock className="w-2.5 h-2.5" />
                         </div>
@@ -1026,11 +1010,10 @@ export default function ChatPage() {
                       <div className="flex items-center justify-between gap-1 mb-0.5">
                         <div className="flex items-center gap-1.5 min-w-0">
                           <span
-                            className={`text-sm font-semibold truncate ${
-                              isActive
-                                ? isDark ? "text-sky-400" : "text-blue-600 font-bold"
-                                : isDark ? "text-white" : "text-zinc-950"
-                            }`}
+                            className={`text-sm font-semibold truncate ${isActive
+                              ? isDark ? "text-sky-400" : "text-blue-600 font-bold"
+                              : isDark ? "text-white" : "text-zinc-950"
+                              }`}
                           >
                             {displayName}
                           </span>
@@ -1075,16 +1058,14 @@ export default function ChatPage() {
           </div>
 
           {/* User profile footer */}
-          <div className={`p-3 border-t flex items-center justify-between pb-[max(0.75rem,env(safe-area-inset-bottom))] ${
-            isDark ? "border-zinc-800/80 bg-zinc-950/40" : "border-zinc-200/80 bg-white"
-          }`}>
+          <div className={`p-3 border-t flex items-center justify-between pb-[max(0.75rem,env(safe-area-inset-bottom))] ${isDark ? "border-zinc-800/80 bg-zinc-950/40" : "border-zinc-200/80 bg-white"
+            }`}>
             <div className="flex items-center gap-2.5 min-w-0">
               <div
-                className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border transition-colors chat-avatar ${
-                  isDark
-                    ? "bg-sky-500/20 border-sky-500/40 text-sky-300"
-                    : "bg-gradient-to-br from-sky-500 to-blue-600 text-white border-blue-600 shadow-xs"
-                }`}
+                className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border transition-colors chat-avatar ${isDark
+                  ? "bg-sky-500/20 border-sky-500/40 text-sky-300"
+                  : "bg-gradient-to-br from-sky-500 to-blue-600 text-white border-blue-600 shadow-xs"
+                  }`}
               >
                 <span className={isDark ? "text-sky-300" : "text-white"}>
                   {profile?.full_name?.charAt(0).toUpperCase() || profile?.username?.charAt(0).toUpperCase() || "U"}
@@ -1100,9 +1081,8 @@ export default function ChatPage() {
 
             <button
               onClick={() => setIsSecurityModalOpen(true)}
-              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                isDark ? "text-sky-400 hover:bg-sky-500/10" : "text-blue-600 hover:bg-blue-50"
-              }`}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${isDark ? "text-sky-400 hover:bg-sky-500/10" : "text-blue-600 hover:bg-blue-50"
+                }`}
               title="End-to-End Encryption Security Verified"
             >
               <ShieldCheck className="w-4 h-4" />
@@ -1112,17 +1092,15 @@ export default function ChatPage() {
 
         {/* CHAT AREA */}
         <section
-          className={`chat-main flex-1 flex flex-col overflow-hidden transition-colors ${
-            isDark ? "bg-[#09090b]" : "bg-[#fafafa]"
-          } ${mobileShowChat ? "flex" : "hidden md:flex"}`}
+          className={`chat-main flex-1 flex flex-col overflow-hidden transition-colors ${isDark ? "bg-[#09090b]" : "bg-[#fafafa]"
+            } ${mobileShowChat ? "flex" : "hidden md:flex"}`}
         >
           {activeConversation ? (
             <>
               {/* Chat Top Bar */}
               <div
-                className={`chat-header h-16 px-3 sm:px-6 border-b backdrop-blur-md flex items-center justify-between shrink-0 gap-2 relative transition-colors ${
-                  isDark ? "border-zinc-800/80 bg-zinc-950/80" : "border-zinc-200 bg-white/95"
-                }`}
+                className={`chat-header h-16 px-3 sm:px-6 border-b backdrop-blur-md flex items-center justify-between shrink-0 gap-2 relative transition-colors ${isDark ? "border-zinc-800/80 bg-zinc-950/80" : "border-zinc-200 bg-white/95"
+                  }`}
               >
                 <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                   {/* Mobile Back Button */}
@@ -1131,20 +1109,18 @@ export default function ChatPage() {
                       setMobileShowChat(false);
                       setMobileMenuOpen(false);
                     }}
-                    className={`md:hidden w-10 h-10 -ml-1 rounded-xl flex items-center justify-center active:scale-95 transition-all shrink-0 cursor-pointer ${
-                      isDark ? "text-zinc-300 hover:text-white hover:bg-zinc-800" : "text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100"
-                    }`}
+                    className={`md:hidden w-10 h-10 -ml-1 rounded-xl flex items-center justify-center active:scale-95 transition-all shrink-0 cursor-pointer ${isDark ? "text-zinc-300 hover:text-white hover:bg-zinc-800" : "text-zinc-700 hover:text-zinc-950 hover:bg-zinc-100"
+                      }`}
                     aria-label="Back to conversations"
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
 
                   <div
-                    className={`w-10 h-10 rounded-2xl border flex items-center justify-center font-bold text-sm shrink-0 shadow-xs transition-colors chat-avatar ${
-                      isDark
-                        ? "bg-zinc-900 border-zinc-800 text-sky-200"
-                        : "bg-gradient-to-br from-sky-50 to-blue-100 border-blue-200 text-blue-700"
-                    }`}
+                    className={`w-10 h-10 rounded-2xl border flex items-center justify-center font-bold text-sm shrink-0 shadow-xs transition-colors chat-avatar ${isDark
+                      ? "bg-zinc-900 border-zinc-800 text-sky-200"
+                      : "bg-gradient-to-br from-sky-50 to-blue-100 border-blue-200 text-blue-700"
+                      }`}
                   >
                     {activeConversation.type === "group" ? (
                       <Users className={`w-5 h-5 ${isDark ? "text-sky-400" : "text-blue-600"}`} />
@@ -1157,27 +1133,24 @@ export default function ChatPage() {
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <h3 className={`text-sm font-bold truncate max-w-[130px] xs:max-w-[180px] sm:max-w-[260px] md:max-w-xs ${
-                        isDark ? "text-white" : "text-zinc-950"
-                      }`}>
+                      <h3 className={`text-sm font-bold truncate max-w-[130px] xs:max-w-[180px] sm:max-w-[260px] md:max-w-xs ${isDark ? "text-white" : "text-zinc-950"
+                        }`}>
                         {activeConversation.type === "group"
                           ? activeConversation.name || "Group Chat"
                           : otherParticipant?.full_name || otherParticipant?.username || "Direct Chat"}
                       </h3>
                       {activeConversation.type === "group" ? (
-                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${
-                          isDark ? "bg-sky-500/10 border border-sky-500/20 text-sky-400" : "bg-blue-50 border border-blue-200 text-blue-700"
-                        }`}>
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${isDark ? "bg-sky-500/10 border border-sky-500/20 text-sky-400" : "bg-blue-50 border border-blue-200 text-blue-700"
+                          }`}>
                           <Users className="w-2.5 h-2.5" /> Group
                         </span>
                       ) : (
                         <button
                           onClick={() => setIsSecurityModalOpen(true)}
-                          className={`inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors shrink-0 cursor-pointer ${
-                            isDark
-                              ? "bg-sky-500/10 border border-sky-500/20 text-sky-400 hover:bg-sky-500/20"
-                              : "bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100"
-                          }`}
+                          className={`inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors shrink-0 cursor-pointer ${isDark
+                            ? "bg-sky-500/10 border border-sky-500/20 text-sky-400 hover:bg-sky-500/20"
+                            : "bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100"
+                            }`}
                         >
                           <Lock className="w-2.5 h-2.5" /> E2EE
                         </button>
@@ -1209,11 +1182,10 @@ export default function ChatPage() {
                   {/* Quick Translator Tool */}
                   <button
                     onClick={() => setIsQuickTranslatorOpen(true)}
-                    className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
-                      isDark
-                        ? "bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/25"
-                        : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
-                    }`}
+                    className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${isDark
+                      ? "bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/25"
+                      : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
+                      }`}
                     title="Quick Translator Tool"
                   >
                     <Languages className="w-3.5 h-3.5" />
@@ -1235,11 +1207,10 @@ export default function ChatPage() {
                     <>
                       <button
                         onClick={() => setIsEventModalOpen(true)}
-                        className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
-                          isDark
-                            ? "bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/25"
-                            : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
-                        }`}
+                        className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${isDark
+                          ? "bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/25"
+                          : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
+                          }`}
                         title="Schedule Group Event"
                       >
                         <CalendarPlus className="w-3.5 h-3.5" />
@@ -1248,11 +1219,10 @@ export default function ChatPage() {
 
                       <button
                         onClick={() => setIsGroupDetailsOpen(true)}
-                        className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
-                          isDark
-                            ? "bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/60"
-                            : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 hover:text-zinc-950 border border-zinc-200"
-                        }`}
+                        className={`px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${isDark
+                          ? "bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/60"
+                          : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 hover:text-zinc-950 border border-zinc-200"
+                          }`}
                         title="Group Details & Members"
                       >
                         <Users className={`w-3.5 h-3.5 ${isDark ? "text-sky-400" : "text-blue-600"}`} />
@@ -1263,11 +1233,10 @@ export default function ChatPage() {
 
                   <button
                     onClick={() => setIsSecurityModalOpen(true)}
-                    className={`p-2 rounded-xl transition-colors cursor-pointer ${
-                      isDark
-                        ? "bg-zinc-800/40 hover:bg-zinc-800 text-zinc-300 hover:text-sky-400"
-                        : "bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-blue-600"
-                    }`}
+                    className={`p-2 rounded-xl transition-colors cursor-pointer ${isDark
+                      ? "bg-zinc-800/40 hover:bg-zinc-800 text-zinc-300 hover:text-sky-400"
+                      : "bg-zinc-100 hover:bg-zinc-200 text-zinc-600 hover:text-blue-600"
+                      }`}
                     title="Security Details"
                   >
                     <Shield className="w-4 h-4" />
@@ -1278,11 +1247,10 @@ export default function ChatPage() {
                 <div className="flex md:hidden items-center gap-1 shrink-0 relative">
                   <button
                     onClick={() => setIsQuickTranslatorOpen(true)}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
-                      isDark
-                        ? "bg-sky-500/15 hover:bg-sky-500/25 text-sky-400 border border-sky-500/30"
-                        : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
-                    }`}
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer active:scale-95 ${isDark
+                      ? "bg-sky-500/15 hover:bg-sky-500/25 text-sky-400 border border-sky-500/30"
+                      : "bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200"
+                      }`}
                     title="Quick Translator"
                   >
                     <Languages className="w-4 h-4" />
@@ -1290,11 +1258,10 @@ export default function ChatPage() {
 
                   <button
                     onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
-                      isDark
-                        ? "bg-zinc-800/60 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/50"
-                        : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 hover:text-zinc-950 border border-zinc-200"
-                    }`}
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer active:scale-95 ${isDark
+                      ? "bg-zinc-800/60 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/50"
+                      : "bg-zinc-100 hover:bg-zinc-200 text-zinc-700 hover:text-zinc-950 border border-zinc-200"
+                      }`}
                     title="More actions"
                   >
                     <MoreVertical className="w-4 h-4" />
@@ -1436,12 +1403,10 @@ export default function ChatPage() {
               {/* Messages Stream */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
                 {/* Security Announcement Card */}
-                <div className={`max-w-md mx-auto p-3.5 rounded-2xl border text-center text-xs flex flex-col items-center gap-1.5 ${
-                  isDark ? "bg-zinc-900/60 border-zinc-800 text-zinc-400" : "bg-white border-zinc-200 text-zinc-600 shadow-xs"
-                }`}>
-                  <div className={`inline-flex items-center gap-1 font-bold ${
-                    isDark ? "text-sky-400" : "text-blue-600"
+                <div className={`max-w-md mx-auto p-3.5 rounded-2xl border text-center text-xs flex flex-col items-center gap-1.5 ${isDark ? "bg-zinc-900/60 border-zinc-800 text-zinc-400" : "bg-white border-zinc-200 text-zinc-600 shadow-xs"
                   }`}>
+                  <div className={`inline-flex items-center gap-1 font-bold ${isDark ? "text-sky-400" : "text-blue-600"
+                    }`}>
                     {activeConversation.type === "group" ? (
                       <>
                         <Globe className="w-4 h-4" /> Multilingual Group Chat
@@ -1483,10 +1448,10 @@ export default function ChatPage() {
                         {msg.reply_to && (
                           <div
                             className={`text-[11px] mb-1 px-3 py-1 rounded-lg border max-w-sm truncate ${isMe
-                                ? "bg-white/15 border-white/20 text-sky-100"
-                                : isDark
-                                  ? "bg-zinc-800/60 border-zinc-700/60 text-zinc-300"
-                                  : "bg-blue-50/80 border-blue-200 text-blue-900"
+                              ? "bg-white/15 border-white/20 text-sky-100"
+                              : isDark
+                                ? "bg-zinc-800/60 border-zinc-700/60 text-zinc-300"
+                                : "bg-blue-50/80 border-blue-200 text-blue-900"
                               }`}
                           >
                             <span className="font-semibold">{msg.reply_to.sender_name}: </span>
@@ -1498,10 +1463,10 @@ export default function ChatPage() {
                           {/* Message Bubble */}
                           <div
                             className={`rounded-2xl px-4 py-2.5 text-sm shadow-md transition-all ${isMe
-                                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-br-xs shadow-blue-500/15"
-                                : isDark
-                                  ? "bg-slate-800/90 text-slate-100 border border-slate-700/60 rounded-bl-xs"
-                                  : "bg-white text-zinc-950 border border-zinc-200/90 shadow-xs rounded-bl-xs"
+                              ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white rounded-br-xs shadow-blue-500/15"
+                              : isDark
+                                ? "bg-slate-800/90 text-slate-100 border border-slate-700/60 rounded-bl-xs"
+                                : "bg-white text-zinc-950 border border-zinc-200/90 shadow-xs rounded-bl-xs"
                               }`}
                           >
                             {!isMe && activeConversation.type === "group" && (
@@ -1524,17 +1489,15 @@ export default function ChatPage() {
                                       Cancelled
                                     </span>
                                   ) : (
-                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${
-                                      isMe ? "bg-white/20 text-white" : isDark ? "bg-sky-500/20 text-sky-300" : "bg-blue-100 text-blue-700"
-                                    }`}>
+                                    <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold shrink-0 ${isMe ? "bg-white/20 text-white" : isDark ? "bg-sky-500/20 text-sky-300" : "bg-blue-100 text-blue-700"
+                                      }`}>
                                       Active
                                     </span>
                                   )}
                                 </div>
                                 {msg.event_data?.date && (
-                                  <p className={`text-[11px] font-medium mb-1 flex items-center gap-1 ${
-                                    isMe ? "text-sky-100" : isDark ? "text-sky-300" : "text-blue-700"
-                                  }`}>
+                                  <p className={`text-[11px] font-medium mb-1 flex items-center gap-1 ${isMe ? "text-sky-100" : isDark ? "text-sky-300" : "text-blue-700"
+                                    }`}>
                                     <span>⏰</span>
                                     <span>{new Date(msg.event_data.date).toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}</span>
                                   </p>
@@ -1604,34 +1567,31 @@ export default function ChatPage() {
                             {/* Translated content preview - Clear, prominent, and high-contrast */}
                             {msg.translated_content && msg.translated_content !== msg.content && (
                               <div
-                                className={`mt-2.5 pt-2.5 border-t ${
-                                  isMe
-                                    ? "border-white/25 text-white"
-                                    : isDark
-                                      ? "border-slate-700/60 text-slate-100"
-                                      : "border-blue-100 text-zinc-950"
-                                }`}
+                                className={`mt-2.5 pt-2.5 border-t ${isMe
+                                  ? "border-white/25 text-white"
+                                  : isDark
+                                    ? "border-slate-700/60 text-slate-100"
+                                    : "border-blue-100 text-zinc-950"
+                                  }`}
                               >
                                 <div
-                                  className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider mb-1 ${
-                                    isMe
-                                      ? "text-sky-100"
-                                      : isDark
-                                        ? "text-sky-400"
-                                        : "text-blue-600"
-                                  }`}
+                                  className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider mb-1 ${isMe
+                                    ? "text-sky-100"
+                                    : isDark
+                                      ? "text-sky-400"
+                                      : "text-blue-600"
+                                    }`}
                                 >
                                   <Sparkles className="w-3.5 h-3.5" />
                                   <span>Translated</span>
                                 </div>
                                 <div
-                                  className={`text-sm sm:text-base font-semibold leading-relaxed ${
-                                    isMe
-                                      ? "text-white"
-                                      : isDark
-                                        ? "text-zinc-100"
-                                        : "text-zinc-950"
-                                  }`}
+                                  className={`text-sm sm:text-base font-semibold leading-relaxed ${isMe
+                                    ? "text-white"
+                                    : isDark
+                                      ? "text-zinc-100"
+                                      : "text-zinc-950"
+                                    }`}
                                 >
                                   {msg.translated_content}
                                 </div>
@@ -1641,13 +1601,12 @@ export default function ChatPage() {
                             {/* Translating indicator */}
                             {msg.is_translation_loading && !msg.translated_content && (
                               <div
-                                className={`mt-2.5 pt-2 border-t flex items-center gap-2 text-xs font-medium ${
-                                  isMe
-                                    ? "border-white/20 text-sky-100"
-                                    : isDark
-                                      ? "border-slate-700/60 text-sky-400"
-                                      : "border-blue-100 text-blue-600"
-                                }`}
+                                className={`mt-2.5 pt-2 border-t flex items-center gap-2 text-xs font-medium ${isMe
+                                  ? "border-white/20 text-sky-100"
+                                  : isDark
+                                    ? "border-slate-700/60 text-sky-400"
+                                    : "border-blue-100 text-blue-600"
+                                  }`}
                               >
                                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                 <span>Translating to your language...</span>
@@ -1655,9 +1614,8 @@ export default function ChatPage() {
                             )}
 
                             {/* Bubble footer with time & status */}
-                            <div className={`flex items-center justify-end gap-1 mt-1 text-[10px] ${
-                              isMe ? "text-white/80" : isDark ? "text-slate-400" : "text-zinc-500"
-                            }`}>
+                            <div className={`flex items-center justify-end gap-1 mt-1 text-[10px] ${isMe ? "text-white/80" : isDark ? "text-slate-400" : "text-zinc-500"
+                              }`}>
                               {msg.is_edited && (
                                 <span className="italic opacity-80 mr-0.5 text-[9px]">(edited)</span>
                               )}
@@ -1723,11 +1681,10 @@ export default function ChatPage() {
                                   e.stopPropagation();
                                   setActiveMessageActionId(activeMessageActionId === msg.id ? null : msg.id);
                                 }}
-                                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
-                                  activeMessageActionId === msg.id
-                                    ? "bg-slate-800 text-white"
-                                    : "text-slate-500 hover:text-slate-300"
-                                }`}
+                                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${activeMessageActionId === msg.id
+                                  ? "bg-slate-800 text-white"
+                                  : "text-slate-500 hover:text-slate-300"
+                                  }`}
                                 title="Message options"
                               >
                                 <MoreVertical className="w-3.5 h-3.5" />
@@ -1737,9 +1694,8 @@ export default function ChatPage() {
                               {activeMessageActionId === msg.id && (
                                 <div
                                   onClick={(e) => e.stopPropagation()}
-                                  className={`absolute z-30 bottom-full mb-1 ${
-                                    isMe ? "right-0" : "left-0"
-                                  } min-w-[130px] bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 flex flex-col gap-1 animate-scaleUp`}
+                                  className={`absolute z-30 bottom-full mb-1 ${isMe ? "right-0" : "left-0"
+                                    } min-w-[130px] bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 flex flex-col gap-1 animate-scaleUp`}
                                 >
                                   <button
                                     onClick={() => {
@@ -1875,12 +1831,10 @@ export default function ChatPage() {
             </>
           ) : (
             /* No conversation selected */
-            <div className={`flex-1 flex flex-col items-center justify-center p-8 text-center transition-colors ${
-              isDark ? "bg-[#09090b]" : "bg-[#fafafa]"
-            }`}>
-              <div className={`w-16 h-16 rounded-3xl border flex items-center justify-center mb-4 shadow-sm transition-colors ${
-                isDark ? "bg-zinc-900 border-zinc-800 text-sky-400" : "bg-sky-50 border-sky-200 text-blue-600"
+            <div className={`flex-1 flex flex-col items-center justify-center p-8 text-center transition-colors ${isDark ? "bg-[#09090b]" : "bg-[#fafafa]"
               }`}>
+              <div className={`w-16 h-16 rounded-3xl border flex items-center justify-center mb-4 shadow-sm transition-colors ${isDark ? "bg-zinc-900 border-zinc-800 text-sky-400" : "bg-sky-50 border-sky-200 text-blue-600"
+                }`}>
                 <MessageSquare className="w-8 h-8" />
               </div>
               <h2 className={`text-xl font-bold tracking-tight ${isDark ? "text-white" : "text-zinc-950"}`}>Your Conversations</h2>
@@ -1901,15 +1855,21 @@ export default function ChatPage() {
       {/* NEW CHAT / GROUP MODAL */}
       {isNewChatModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
-          <div className="w-full max-w-md max-h-[90dvh] flex flex-col rounded-3xl bg-slate-900 border border-slate-800 p-4 sm:p-6 shadow-2xl animate-scaleUp overflow-hidden">
+          <div className={`w-full max-w-md max-h-[90dvh] flex flex-col rounded-3xl ${
+            isDark ? "bg-slate-900 border border-slate-800" : "bg-white border border-zinc-200"
+          } p-4 sm:p-6 shadow-2xl animate-scaleUp overflow-hidden`}>
             <div className="flex items-center justify-between mb-4 shrink-0">
-              <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-950/70 border border-slate-800">
+              <div className={`flex items-center gap-1.5 p-1 rounded-2xl border transition-colors ${
+                isDark ? "bg-slate-950/70 border-slate-800" : "bg-zinc-100 border-zinc-200"
+              }`}>
                 <button
                   type="button"
                   onClick={() => setNewChatTab("direct")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${newChatTab === "direct"
-                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-blue-500/20"
-                      : "text-slate-400 hover:text-white"
+                    ? "bg-gradient-to-r from-sky-500 to-blue-600 !text-white shadow-md shadow-blue-500/20"
+                    : isDark
+                      ? "text-slate-400 hover:text-white"
+                      : "text-zinc-600 hover:text-zinc-950"
                     }`}
                 >
                   <User className="w-3.5 h-3.5" /> Direct Chat
@@ -1918,8 +1878,10 @@ export default function ChatPage() {
                   type="button"
                   onClick={() => setNewChatTab("group")}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${newChatTab === "group"
-                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-md shadow-blue-500/20"
-                      : "text-slate-400 hover:text-white"
+                    ? "bg-gradient-to-r from-sky-500 to-blue-600 !text-white shadow-md shadow-blue-500/20"
+                    : isDark
+                      ? "text-slate-400 hover:text-white"
+                      : "text-zinc-600 hover:text-zinc-950"
                     }`}
                 >
                   <Users className="w-3.5 h-3.5" /> New Group
@@ -1928,7 +1890,9 @@ export default function ChatPage() {
 
               <button
                 onClick={closeNewChatModal}
-                className="text-slate-500 hover:text-white p-2 rounded-xl transition-colors cursor-pointer"
+                className={`p-2 rounded-xl transition-colors cursor-pointer ${
+                  isDark ? "text-slate-500 hover:text-white" : "text-zinc-400 hover:text-zinc-950"
+                }`}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1943,39 +1907,38 @@ export default function ChatPage() {
                     value={userSearchTerm}
                     onChange={(e) => handleUserSearchChange(e.target.value)}
                     placeholder="Search by @username or email..."
-                    className="w-full rounded-2xl bg-slate-950 border border-slate-800 pl-10 pr-4 py-2.5 sm:py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500/60"
+                    className={`w-full rounded-2xl border pl-10 pr-4 py-2.5 sm:py-3 text-sm focus:outline-none transition-colors ${isDark ? "bg-slate-950 border-slate-800 text-white placeholder-slate-500 focus:border-sky-500/60" : "bg-zinc-50 border-zinc-200 text-zinc-950 placeholder-zinc-400 focus:border-blue-500"}`}
                     autoFocus
                   />
                 </div>
 
-                <div className="flex-1 overflow-y-auto divide-y divide-slate-800/40 pr-1">
+                <div className={`flex-1 overflow-y-auto divide-y pr-1 ${isDark ? "divide-slate-800/40" : "divide-zinc-100"}`}>
                   {isSearchingUsers ? (
-                    <div className="p-4 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
+                    <div className={`p-4 text-center text-xs flex items-center justify-center gap-2 ${isDark ? "text-slate-500" : "text-zinc-500"}`}>
                       <Loader2 className="w-4 h-4 animate-spin text-sky-400" /> Searching users...
                     </div>
                   ) : userSearchResults.length === 0 ? (
-                    <div className="p-6 text-center text-xs text-slate-500">
+                    <div className={`p-6 text-center text-xs ${isDark ? "text-slate-500" : "text-zinc-500"}`}>
                       {userSearchTerm.trim().length >= 2 ? "No users found." : "Type at least 2 characters to search."}
                     </div>
                   ) : (
                     userSearchResults.map((target) => (
                       <div
                         key={target.id}
-                        className="p-3 flex items-center justify-between hover:bg-slate-800/40 rounded-xl transition-colors"
+                        className={`p-3 flex items-center justify-between rounded-xl transition-colors ${isDark ? "hover:bg-slate-800/40" : "hover:bg-zinc-100"}`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 chat-avatar ${
-                            isDark
-                              ? "bg-slate-800 border border-slate-700 text-sky-200"
-                              : "bg-gradient-to-br from-sky-50 to-blue-100 border border-blue-200 text-blue-700"
-                          }`}>
+                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 chat-avatar ${isDark
+                            ? "bg-slate-800 border border-slate-700 text-sky-200"
+                            : "bg-gradient-to-br from-sky-50 to-blue-100 border border-blue-200 text-blue-700"
+                            }`}>
                             <span>{(target.full_name || target.username).charAt(0).toUpperCase()}</span>
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-semibold text-white truncate">
+                            <p className={`text-sm font-semibold truncate ${isDark ? "text-white" : "text-zinc-950"}`}>
                               {target.full_name || target.username}
                             </p>
-                            <p className="text-xs text-slate-400 truncate">@{target.username} · {target.native_language}</p>
+                            <p className={`text-xs truncate ${isDark ? "text-slate-400" : "text-zinc-500"}`}>@{target.username} · {target.native_language}</p>
                           </div>
                         </div>
                         <button
@@ -1999,7 +1962,7 @@ export default function ChatPage() {
                 )}
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${isDark ? "text-slate-300" : "text-zinc-700"}`}>
                     Group Name
                   </label>
                   <input
@@ -2007,7 +1970,7 @@ export default function ChatPage() {
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
                     placeholder="e.g. Design Team, Family, Global Project"
-                    className="w-full rounded-2xl bg-slate-950 border border-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500/60"
+                    className={`w-full rounded-2xl border px-4 py-2.5 text-sm focus:outline-none transition-colors ${isDark ? "bg-slate-950 border-slate-800 text-white placeholder-slate-500 focus:border-sky-500/60" : "bg-zinc-50 border-zinc-200 text-zinc-950 placeholder-zinc-400 focus:border-blue-500"}`}
                     required
                   />
                 </div>
@@ -2015,20 +1978,20 @@ export default function ChatPage() {
                 {/* Selected Members Chips */}
                 {selectedGroupMembers.length > 0 && (
                   <div>
-                    <label className="block text-xs font-semibold text-slate-400 mb-1.5">
+                    <label className={`block text-xs font-semibold mb-1.5 ${isDark ? "text-slate-400" : "text-zinc-600"}`}>
                       Selected Members ({selectedGroupMembers.length})
                     </label>
-                    <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1.5 rounded-xl bg-slate-950/60 border border-slate-800/80">
+                    <div className={`flex flex-wrap gap-1.5 max-h-24 overflow-y-auto p-1.5 rounded-xl border ${isDark ? "bg-slate-950/60 border-slate-800/80" : "bg-zinc-50 border-zinc-200"}`}>
                       {selectedGroupMembers.map((m) => (
                         <span
                           key={m.id}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-300 text-xs font-medium"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-400 text-xs font-medium"
                         >
                           <span>{m.full_name || `@${m.username}`}</span>
                           <button
                             type="button"
                             onClick={() => toggleSelectGroupMember(m)}
-                            className="hover:text-white transition-colors"
+                            className="hover:text-sky-200 transition-colors"
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -2040,7 +2003,7 @@ export default function ChatPage() {
 
                 {/* Member Search */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className={`block text-xs font-semibold uppercase tracking-wider mb-1.5 ${isDark ? "text-slate-300" : "text-zinc-700"}`}>
                     Invite Members
                   </label>
                   <div className="relative">
@@ -2050,13 +2013,13 @@ export default function ChatPage() {
                       value={userSearchTerm}
                       onChange={(e) => handleUserSearchChange(e.target.value)}
                       placeholder="Search users to add..."
-                      className="w-full rounded-2xl bg-slate-950 border border-slate-800 pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500/60"
+                      className={`w-full rounded-2xl border pl-10 pr-4 py-2.5 text-sm focus:outline-none transition-colors ${isDark ? "bg-slate-950 border-slate-800 text-white placeholder-slate-500 focus:border-sky-500/60" : "bg-zinc-50 border-zinc-200 text-zinc-950 placeholder-zinc-400 focus:border-blue-500"}`}
                     />
                   </div>
                 </div>
 
                 {/* Member Search Results */}
-                <div className="max-h-40 overflow-y-auto divide-y divide-slate-800/40 border border-slate-800/60 rounded-2xl bg-slate-950/40">
+                <div className={`max-h-40 overflow-y-auto divide-y rounded-2xl border transition-colors ${isDark ? "divide-slate-800/40 border-slate-800/60 bg-slate-950/40" : "divide-zinc-200 border-zinc-200 bg-zinc-50/50"}`}>
                   {isSearchingUsers ? (
                     <div className="p-3 text-center text-xs text-slate-500 flex items-center justify-center gap-2">
                       <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-400" /> Searching...
@@ -2071,29 +2034,30 @@ export default function ChatPage() {
                       return (
                         <div
                           key={target.id}
-                          className="p-2.5 flex items-center justify-between hover:bg-slate-800/30 transition-colors"
+                          className={`p-2.5 flex items-center justify-between transition-colors ${isDark ? "hover:bg-slate-800/30" : "hover:bg-zinc-100/70"}`}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
-                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 chat-avatar ${
-                              isDark
-                                ? "bg-slate-800 border border-slate-700 text-sky-200"
-                                : "bg-gradient-to-br from-sky-50 to-blue-100 border border-blue-200 text-blue-700"
-                            }`}>
+                            <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 chat-avatar ${isDark
+                              ? "bg-slate-800 border border-slate-700 text-sky-200"
+                              : "bg-gradient-to-br from-sky-50 to-blue-100 border border-blue-200 text-blue-700"
+                              }`}>
                               <span>{(target.full_name || target.username).charAt(0).toUpperCase()}</span>
                             </div>
                             <div className="min-w-0">
-                              <p className="text-xs font-semibold text-white truncate">
+                              <p className={`text-xs font-semibold truncate ${isDark ? "text-white" : "text-zinc-950"}`}>
                                 {target.full_name || target.username}
                               </p>
-                              <p className="text-[10px] text-slate-400 truncate">@{target.username}</p>
+                              <p className={`text-[10px] truncate ${isDark ? "text-slate-400" : "text-zinc-500"}`}>@{target.username}</p>
                             </div>
                           </div>
                           <button
                             type="button"
                             onClick={() => toggleSelectGroupMember(target)}
                             className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${isSelected
-                                ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xs"
-                                : "bg-slate-800 hover:bg-slate-700 text-slate-300"
+                              ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xs"
+                              : isDark
+                                ? "bg-slate-800 hover:bg-slate-700 text-slate-300"
+                                : "bg-zinc-200 hover:bg-zinc-300 text-zinc-800"
                               }`}
                           >
                             {isSelected ? "Selected" : "Add"}
@@ -2139,11 +2103,10 @@ export default function ChatPage() {
             <div className="flex-1 overflow-y-auto pr-1 space-y-4">
               {/* Profile Info */}
               <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center font-bold text-base shrink-0 chat-avatar ${
-                  isDark
-                    ? "bg-sky-500/20 border-sky-500/40 text-sky-300"
-                    : "bg-gradient-to-br from-sky-50 to-blue-100 border-blue-200 text-blue-700"
-                }`}>
+                <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center font-bold text-base shrink-0 chat-avatar ${isDark
+                  ? "bg-sky-500/20 border-sky-500/40 text-sky-300"
+                  : "bg-gradient-to-br from-sky-50 to-blue-100 border-blue-200 text-blue-700"
+                  }`}>
                   <span>{profile?.full_name?.charAt(0).toUpperCase() || "U"}</span>
                 </div>
                 <div className="min-w-0">
@@ -2211,19 +2174,18 @@ export default function ChatPage() {
                     <Bell className="w-4 h-4 text-sky-400" /> Notifications & Sound
                   </span>
                   <span
-                    className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                      browserPermission === "granted"
-                        ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
-                        : browserPermission === "denied"
+                    className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${browserPermission === "granted"
+                      ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
+                      : browserPermission === "denied"
                         ? "bg-rose-500/10 text-rose-400"
                         : "bg-amber-500/10 text-amber-400"
-                    }`}
+                      }`}
                   >
                     {browserPermission === "granted"
                       ? "Active"
                       : browserPermission === "denied"
-                      ? "Blocked"
-                      : "Not Enabled"}
+                        ? "Blocked"
+                        : "Not Enabled"}
                   </span>
                 </div>
 
@@ -2247,14 +2209,12 @@ export default function ChatPage() {
                       setSoundEnabled(next);
                       if (next) playMessageSound();
                     }}
-                    className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors cursor-pointer ${
-                      soundActive ? "bg-gradient-to-r from-sky-500 to-blue-600" : "bg-slate-800"
-                    }`}
+                    className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors cursor-pointer ${soundActive ? "bg-gradient-to-r from-sky-500 to-blue-600" : "bg-slate-800"
+                      }`}
                   >
                     <div
-                      className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                        soundActive ? "translate-x-5" : "translate-x-0"
-                      }`}
+                      className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${soundActive ? "translate-x-5" : "translate-x-0"
+                        }`}
                     />
                   </button>
                 </div>
@@ -2273,8 +2233,8 @@ export default function ChatPage() {
                         {browserPermission === "granted"
                           ? "Desktop & background notifications"
                           : browserPermission === "denied"
-                          ? "Blocked in browser permissions"
-                          : "Prompt for browser permission"}
+                            ? "Blocked in browser permissions"
+                            : "Prompt for browser permission"}
                       </p>
                     </div>
                   </div>
@@ -2286,14 +2246,12 @@ export default function ChatPage() {
                         setNotifActive(next);
                         setNotificationsEnabled(next);
                       }}
-                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors cursor-pointer ${
-                        notifActive ? "bg-gradient-to-r from-sky-500 to-blue-600" : "bg-slate-800"
-                      }`}
+                      className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors cursor-pointer ${notifActive ? "bg-gradient-to-r from-sky-500 to-blue-600" : "bg-slate-800"
+                        }`}
                     >
                       <div
-                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                          notifActive ? "translate-x-5" : "translate-x-0"
-                        }`}
+                        className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${notifActive ? "translate-x-5" : "translate-x-0"
+                          }`}
                       />
                     </button>
                   ) : (
@@ -2320,12 +2278,30 @@ export default function ChatPage() {
 
                 {/* Test Notification Button */}
                 <button
-                  onClick={() => {
-                    playMessageSound();
-                    showWebNotification({
-                      title: "Gabvia Web Chat",
-                      body: "Test notification: sound and alerts are working properly! 🎉",
-                      tag: "test-notification",
+                  onClick={async () => {
+                    await playMessageSound();
+
+                    let perm = browserPermission;
+                    if (perm === "default") {
+                      perm = await requestNotificationPermission();
+                      setBrowserPermission(perm);
+                    }
+
+                    if (perm === "granted") {
+                      showWebNotification({
+                        title: "Gabvia Web Chat 🔔",
+                        body: "Test notification: sound and alerts are working properly! 🎉",
+                        tag: "test-notification",
+                      });
+                    }
+
+                    // Always trigger in-app toast preview for instant visual confirmation
+                    triggerInAppToast({
+                      id: `test-${Date.now()}`,
+                      conversationId: activeConversationId || "test",
+                      senderName: "Gabvia Web Chat",
+                      messageText: "Test notification: sound and alerts are working properly! 🎉",
+                      timestamp: Date.now(),
                     });
                   }}
                   className="w-full py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium border border-slate-800 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
@@ -2691,11 +2667,10 @@ export default function ChatPage() {
                 return (
                   <div key={pId} className="py-2.5 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 chat-avatar ${
-                        isDark
-                          ? "bg-slate-800 border border-slate-700 text-sky-200"
-                          : "bg-gradient-to-br from-sky-50 to-blue-100 border border-blue-200 text-blue-700"
-                      }`}>
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 chat-avatar ${isDark
+                        ? "bg-slate-800 border border-slate-700 text-sky-200"
+                        : "bg-gradient-to-br from-sky-50 to-blue-100 border border-blue-200 text-blue-700"
+                        }`}>
                         <span>{displayName.charAt(0).toUpperCase()}</span>
                       </div>
                       <div className="min-w-0">
@@ -2926,8 +2901,8 @@ export default function ChatPage() {
                     <div
                       key={key}
                       className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-colors ${isClaimed
-                          ? "bg-sky-500/10 border-sky-500/30 text-white"
-                          : "bg-slate-950/40 border-slate-800 text-slate-300"
+                        ? "bg-sky-500/10 border-sky-500/30 text-white"
+                        : "bg-slate-950/40 border-slate-800 text-slate-300"
                         }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
@@ -2945,8 +2920,8 @@ export default function ChatPage() {
                       </div>
                       <span
                         className={`text-xs font-bold px-2 py-0.5 rounded-full shrink-0 ${isClaimed
-                            ? "bg-sky-500/20 text-sky-300 border border-sky-500/30"
-                            : "bg-slate-800 text-slate-400"
+                          ? "bg-sky-500/20 text-sky-300 border border-sky-500/30"
+                          : "bg-slate-800 text-slate-400"
                           }`}
                       >
                         +{info.points} pts
