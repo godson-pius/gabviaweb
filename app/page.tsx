@@ -161,7 +161,7 @@ function GooglePlayIcon({ size = 20 }: { size?: number }) {
 const FAQS = [
   {
     q: "When does Gabvia Web officially open?",
-    a: "Gabvia Web will launch for everyone on Monday morning. You will be able to log in or create an account directly in your web browser with zero downloads.",
+    a: "Gabvia Web is open for everyone right now! You can log in or create an account directly in your web browser with zero downloads required.",
   },
   {
     q: "Can I use Gabvia on my phone right now?",
@@ -220,8 +220,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 text-xs font-mono">
           <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap">
             <span className="flex h-2 w-2 relative flex-shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
             <span
               className={`font-semibold uppercase tracking-wider ${isDark ? "text-zinc-100" : "text-zinc-950"
@@ -231,19 +231,20 @@ export default function Home() {
             </span>
             <span className="text-zinc-500 hidden sm:inline">—</span>
             <span className={`${isDark ? "text-zinc-400" : "text-zinc-600"} truncate`}>
-              Gabvia Web Platform launches Monday · Direct in-browser multilingual communication.
+              Gabvia Web Platform is now live · Direct in-browser multilingual communication.
             </span>
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            <span
-              className={`px-2 py-0.5 rounded text-[11px] font-semibold border ${isDark
-                ? "bg-sky-950/50 text-sky-400 border-sky-800/60"
-                : "bg-sky-50 text-sky-700 border-sky-200"
+            <Link
+              href="/chat"
+              className={`px-2.5 py-0.5 rounded text-[11px] font-semibold border transition-colors ${isDark
+                ? "bg-emerald-950/50 text-emerald-400 border-emerald-800/60 hover:bg-emerald-900/60"
+                : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
                 }`}
             >
-              LAUNCHING MONDAY
-            </span>
+              WEB CHAT LIVE →
+            </Link>
           </div>
         </div>
       </div>
@@ -322,6 +323,19 @@ export default function Home() {
                 TOOL
               </span>
             </Link>
+            <Link
+              href="/chat"
+              className={`${isDark ? "text-sky-400 hover:text-sky-300 font-semibold" : "text-blue-600 hover:text-blue-500 font-semibold"
+                } transition-colors flex items-center gap-1.5`}
+            >
+              <span>Web Chat</span>
+              <span
+                className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${isDark ? "bg-sky-950/60 text-sky-400 border-sky-800" : "bg-sky-50 text-blue-700 border-sky-200"
+                  }`}
+              >
+                LIVE
+              </span>
+            </Link>
           </nav>
 
           {/* Actions & Theme Toggle */}
@@ -354,17 +368,17 @@ export default function Home() {
               <span>Android App</span>
             </a>
 
-            {/* Web Platform Locked Badge for Monday Launch */}
-            <div
-              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-mono font-medium border cursor-not-allowed select-none ${isDark
-                ? "text-zinc-500 bg-zinc-900/40 border-zinc-800"
-                : "text-zinc-400 bg-zinc-50 border border-zinc-200"
+            {/* Open Web Chat Button */}
+            <Link
+              href="/chat"
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${isDark
+                ? "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white shadow-sky-950/40"
+                : "bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white shadow-blue-500/20"
                 }`}
-              title="Web platform opens for public use on Monday morning"
             >
-              <Icon name="lock" size={13} />
-              <span>Web Platform: Monday</span>
-            </div>
+              <Icon name="spark" size={13} />
+              <span>Open Web Chat</span>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -429,7 +443,25 @@ export default function Home() {
             >
               Translator Tool
             </Link>
+            <Link
+              href="/chat"
+              onClick={() => setMenuOpen(false)}
+              className={`block text-sm font-bold ${isDark ? "text-sky-400" : "text-blue-600"}`}
+            >
+              Web Chat (Live)
+            </Link>
             <div className={`pt-4 border-t flex flex-col gap-2 ${isDark ? "border-zinc-800" : "border-zinc-100"}`}>
+              <Link
+                href="/chat"
+                onClick={() => setMenuOpen(false)}
+                className={`w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${isDark
+                  ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white"
+                  : "bg-gradient-to-r from-blue-600 to-sky-600 text-white"
+                  }`}
+              >
+                <Icon name="spark" size={14} />
+                <span>Open Web Chat</span>
+              </Link>
               <a
                 href={PLAY_STORE_URL}
                 target="_blank"
@@ -442,13 +474,6 @@ export default function Home() {
                 <GooglePlayIcon size={16} />
                 <span>Get Android App</span>
               </a>
-              <div
-                className={`w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-mono border ${isDark ? "text-zinc-500 bg-zinc-900/50 border-zinc-800" : "text-zinc-600 bg-zinc-50 border-zinc-200"
-                  }`}
-              >
-                <Icon name="lock" size={13} />
-                <span>Web Platform Opens Monday</span>
-              </div>
             </div>
           </div>
         )}
@@ -478,10 +503,10 @@ export default function Home() {
                   : "border-zinc-200 bg-zinc-50 text-zinc-700"
                   }`}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
-                <span className={`font-semibold ${isDark ? "text-zinc-100" : "text-zinc-950"}`}>COMING MONDAY</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className={`font-semibold ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>NOW LIVE</span>
                 <span className="text-zinc-500">|</span>
-                <span className={isDark ? "text-zinc-400" : "text-zinc-600"}>GLOBAL PLATFORM RELEASE</span>
+                <span className={isDark ? "text-zinc-400" : "text-zinc-600"}>GLOBAL WEB CHAT PLATFORM OPEN</span>
               </div>
 
               {/* Headline */}
@@ -497,34 +522,36 @@ export default function Home() {
                   className={`text-base sm:text-lg max-w-2xl leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"
                     }`}
                 >
-                  Gabvia is the real-time multilingual communication platform. Starting this Monday, message, talk, and share voice notes with anyone across 40+ languages with in-flow AI translation and end-to-end privacy — directly from Chrome, Safari, Firefox, and Edge.
+                  Gabvia is the real-time multilingual communication platform. Message, talk, and share voice notes with anyone across 40+ languages with in-flow AI translation and end-to-end privacy — directly from Chrome, Safari, Firefox, and Edge.
                 </p>
               </div>
 
               {/* Hero Action Buttons */}
               <div className="flex flex-wrap items-center gap-4 pt-2">
+                <Link
+                  href="/chat"
+                  className={`inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full text-sm font-bold tracking-wide transition-all shadow-lg active:scale-[0.98] ${isDark
+                    ? "bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white shadow-sky-500/25"
+                    : "bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-500 hover:to-sky-500 text-white shadow-blue-500/30"
+                    }`}
+                >
+                  <Icon name="spark" size={17} />
+                  <span>Start Chatting on Web</span>
+                  <Icon name="arrow-right" size={15} />
+                </Link>
+
                 <a
                   href={PLAY_STORE_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full text-sm font-semibold tracking-wide transition-all shadow-sm hover:shadow ${isDark
-                    ? "bg-white hover:bg-zinc-100"
-                    : "bg-zinc-950 hover:bg-zinc-800"
+                  className={`inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full text-sm font-semibold tracking-wide transition-all border ${isDark
+                    ? "border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-200"
+                    : "border-zinc-200 bg-zinc-100 hover:bg-zinc-200 text-zinc-800"
                     }`}
                 >
                   <GooglePlayIcon size={18} />
-                  <span className={`${!isDark ? "text-white" : "text-black"}`}>Get for Android (Google Play)</span>
+                  <span>Get for Android</span>
                 </a>
-
-                <div
-                  className={`inline-flex items-center gap-2 px-5 py-3.5 rounded-full border font-mono text-xs select-none ${isDark
-                    ? "border-zinc-800 bg-zinc-900/50 text-zinc-400"
-                    : "border-zinc-200 bg-zinc-100/70 text-zinc-600"
-                    }`}
-                >
-                  <Icon name="lock" size={13} />
-                  <span>Web Platform Opens Monday</span>
-                </div>
               </div>
 
               {/* Minimal Value Points */}
@@ -597,8 +624,8 @@ export default function Home() {
                   </div>
                   <div className="text-right">
                     <span className={`block ${isDark ? "text-zinc-500" : "text-zinc-600"}`}>ACCESS</span>
-                    <span className={isDark ? "text-zinc-200 font-semibold" : "text-zinc-800 font-semibold"}>
-                      Opens Monday
+                    <span className="text-emerald-500 font-semibold">
+                      Open Now
                     </span>
                   </div>
                 </div>
@@ -737,7 +764,7 @@ export default function Home() {
               Multilingual Access Everywhere
             </h2>
             <p className={`text-base ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
-              Communicate across borders and languages on Android today and universal web starting Monday.
+              Communicate across borders and languages on Android and universal web right now.
             </p>
           </div>
 
@@ -778,25 +805,34 @@ export default function Home() {
 
             {/* Phase 2 */}
             <div
-              className={`p-8 rounded-2xl border-2 space-y-4 shadow-sm relative ${isDark ? "border-sky-500/70 bg-zinc-900/80 shadow-lg shadow-sky-950/20" : "border-blue-600 bg-white shadow-lg shadow-blue-500/10"
+              className={`p-8 rounded-2xl border-2 space-y-4 shadow-sm relative ${isDark ? "border-emerald-500/70 bg-zinc-900/80 shadow-lg shadow-emerald-950/20" : "border-emerald-600 bg-white shadow-lg shadow-emerald-500/10"
                 }`}
             >
               <span
-                className="absolute -top-3 right-6 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-sm"
+                className="absolute -top-3 right-6 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-emerald-500 text-white shadow-sm"
               >
-                MONDAY LAUNCH
+                LIVE NOW
               </span>
               <div className="flex items-center justify-between">
-                <span className={`font-mono text-xs font-bold ${isDark ? "text-sky-400" : "text-blue-600"}`}>
+                <span className={`font-mono text-xs font-bold ${isDark ? "text-emerald-400" : "text-emerald-600"}`}>
                   PHASE 02
                 </span>
-                <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               </div>
               <h3 className={`text-lg font-bold ${isDark ? "text-white" : "text-zinc-950"}`}>Universal Web Platform</h3>
               <p className={`text-sm leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
                 Browser-based web client for desktop and laptop computers with real-time translation, voice audio, and notifications.
               </p>
-              <div className={`pt-2 text-xs font-mono ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>Doors open worldwide Monday morning</div>
+              <div className="pt-2">
+                <Link
+                  href="/chat"
+                  className={`text-xs font-mono font-semibold hover:underline inline-flex items-center gap-1 ${isDark ? "text-emerald-400" : "text-emerald-600"
+                    }`}
+                >
+                  <span>Launch Web Chat</span>
+                  <Icon name="arrow-up-right" size={12} />
+                </Link>
+              </div>
             </div>
 
             {/* Phase 3 */}
@@ -914,6 +950,12 @@ export default function Home() {
               >
                 Translator
               </Link>
+              <Link
+                href="/chat"
+                className={`${isDark ? "text-emerald-400 hover:text-emerald-300" : "text-emerald-600 hover:text-emerald-700"} font-semibold transition-colors`}
+              >
+                Web Chat (Live)
+              </Link>
               <a
                 href={PLAY_STORE_URL}
                 target="_blank"
@@ -928,8 +970,8 @@ export default function Home() {
           <div className={`pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
             <div>© {new Date().getFullYear()} Gabvia Technologies Inc. All rights reserved.</div>
             <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
-              <span>MONDAY LAUNCH · READY</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>WEB PLATFORM LIVE · READY</span>
             </div>
           </div>
         </div>

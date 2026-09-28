@@ -5,6 +5,7 @@ import {
   User,
   onAuthStateChanged,
   signInWithEmailAndPassword,
+  signInWithCustomToken,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
   sendPasswordResetEmail,
@@ -50,6 +51,7 @@ interface AuthContextType {
   needsKeyRecovery: boolean;
   hasBackup: boolean;
   signIn: (identifier: string, password: string) => Promise<void>;
+  signInWithOtp: (customToken: string) => Promise<void>;
   signUp: (params: {
     fullName: string;
     username: string;
@@ -232,6 +234,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithOtp = async (customToken: string) => {
+    await signInWithCustomToken(auth, customToken);
+    clearLoginAttempts();
+  };
+
   const signUp = async (params: {
     fullName: string;
     username: string;
@@ -402,6 +409,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         needsKeyRecovery,
         hasBackup,
         signIn,
+        signInWithOtp,
         signUp,
         signOut,
         resetPassword,

@@ -188,7 +188,7 @@ const jsonLdData = {
           name: "When does Gabvia Web officially open?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Gabvia Web will launch for everyone on Monday morning with instant access directly in your web browser with zero downloads required.",
+            text: "Gabvia Web is officially open and live for everyone with instant access directly in your web browser with zero downloads required.",
           },
         },
         {

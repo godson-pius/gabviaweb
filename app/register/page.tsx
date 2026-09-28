@@ -1,27 +1,27 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { LANGUAGES } from "@/lib/constants";
-import { validateUsername, validatePassword } from "@/lib/security";
+import { validatePassword, validateUsername } from "@/lib/security";
 import {
-  Lock,
-  Mail,
-  User,
-  AtSign,
-  Globe,
-  Tag,
+  AlertCircle,
   ArrowRight,
+  AtSign,
+  Check,
   Eye,
   EyeOff,
-  ShieldCheck,
-  AlertCircle,
+  Globe,
   Loader2,
-  Check,
+  Lock,
+  Mail,
+  ShieldCheck,
+  Tag,
+  User,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -140,7 +140,7 @@ export default function RegisterPage() {
 
       {/* Main Content */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-4">
-        <div className="w-full max-w-lg">
+        <div className="w-full max-w-2xl">
           {/* Card */}
           <div className="relative rounded-3xl bg-slate-900/90 border border-slate-800/80 p-8 shadow-2xl backdrop-blur-xl">
             {/* Glow accent */}
