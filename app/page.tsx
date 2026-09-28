@@ -2,6 +2,7 @@
 
 import { AppWorkflow3D } from "@/components/landing/AppWorkflow3D";
 import { SpaceGlobe } from "@/components/landing/SpaceGlobe";
+import { SupportFeedback3D } from "@/components/landing/SupportFeedback3D";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
@@ -184,7 +185,7 @@ const FAQS = [
 export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
     const saved = localStorage.getItem("gabvia-theme");
@@ -195,7 +196,7 @@ export default function Home() {
 
   const toggleTheme = () => {
     setTheme((prev) => {
-      const next = prev === "light" ? "dark" : "light";
+      const next = prev === "dark" ? "light" : "dark";
       localStorage.setItem("gabvia-theme", next);
       return next;
     });
@@ -914,7 +915,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. Minimalist Footer */}
+      {/* 8. 3D Support & Feedback Community Hub */}
+      <SupportFeedback3D theme={isDark ? "dark" : "light"} />
+
+      {/* 9. Minimalist Footer */}
       <footer className={`py-16 transition-colors ${isDark ? "bg-zinc-950" : "bg-white"}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div
@@ -949,6 +953,12 @@ export default function Home() {
                 className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"} transition-colors`}
               >
                 Translator
+              </Link>
+              <Link
+                href="/support"
+                className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"} transition-colors`}
+              >
+                Support
               </Link>
               <Link
                 href="/chat"

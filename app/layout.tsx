@@ -230,7 +230,7 @@ const jsonLdData = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={hankenGrotesk.variable}>
+    <html lang="en" className={`dark ${hankenGrotesk.variable}`}>
       <head>
         {/* Rich Structured Data (JSON-LD) for Google SERP Knowledge Graph & Rich FAQ Snippets */}
         <script
@@ -238,7 +238,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}
         />
       </head>
-      <body className={`${hankenGrotesk.className} ${hankenGrotesk.variable}`}>
+      <body className={`${hankenGrotesk.className} ${hankenGrotesk.variable} bg-[#09090b] text-[#f4f4f5]`}>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

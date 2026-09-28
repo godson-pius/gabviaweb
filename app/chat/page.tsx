@@ -85,7 +85,7 @@ export default function ChatPage() {
   } = useAuth();
 
   // SpaceFS Theme Synchronization
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
 
   useEffect(() => {
     const saved = localStorage.getItem("gabvia-theme") as "light" | "dark" | null;

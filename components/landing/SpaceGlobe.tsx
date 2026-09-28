@@ -78,7 +78,7 @@ interface SpaceGlobeProps {
   theme?: "light" | "dark";
 }
 
-export function SpaceGlobe({ className = "", theme = "light" }: SpaceGlobeProps) {
+export function SpaceGlobe({ className = "", theme = "dark" }: SpaceGlobeProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const markersContainerRef = useRef<HTMLDivElement>(null);
   const isDark = theme === "dark";

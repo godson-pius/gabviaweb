@@ -82,7 +82,7 @@ const SCENARIOS: LanguageScenario[] = [
   },
 ];
 
-export function AppWorkflow3D({ theme = "light", className = "" }: AppWorkflow3DProps) {
+export function AppWorkflow3D({ theme = "dark", className = "" }: AppWorkflow3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
