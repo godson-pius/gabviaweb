@@ -48,7 +48,7 @@ async function authorizeAdmin(request: NextRequest) {
   const roleEntry = roleEntries.find((entry) => entry.toLowerCase().startsWith(`${email}=`) || entry.toLowerCase().startsWith(`${email}:`));
   const role = roleEntry?.split(/[=:]/)[1]?.trim().toLowerCase() || "owner";
   if (!["owner", "admin"].includes(role)) throw new Error("Only owner or admin roles can send bulk emails.");
-  return { email, role };
+  return { email, role, idToken: token };
 }
 
 async function getGoogleAccessToken() {
@@ -84,33 +84,96 @@ async function getAuthEmails(projectId: string, accessToken: string) {
       headers: { Authorization: `Bearer ${accessToken}` },
       cache: "no-store",
     });
-    const payload = await response.json() as { users?: AuthUser[]; nextPageToken?: string; error?: { message?: string } };
-    if (!response.ok) throw new Error(payload.error?.message ?? "Could not retrieve registered user emails from Firebase Auth.");
-    for (const user of payload.users ?? []) {
+    const payload = await response.json().catch(() => null) as { users?: AuthUser[]; nextPageToken?: string; error?: { message?: string } } | null;
+    if (!response.ok) throw new Error(payload?.error?.message ?? "Could not retrieve registered user emails from Firebase Auth.");
+    for (const user of payload?.users ?? []) {
       const email = user.email?.trim().toLowerCase() ?? "";
       if (!user.disabled && EMAIL_PATTERN.test(email)) emails.push(email);
     }
-    nextPageToken = payload.nextPageToken ?? "";
+    nextPageToken = payload?.nextPageToken ?? "";
     pageCount += 1;
   } while (nextPageToken && pageCount < 100);
 
   return emails;
 }
 
-async function getWaitlistEmails(projectId: string, apiKey: string) {
-  const response = await fetch(`https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents:runQuery?key=${apiKey}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ structuredQuery: { from: [{ collectionId: "waitlist" }] } }),
-    cache: "no-store",
-  });
-  const payload = await response.json() as Array<{ document?: { fields?: Record<string, Record<string, unknown>> }; error?: { message?: string } }>;
-  if (!response.ok) throw new Error(payload?.[0]?.error?.message ?? "Could not retrieve waitlist emails.");
+async function getProfileEmails(projectId: string, apiKey: string, authToken?: string): Promise<string[]> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
+  const response = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents:runQuery?key=${apiKey}`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ structuredQuery: { from: [{ collectionId: "profiles" }] } }),
+      cache: "no-store",
+    }
+  );
+  const payload = await response.json().catch(() => null) as Array<{ document?: { fields?: Record<string, Record<string, unknown>> } }> | null;
+  if (!response.ok || !Array.isArray(payload)) return [];
 
   return payload.flatMap((row) => {
     const email = String(decodeFirestoreFields(row.document?.fields).email ?? "").trim().toLowerCase();
     return EMAIL_PATTERN.test(email) ? [email] : [];
   });
+}
+
+async function getWaitlistEmails(projectId: string, apiKey: string, authToken?: string): Promise<string[]> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
+  const response = await fetch(`https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents:runQuery?key=${apiKey}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ structuredQuery: { from: [{ collectionId: "waitlist" }] } }),
+    cache: "no-store",
+  });
+  const payload = await response.json().catch(() => null) as Array<{ document?: { fields?: Record<string, Record<string, unknown>> }; error?: { message?: string } }> | { error?: { message?: string } } | null;
+  if (!response.ok) {
+    const errorMsg = Array.isArray(payload) ? payload?.[0]?.error?.message : payload?.error?.message;
+    throw new Error(errorMsg ?? "Could not retrieve waitlist emails.");
+  }
+
+  if (!Array.isArray(payload)) return [];
+  return payload.flatMap((row) => {
+    const email = String(decodeFirestoreFields(row.document?.fields).email ?? "").trim().toLowerCase();
+    return EMAIL_PATTERN.test(email) ? [email] : [];
+  });
+}
+
+async function resolveRegisteredUserEmails(projectId: string, apiKey: string, accessToken: string, authToken: string): Promise<string[]> {
+  const emailSet = new Set<string>();
+
+  if (accessToken) {
+    try {
+      const authEmails = await getAuthEmails(projectId, accessToken);
+      for (const email of authEmails) emailSet.add(email);
+    } catch (err) {
+      console.warn("[Admin Email] Firebase Auth batchGet returned error, falling back to Firestore profiles:", err);
+    }
+  }
+
+  try {
+    const profileEmails = await getProfileEmails(projectId, apiKey, authToken);
+    for (const email of profileEmails) emailSet.add(email);
+  } catch (err) {
+    console.warn("[Admin Email] Could not query profiles for user emails:", err);
+  }
+
+  return Array.from(emailSet);
+}
+
+async function resolveWaitlistEmails(projectId: string, apiKey: string, authToken: string, isExclusiveTarget: boolean): Promise<string[]> {
+  try {
+    return await getWaitlistEmails(projectId, apiKey, authToken);
+  } catch (err) {
+    console.warn("[Admin Email] Could not fetch waitlist emails:", err);
+    if (isExclusiveTarget) {
+      throw err;
+    }
+    return [];
+  }
 }
 
 function escapeHtml(value: string) {
@@ -209,7 +272,7 @@ async function writeAuditLog(projectId: string, accessToken: string, entry: { ad
 export async function POST(request: NextRequest) {
   let sent = 0;
   try {
-    const { email: adminEmail } = await authorizeAdmin(request);
+    const { email: adminEmail, idToken } = await authorizeAdmin(request);
     const body = await request.json() as { target?: EmailTarget; subject?: string; message?: string };
     const target = body.target;
     const subject = body.subject?.trim() ?? "";
@@ -226,10 +289,19 @@ export async function POST(request: NextRequest) {
     if (!projectId || !firebaseApiKey) throw new Error("Firebase web configuration is missing.");
     if (!from || !EMAIL_PATTERN.test(from.match(/<([^>]+)>/)?.[1] ?? from)) throw new Error("Add a verified RESEND_FROM_EMAIL address to the web environment.");
 
-    const accessToken = target === "waitlist" ? "" : await getGoogleAccessToken();
+    let accessToken = "";
+    if (process.env.FIREBASE_ADMIN_CLIENT_EMAIL && process.env.FIREBASE_ADMIN_PRIVATE_KEY) {
+      try {
+        accessToken = await getGoogleAccessToken();
+      } catch (tokenErr) {
+        console.warn("[Admin Email] Service account token not available, falling back to admin ID token:", tokenErr);
+      }
+    }
+    const firestoreToken = accessToken || idToken;
+
     const [userEmails, waitlistEmails] = await Promise.all([
-      target === "waitlist" ? Promise.resolve([]) : getAuthEmails(projectId, accessToken),
-      target === "users" ? Promise.resolve([]) : getWaitlistEmails(projectId, firebaseApiKey),
+      target === "waitlist" ? Promise.resolve([]) : resolveRegisteredUserEmails(projectId, firebaseApiKey, accessToken, firestoreToken),
+      target === "users" ? Promise.resolve([]) : resolveWaitlistEmails(projectId, firebaseApiKey, firestoreToken, target === "waitlist"),
     ]);
     const recipients = Array.from(new Set([...userEmails, ...waitlistEmails]));
     if (!recipients.length) return NextResponse.json({ ok: false, error: "No valid email recipients were found for that group." }, { status: 404 });
@@ -240,8 +312,9 @@ export async function POST(request: NextRequest) {
       await sendBatch(resendApiKey, from, subject, message, batch, Math.floor(index / RESEND_BATCH_SIZE));
       sent += batch.length;
     }
-    if (accessToken) {
-      try { await writeAuditLog(projectId, accessToken, { adminEmail, target, sent }); } catch { /* Email delivery remains successful if audit logging is unavailable. */ }
+    const auditToken = accessToken || idToken;
+    if (auditToken) {
+      try { await writeAuditLog(projectId, auditToken, { adminEmail, target, sent }); } catch { /* Email delivery remains successful if audit logging is unavailable. */ }
     }
     return NextResponse.json({ ok: true, target, sent, batches: Math.ceil(sent / RESEND_BATCH_SIZE) });
   } catch (error) {

@@ -106,7 +106,8 @@ service cloud.firestore {
     // Waitlist collection
     match /waitlist/{entry} {
       allow create: if true; // Public waitlist signup
-      allow read, update, delete: if false;
+      allow read: if isAuthenticated(); // Allow authenticated admins and users to read
+      allow update, delete: if false;
     }
   }
 }
