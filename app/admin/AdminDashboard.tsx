@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { FormEvent, useEffect, useState } from "react";
 
-type Section = "overview" | "users" | "messaging" | "revenue" | "insights";
+type Section = "overview" | "users" | "messaging" | "revenue" | "feedback" | "insights";
 type TrendPoint = { label: string; activeUsers: number; messages: number; signups?: number };
 type UserSummary = { id: string; name: string; username: string; language: string; points: number; status: string; createdAt: string | null; updatedAt: string | null; lastActive: string | null; messages: number; textMessages: number; voiceMessages: number; conversations: number; translations: number; referralCode: string; referredBy: string; referredById: string | null; referrals: number; bonusPlan: string; signupPosition: number | null };
 type WaitlistEntry = { id: string; name: string; email: string; country: string; language: string; useCase: string; source: string; status: string; createdAt: string | null };
@@ -12,6 +12,7 @@ type PaymentTransaction = { id: string; provider: string; store: string; product
 type InsightMetric = { label: string; value: number };
 type DashboardInsights = { retention: Array<{ label: string; retained: number; eligible: number; rate: number }>; funnel: InsightMetric[]; features: InsightMetric[]; moderation: { activeUsers: number; suspendedUsers: number; reports: number | null }; system: { status: string; profileRecords: number; messageRecords: number; conversationRecords: number; translationRecords: number; paymentProviders: Array<{ name: string; configured: boolean }> } };
 type AuditLog = { id: string; action: string; adminEmail: string; userId: string; createdAt: string | null; ipAddress: string; location: string; operatingSystem: string; browser: string; userAgent: string };
+type FeedbackItem = { id: string; ticketId: string; subject: string; message: string; category: string; status: string; name: string; email: string; userId: string; createdAt: string | null; source: string };
 
 type DashboardData = {
   adminEmail: string;
@@ -37,6 +38,10 @@ type DashboardData = {
     settledRevenueByCurrency: CurrencyTotal[];
     paidTransactions: number;
     waitlistCount: number;
+    totalFeedback: number;
+    newFeedbackCount: number;
+    inProgressFeedbackCount: number;
+    resolvedFeedbackCount: number;
   };
   trends: {
     daily: TrendPoint[];
@@ -53,6 +58,7 @@ type DashboardData = {
   paymentTransactions: PaymentTransaction[];
   insights: DashboardInsights;
   auditLogs: AuditLog[];
+  feedback: FeedbackItem[];
 };
 
 const emptyData: DashboardData = {
@@ -60,7 +66,7 @@ const emptyData: DashboardData = {
   adminRole: "owner",
   lastUpdated: "",
   warnings: [],
-  metrics: { totalUsers: 0, dau: 0, mau: 0, activeRate: 0, totalMessages: 0, messagesThisMonth: 0, totalConversations: 0, groupConversations: 0, directConversations: 0, totalTranslations: 0, referredUsers: 0, totalGabPoints: 0, grossRevenue: 0, settledRevenue: 0, grossRevenueByCurrency: [], settledRevenueByCurrency: [], paidTransactions: 0, waitlistCount: 0 },
+  metrics: { totalUsers: 0, dau: 0, mau: 0, activeRate: 0, totalMessages: 0, messagesThisMonth: 0, totalConversations: 0, groupConversations: 0, directConversations: 0, totalTranslations: 0, referredUsers: 0, totalGabPoints: 0, grossRevenue: 0, settledRevenue: 0, grossRevenueByCurrency: [], settledRevenueByCurrency: [], paidTransactions: 0, waitlistCount: 0, totalFeedback: 0, newFeedbackCount: 0, inProgressFeedbackCount: 0, resolvedFeedbackCount: 0 },
   trends: { daily: [], monthly: [], revenue: [] },
   breakdowns: { languages: [], providers: [] },
   recentUsers: [],
@@ -69,9 +75,10 @@ const emptyData: DashboardData = {
   paymentTransactions: [],
   insights: { retention: [], funnel: [], features: [], moderation: { activeUsers: 0, suspendedUsers: 0, reports: null }, system: { status: "unknown", profileRecords: 0, messageRecords: 0, conversationRecords: 0, translationRecords: 0, paymentProviders: [] } },
   auditLogs: [],
+  feedback: [],
 };
 
-type IconName = "grid" | "users" | "message" | "wallet" | "settings" | "bell" | "search" | "arrow" | "trend" | "download" | "logout" | "refresh" | "globe" | "mic" | "close";
+type IconName = "grid" | "users" | "message" | "wallet" | "settings" | "bell" | "search" | "arrow" | "trend" | "download" | "logout" | "refresh" | "globe" | "mic" | "close" | "chat" | "check" | "mail";
 
 function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
   const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
@@ -91,6 +98,9 @@ function Icon({ name, size = 18 }: { name: IconName; size?: number }) {
     globe: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" /></>,
     mic: <><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8" /></>,
     close: <><path d="m6 6 12 12M18 6 6 18" /></>,
+    chat: <><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z" /><path d="M8 11.5h.01M12 11.5h.01M16 11.5h.01" /></>,
+    check: <path d="m5 12 5 5L20 7" />,
+    mail: <><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></>,
   };
   return <svg {...common}>{paths[name]}</svg>;
 }
@@ -138,6 +148,13 @@ function StatCard({ label, value, change, icon, tone = "blue" }: { label: string
   return <div className={`admin-stat-card ${tone}`}><div className="stat-card-top"><span>{label}</span><span className="stat-icon"><Icon name={icon} size={17} /></span></div><strong>{value}</strong>{change && <small><Icon name="trend" size={12} /> {change}</small>}</div>;
 }
 
+function getGreeting(date = new Date()): string {
+  const hour = date.getHours();
+  if (hour >= 5 && hour < 12) return "Good morning";
+  if (hour >= 12 && hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 export default function AdminDashboard({ firebaseApiKey }: { firebaseApiKey: string }) {
   const [section, setSection] = useState<Section>("overview");
   const [email, setEmail] = useState("");
@@ -153,6 +170,7 @@ export default function AdminDashboard({ firebaseApiKey }: { firebaseApiKey: str
   const [selectedCurrency, setSelectedCurrency] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchSelectedUserId, setSearchSelectedUserId] = useState<string | null>(null);
+  const [feedbackSelectedTicketId, setFeedbackSelectedTicketId] = useState<string | null>(null);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const loadAnalytics = async (idToken: string) => {
@@ -162,7 +180,7 @@ export default function AdminDashboard({ firebaseApiKey }: { firebaseApiKey: str
       const response = await fetch("/api/admin/analytics", { headers: { Authorization: `Bearer ${idToken}` }, cache: "no-store" });
       const payload = await response.json() as DashboardData & { ok: boolean; error?: string };
       if (!response.ok || !payload.ok) throw new Error(payload.error ?? "Could not load analytics.");
-      setData({ ...payload, adminRole: payload.adminRole ?? "owner", metrics: { ...emptyData.metrics, ...payload.metrics }, users: payload.users ?? payload.recentUsers ?? [], waitlist: payload.waitlist ?? [], paymentTransactions: payload.paymentTransactions ?? [], insights: payload.insights ?? emptyData.insights, auditLogs: payload.auditLogs ?? [] });
+      setData({ ...payload, adminRole: payload.adminRole ?? "owner", metrics: { ...emptyData.metrics, ...payload.metrics }, users: payload.users ?? payload.recentUsers ?? [], waitlist: payload.waitlist ?? [], paymentTransactions: payload.paymentTransactions ?? [], insights: payload.insights ?? emptyData.insights, auditLogs: payload.auditLogs ?? [], feedback: payload.feedback ?? [] });
       setAdminEmail(payload.adminEmail);
       sessionStorage.setItem("gabvia_admin_token", idToken);
     } catch (loadError) {
@@ -275,6 +293,63 @@ export default function AdminDashboard({ firebaseApiKey }: { firebaseApiKey: str
     }
   };
 
+  const handleFeedbackAction = async (ticketId: string, action: "status" | "delete", newStatus?: string) => {
+    setDataError("");
+    try {
+      if (action === "status" && newStatus) {
+        const response = await fetch("/api/admin/feedback", {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ ticketId, status: newStatus }),
+        });
+        const payload = (await response.json()) as { ok?: boolean; error?: string };
+        if (!response.ok || !payload.ok) throw new Error(payload.error ?? "Could not update feedback status.");
+        setData((current) => {
+          const nextFeedback = (current.feedback ?? []).map((f) =>
+            f.ticketId === ticketId || f.id === ticketId ? { ...f, status: newStatus } : f
+          );
+          return {
+            ...current,
+            feedback: nextFeedback,
+            metrics: {
+              ...current.metrics,
+              totalFeedback: nextFeedback.length,
+              newFeedbackCount: nextFeedback.filter((f) => f.status === "new" || !f.status).length,
+              inProgressFeedbackCount: nextFeedback.filter((f) => f.status === "in_progress").length,
+              resolvedFeedbackCount: nextFeedback.filter((f) => f.status === "resolved").length,
+            },
+          };
+        });
+      } else if (action === "delete") {
+        const response = await fetch("/api/admin/feedback", {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ ticketId }),
+        });
+        const payload = (await response.json()) as { ok?: boolean; error?: string };
+        if (!response.ok || !payload.ok) throw new Error(payload.error ?? "Could not delete feedback.");
+        setData((current) => {
+          const nextFeedback = (current.feedback ?? []).filter((f) => f.ticketId !== ticketId && f.id !== ticketId);
+          return {
+            ...current,
+            feedback: nextFeedback,
+            metrics: {
+              ...current.metrics,
+              totalFeedback: nextFeedback.length,
+              newFeedbackCount: nextFeedback.filter((f) => f.status === "new" || !f.status).length,
+              inProgressFeedbackCount: nextFeedback.filter((f) => f.status === "in_progress").length,
+              resolvedFeedbackCount: nextFeedback.filter((f) => f.status === "resolved").length,
+            },
+          };
+        });
+      }
+    } catch (feedbackError) {
+      const msg = feedbackError instanceof Error ? feedbackError.message : "Could not update feedback.";
+      setDataError(msg);
+      throw feedbackError;
+    }
+  };
+
   if (!token) return <LoginScreen apiKeyConfigured={Boolean(firebaseApiKey)} email={email} password={password} error={error || dataError} loading={loading} setEmail={setEmail} setPassword={setPassword} onSubmit={handleLogin} />;
 
   const activeTrend = period === "daily" ? data.trends.daily : data.trends.monthly;
@@ -286,19 +361,22 @@ export default function AdminDashboard({ firebaseApiKey }: { firebaseApiKey: str
   ].filter((currency) => /^[A-Z]{3}$/.test(currency)))).sort();
   const chartCurrency = selectedCurrency || availableCurrencies[0] || "NGN";
   const maxRevenue = Math.max(...data.trends.revenue.map((item) => item.byCurrency.find((total) => total.currency === chartCurrency)?.amount ?? 0), 1);
+  const greeting = getGreeting();
 
-  return <div className="admin-app"><aside className="admin-sidebar"><div className="admin-brand"><Image src="/logo.png" alt="" width={31} height={31} /><span>gabvia</span><b>ADMIN</b></div><div className="admin-workspace"><span className="workspace-avatar">G</span><span><strong>Gabvia HQ</strong><small>Analytics workspace</small></span><span className="workspace-chevron">⌄</span></div><nav className="admin-nav" aria-label="Admin navigation"><p>Workspace</p>{([["overview", "Overview", "grid"], ["users", "Users", "users"], ["messaging", "Messaging", "message"], ["revenue", "Revenue", "wallet"], ["insights", "Insights", "trend"]] as [Section, string, IconName][]).map(([key, label, icon]) => <button className={section === key ? "active" : ""} key={key} onClick={() => setSection(key)}><Icon name={icon} size={17} /><span>{label}</span>{key === "users" && <em>{formatNumber(data.metrics.totalUsers)}</em>}</button>)}</nav><nav className="admin-nav admin-nav-secondary" aria-label="Settings navigation"><p>Manage</p><button onClick={() => setDataError("Settings are managed in the Gabvia project configuration.")}><Icon name="settings" size={17} /><span>Settings</span></button><button onClick={() => setDataError(data.warnings.length ? data.warnings.join(" · ") : "No active alerts.")}><Icon name="bell" size={17} /><span>Alerts</span><i className="alert-dot" /></button></nav><div className="sidebar-bottom"><div className="admin-user"><span className="admin-user-avatar">{(adminEmail || "A").slice(0, 1).toUpperCase()}</span><span><strong>{adminEmail || "Admin"}</strong><small>{data.adminRole} role</small></span></div><button className="logout-button" aria-label="Sign out" onClick={logout}><Icon name="logout" size={16} /></button></div></aside><main className="admin-main"><header className="admin-header"><div><div className="admin-breadcrumb">Workspace <span>/</span> <b>{section[0].toUpperCase() + section.slice(1)}</b></div><h1>{section === "overview" ? "Good morning, admin" : `${section[0].toUpperCase() + section.slice(1)} analytics`}</h1><p>{section === "overview" ? "Here's what's happening across Gabvia today." : `A closer look at Gabvia ${section} and the signals that matter.`}</p></div><div className="admin-header-actions"><button className="icon-button" onClick={() => { setSearchOpen(true); setNotificationsOpen(false); }} aria-label="Search users"><Icon name="search" size={17} /></button><button className="icon-button notification-button" onClick={() => { setNotificationsOpen(true); setSearchOpen(false); }} aria-label="Show alerts"><Icon name="bell" size={17} /><i /></button><button className="admin-refresh" onClick={() => void loadAnalytics(token)} disabled={loadingData}><Icon name="refresh" size={15} /> {loadingData ? "Refreshing" : "Refresh data"}</button></div></header>{dataError && <div className="admin-alert error"><span>!</span><p>{dataError}</p><button onClick={() => { setDataError(""); void loadAnalytics(token); }}>Retry</button></div>}{data.warnings.length > 0 && <div className="admin-alert warning"><span>i</span><p>Some payment providers could not be reached. Product analytics are still live.</p><small>{data.warnings.join(" · ")}</small></div>}{section === "overview" && <Overview data={data} activeTrend={activeTrend} period={period} setPeriod={setPeriod} maxLanguageUsers={maxLanguageUsers} setSection={setSection} />}{section === "users" && <UsersSection key={searchSelectedUserId ?? "users"} data={data} activeTrend={activeTrend} period={period} setPeriod={setPeriod} onAccountAction={handleAccountAction} onBulkAccountAction={handleBulkAccountAction} onAddPoints={handleAddPoints} initialSelectedUserId={searchSelectedUserId} />}{section === "messaging" && <MessagingSection data={data} activeTrend={activeTrend} period={period} setPeriod={setPeriod} token={token} />}{section === "revenue" && <RevenueSection data={data} maxRevenue={maxRevenue} chartCurrency={chartCurrency} availableCurrencies={availableCurrencies} selectedCurrency={chartCurrency} onCurrencyChange={setSelectedCurrency} />}{section === "insights" && <InsightsSection data={data} />}{searchOpen && <AdminSearchModal users={data.users ?? []} onClose={() => setSearchOpen(false)} onOpenUsers={(userId) => { setSearchSelectedUserId(userId ?? null); setSection("users"); setSearchOpen(false); }} />}{notificationsOpen && <AdminNotificationsModal data={data} onClose={() => setNotificationsOpen(false)} />}</main></div>;
+  return <div className="admin-app"><aside className="admin-sidebar"><div className="admin-brand"><Image src="/logo.png" alt="" width={31} height={31} /><span>gabvia</span><b>ADMIN</b></div><div className="admin-workspace"><span className="workspace-avatar">G</span><span><strong>Gabvia HQ</strong><small>Analytics workspace</small></span><span className="workspace-chevron">⌄</span></div><nav className="admin-nav" aria-label="Admin navigation"><p>Workspace</p>{([["overview", "Overview", "grid"], ["users", "Users", "users"], ["messaging", "Messaging", "message"], ["revenue", "Revenue", "wallet"], ["feedback", "Feedback", "chat"], ["insights", "Insights", "trend"]] as [Section, string, IconName][]).map(([key, label, icon]) => <button className={section === key ? "active" : ""} key={key} onClick={() => setSection(key)}><Icon name={icon} size={17} /><span>{label}</span>{key === "users" && <em>{formatNumber(data.metrics.totalUsers)}</em>}{key === "feedback" && (data.metrics.totalFeedback > 0 || (data.feedback?.length ?? 0) > 0) && <em className={data.metrics.newFeedbackCount > 0 ? "feedback-badge-new" : ""}>{formatNumber(data.metrics.totalFeedback || data.feedback?.length || 0)}</em>}</button>)}</nav><nav className="admin-nav admin-nav-secondary" aria-label="Settings navigation"><p>Manage</p><button onClick={() => setDataError("Settings are managed in the Gabvia project configuration.")}><Icon name="settings" size={17} /><span>Settings</span></button><button onClick={() => setDataError(data.warnings.length ? data.warnings.join(" · ") : "No active alerts.")}><Icon name="bell" size={17} /><span>Alerts</span><i className="alert-dot" /></button></nav><div className="sidebar-bottom"><div className="admin-user"><span className="admin-user-avatar">{(adminEmail || "A").slice(0, 1).toUpperCase()}</span><span><strong>{adminEmail || "Admin"}</strong><small>{data.adminRole} role</small></span></div><button className="logout-button" aria-label="Sign out" onClick={logout}><Icon name="logout" size={16} /></button></div></aside><main className="admin-main"><header className="admin-header"><div><div className="admin-breadcrumb">Workspace <span>/</span> <b>{section[0].toUpperCase() + section.slice(1)}</b></div><h1>{section === "overview" ? `${greeting}, admin` : section === "feedback" ? "User feedback & support" : `${section[0].toUpperCase() + section.slice(1)} analytics`}</h1><p>{section === "overview" ? "Here's what's happening across Gabvia today." : section === "feedback" ? "Review user feedback, feature suggestions, bug reports, and support queries." : `A closer look at Gabvia ${section} and the signals that matter.`}</p></div><div className="admin-header-actions"><button className="icon-button" onClick={() => { setSearchOpen(true); setNotificationsOpen(false); }} aria-label="Search users"><Icon name="search" size={17} /></button><button className="icon-button notification-button" onClick={() => { setNotificationsOpen(true); setSearchOpen(false); }} aria-label="Show alerts"><Icon name="bell" size={17} /><i /></button><button className="admin-refresh" onClick={() => void loadAnalytics(token)} disabled={loadingData}><Icon name="refresh" size={15} /> {loadingData ? "Refreshing" : "Refresh data"}</button></div></header>{dataError && <div className="admin-alert error"><span>!</span><p>{dataError}</p><button onClick={() => { setDataError(""); void loadAnalytics(token); }}>Retry</button></div>}{data.warnings.length > 0 && <div className="admin-alert warning"><span>i</span><p>Some payment providers could not be reached. Product analytics are still live.</p><small>{data.warnings.join(" · ")}</small></div>}{section === "overview" && <Overview data={data} activeTrend={activeTrend} period={period} setPeriod={setPeriod} maxLanguageUsers={maxLanguageUsers} setSection={setSection} onSelectFeedbackTicket={(ticketId) => { setFeedbackSelectedTicketId(ticketId); setSection("feedback"); }} />}{section === "users" && <UsersSection key={searchSelectedUserId ?? "users"} data={data} activeTrend={activeTrend} period={period} setPeriod={setPeriod} onAccountAction={handleAccountAction} onBulkAccountAction={handleBulkAccountAction} onAddPoints={handleAddPoints} initialSelectedUserId={searchSelectedUserId} />}{section === "messaging" && <MessagingSection data={data} activeTrend={activeTrend} period={period} setPeriod={setPeriod} token={token} />}{section === "revenue" && <RevenueSection data={data} maxRevenue={maxRevenue} chartCurrency={chartCurrency} availableCurrencies={availableCurrencies} selectedCurrency={chartCurrency} onCurrencyChange={setSelectedCurrency} />}{section === "feedback" && <FeedbackSection key={feedbackSelectedTicketId ?? "feedback"} data={data} onFeedbackAction={handleFeedbackAction} initialSelectedTicketId={feedbackSelectedTicketId} onOpenUserProfile={(userId) => { setSearchSelectedUserId(userId); setSection("users"); }} />}{section === "insights" && <InsightsSection data={data} />}{searchOpen && <AdminSearchModal users={data.users ?? []} feedback={data.feedback ?? []} onClose={() => setSearchOpen(false)} onOpenUsers={(userId) => { setSearchSelectedUserId(userId ?? null); setSection("users"); setSearchOpen(false); }} onOpenFeedback={(ticketId) => { setFeedbackSelectedTicketId(ticketId ?? null); setSection("feedback"); setSearchOpen(false); }} />}{notificationsOpen && <AdminNotificationsModal data={data} onClose={() => setNotificationsOpen(false)} />}</main></div>;
 }
 
 function LoginScreen({ apiKeyConfigured, email, password, error, loading, setEmail, setPassword, onSubmit }: { apiKeyConfigured: boolean; email: string; password: string; error: string; loading: boolean; setEmail: (value: string) => void; setPassword: (value: string) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void }) {
   return <main className="admin-login-page"><div className="admin-login-orbit orbit-left" /><div className="admin-login-orbit orbit-right" /><div className="admin-login-card"><div className="admin-login-brand"><Image src="/logo.png" alt="" width={45} height={45} /><span>gabvia</span></div><div className="admin-login-kicker">Private workspace</div><h1>Welcome back.</h1><p>Sign in to see how Gabvia is growing.</p><form onSubmit={onSubmit}><label>Email address<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@gabvia.app" required autoComplete="email" /></label><label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="••••••••" required autoComplete="current-password" /></label>{error && <div className="login-error">{error}</div>}{!apiKeyConfigured && <div className="login-error">Firebase API configuration is missing from `gabviaweb/.env`.</div>}<button className="login-button" type="submit" disabled={loading || !apiKeyConfigured}>{loading ? "Signing in…" : "Sign in to dashboard"}<Icon name="arrow" size={17} /></button></form><small className="login-footnote">Admin access is restricted to approved Firebase accounts.</small></div><div className="login-logo-word">gabvia <span>analytics</span></div></main>;
 }
 
-function AdminSearchModal({ users, onClose, onOpenUsers }: { users: UserSummary[]; onClose: () => void; onOpenUsers: (userId?: string) => void }) {
+function AdminSearchModal({ users, feedback = [], onClose, onOpenUsers, onOpenFeedback }: { users: UserSummary[]; feedback?: FeedbackItem[]; onClose: () => void; onOpenUsers: (userId?: string) => void; onOpenFeedback?: (ticketId?: string) => void }) {
   const [query, setQuery] = useState("");
   const normalizedQuery = query.trim().toLowerCase();
-  const results = users.filter((user) => `${user.name} ${user.username} ${user.language} ${user.id}`.toLowerCase().includes(normalizedQuery)).slice(0, 8);
-  return <div className="admin-utility-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="admin-utility-modal" role="dialog" aria-modal="true" aria-labelledby="admin-search-title"><button className="admin-modal-close" onClick={onClose} aria-label="Close search"><Icon name="close" size={17} /></button><span className="utility-kicker">Directory search</span><h2 id="admin-search-title">Find a user</h2><div className="utility-search-input"><Icon name="search" size={16} /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search name, username, language, or ID" /></div><div className="utility-results">{results.length === 0 ? <EmptyState text={normalizedQuery ? "No matching users found." : "Start typing to search all users."} /> : results.map((user) => <button className="utility-user-result" key={user.id} onClick={() => onOpenUsers(user.id)}><span className="table-avatar">{user.name.slice(0, 1).toUpperCase()}</span><span><strong>{user.name}</strong><small>@{user.username} · {user.language}</small></span><Icon name="arrow" size={14} /></button>)}</div><button className="utility-secondary-action" onClick={() => onOpenUsers()}>Open full users directory <Icon name="arrow" size={14} /></button></section></div>;
+  const userResults = users.filter((user) => `${user.name} ${user.username} ${user.language} ${user.id}`.toLowerCase().includes(normalizedQuery)).slice(0, 6);
+  const feedbackResults = feedback.filter((item) => `${item.ticketId} ${item.subject} ${item.name} ${item.email} ${item.message} ${item.category}`.toLowerCase().includes(normalizedQuery)).slice(0, 4);
+  const hasResults = userResults.length > 0 || feedbackResults.length > 0;
+  return <div className="admin-utility-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="admin-utility-modal" role="dialog" aria-modal="true" aria-labelledby="admin-search-title"><button className="admin-modal-close" onClick={onClose} aria-label="Close search"><Icon name="close" size={17} /></button><span className="utility-kicker">Workspace search</span><h2 id="admin-search-title">Find a user or ticket</h2><div className="utility-search-input"><Icon name="search" size={16} /><input autoFocus value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search name, username, feedback ticket, or subject" /></div><div className="utility-results">{!hasResults ? <EmptyState text={normalizedQuery ? "No matching users or feedback queries found." : "Start typing to search users and feedback."} /> : <>{userResults.length > 0 && <><div className="notification-group-title" style={{ padding: "6px 8px 2px", fontSize: "10px", color: "#94a3b8" }}>Users ({userResults.length})</div>{userResults.map((user) => <button className="utility-user-result" key={user.id} onClick={() => onOpenUsers(user.id)}><span className="table-avatar">{user.name.slice(0, 1).toUpperCase()}</span><span><strong>{user.name}</strong><small>@{user.username} · {user.language}</small></span><Icon name="arrow" size={14} /></button>)}</>}{feedbackResults.length > 0 && <><div className="notification-group-title" style={{ padding: "8px 8px 2px", fontSize: "10px", color: "#94a3b8" }}>Feedback & Queries ({feedbackResults.length})</div>{feedbackResults.map((item) => <button className="utility-user-result" key={item.id || item.ticketId} onClick={() => onOpenFeedback?.(item.ticketId || item.id)}><span className="table-avatar feedback-avatar new">F</span><span><strong>{item.subject}</strong><small><code>{item.ticketId}</code> · {item.name || "User"} · {item.category}</small></span><Icon name="arrow" size={14} /></button>)}</>}</>}</div><div style={{ display: "flex", gap: "10px" }}><button className="utility-secondary-action" onClick={() => onOpenUsers()}>Open full directory <Icon name="arrow" size={14} /></button>{onOpenFeedback && <button className="utility-secondary-action" onClick={() => onOpenFeedback()}>Open feedback desk <Icon name="arrow" size={14} /></button>}</div></section></div>;
 }
 
 function AdminNotificationsModal({ data, onClose }: { data: DashboardData; onClose: () => void }) {
@@ -307,8 +385,69 @@ function AdminNotificationsModal({ data, onClose }: { data: DashboardData; onClo
   return <div className="admin-utility-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}><section className="admin-utility-modal notification-modal" role="dialog" aria-modal="true" aria-labelledby="admin-notifications-title"><button className="admin-modal-close" onClick={onClose} aria-label="Close notifications"><Icon name="close" size={17} /></button><span className="utility-kicker">Workspace activity</span><h2 id="admin-notifications-title">Notifications</h2><div className={`notification-health ${systemStatus}`}><span className="notification-health-dot" /><span><strong>System health: {systemStatus}</strong><small>{data.lastUpdated ? `Last checked ${formatDate(data.lastUpdated)}` : "Waiting for the first data refresh"}</small></span></div>{data.warnings.length > 0 ? <div className="notification-group"><span className="notification-group-title">Needs attention</span>{data.warnings.map((warning) => <div className="notification-item warning-item" key={warning}><span>!</span><p>{warning}</p></div>)}</div> : <div className="notification-item success-item"><span>✓</span><p>No active system warnings.</p></div>}<div className="notification-group"><span className="notification-group-title">Recent admin actions</span>{auditLogs.length === 0 ? <EmptyState text="No recent account actions." /> : auditLogs.slice(0, 5).map((entry) => <div className="notification-item" key={entry.id}><span>•</span><p><b>{entry.action}</b> account action by {entry.adminEmail}<small>{formatDate(entry.createdAt)}</small></p></div>)}</div></section></div>;
 }
 
-function Overview({ data, activeTrend, period, setPeriod, maxLanguageUsers, setSection }: { data: DashboardData; activeTrend: TrendPoint[]; period: "daily" | "monthly"; setPeriod: (period: "daily" | "monthly") => void; maxLanguageUsers: number; setSection: (section: Section) => void }) {
-  return <><div className="stat-grid"><StatCard label="Total users" value={formatNumber(data.metrics.totalUsers)} change={`${formatNumber(data.metrics.referredUsers)} referred`} icon="users" /><StatCard label="Daily active users" value={formatNumber(data.metrics.dau)} change={`${data.metrics.activeRate}% of MAU`} icon="trend" tone="green" /><StatCard label="Monthly active users" value={formatNumber(data.metrics.mau)} change="Last 30 days" icon="grid" tone="violet" /><StatCard label="Gross revenue" value={formatMoney(data.metrics.grossRevenue)} change={`${formatNumber(data.metrics.paidTransactions)} paid transactions`} icon="wallet" tone="yellow" /></div><div className="admin-two-column"><section className="admin-panel engagement-panel"><PanelHeading eyebrow="Engagement" title="Active users" action={<div className="period-switch"><button className={period === "daily" ? "selected" : ""} onClick={() => setPeriod("daily")}>30 days</button><button className={period === "monthly" ? "selected" : ""} onClick={() => setPeriod("monthly")}>12 months</button></div>} /><div className="big-chart-stat"><strong>{formatNumber(period === "daily" ? data.metrics.mau : data.trends.monthly.reduce((sum, item) => sum + (item.activeUsers > 0 ? 1 : 0), 0))}</strong><span><i className="positive-dot" /> Unique active users</span></div><LineChart data={activeTrend} dataKey="activeUsers" /></section><section className="admin-panel language-panel"><PanelHeading eyebrow="Audience" title="Top languages" action={<Icon name="globe" size={17} />} /><div className="language-list">{data.breakdowns.languages.map((language) => <div className="language-row" key={language.name}><div className="language-label"><span>{language.name}</span><b>{formatNumber(language.users)}</b></div><div className="language-bar"><i style={{ width: `${(language.users / maxLanguageUsers) * 100}%` }} /></div></div>)}{data.breakdowns.languages.length === 0 && <EmptyState text="No user language data yet." />}</div></section></div><div className="admin-two-column lower-grid"><section className="admin-panel"><PanelHeading eyebrow="Users" title="New arrivals" action={<button className="panel-link" onClick={() => setSection("users")}>View all <Icon name="arrow" size={13} /></button>} /><UserTable users={data.recentUsers.slice(0, 5)} /></section><section className="admin-panel quick-panel"><PanelHeading eyebrow="Product pulse" title="At a glance" /><div className="pulse-grid"><div><span><Icon name="message" size={14} /> Messages this month</span><strong>{formatNumber(data.metrics.messagesThisMonth)}</strong></div><div><span><Icon name="grid" size={14} /> Conversations</span><strong>{formatNumber(data.metrics.totalConversations)}</strong></div><div><span><Icon name="mic" size={14} /> Translations</span><strong>{formatNumber(data.metrics.totalTranslations)}</strong></div><div><span><Icon name="wallet" size={14} /> Settled revenue</span><strong>{formatMoney(data.metrics.settledRevenue)}</strong></div><div><span><Icon name="users" size={14} /> Early access</span><strong>{formatNumber(data.metrics.waitlistCount)}</strong></div></div></section></div><WaitlistPanel entries={data.waitlist} /></>;
+function Overview({ data, activeTrend, period, setPeriod, maxLanguageUsers, setSection, onSelectFeedbackTicket }: { data: DashboardData; activeTrend: TrendPoint[]; period: "daily" | "monthly"; setPeriod: (period: "daily" | "monthly") => void; maxLanguageUsers: number; setSection: (section: Section) => void; onSelectFeedbackTicket?: (ticketId: string) => void }) {
+  return <><div className="stat-grid"><StatCard label="Total users" value={formatNumber(data.metrics.totalUsers)} change={`${formatNumber(data.metrics.referredUsers)} referred`} icon="users" /><StatCard label="Daily active users" value={formatNumber(data.metrics.dau)} change={`${data.metrics.activeRate}% of MAU`} icon="trend" tone="green" /><StatCard label="Monthly active users" value={formatNumber(data.metrics.mau)} change="Last 30 days" icon="grid" tone="violet" /><StatCard label="Gross revenue" value={formatMoney(data.metrics.grossRevenue)} change={`${formatNumber(data.metrics.paidTransactions)} paid transactions`} icon="wallet" tone="yellow" /></div><div className="admin-two-column"><section className="admin-panel engagement-panel"><PanelHeading eyebrow="Engagement" title="Active users" action={<div className="period-switch"><button className={period === "daily" ? "selected" : ""} onClick={() => setPeriod("daily")}>30 days</button><button className={period === "monthly" ? "selected" : ""} onClick={() => setPeriod("monthly")}>12 months</button></div>} /><div className="big-chart-stat"><strong>{formatNumber(period === "daily" ? data.metrics.mau : data.trends.monthly.reduce((sum, item) => sum + (item.activeUsers > 0 ? 1 : 0), 0))}</strong><span><i className="positive-dot" /> Unique active users</span></div><LineChart data={activeTrend} dataKey="activeUsers" /></section><section className="admin-panel language-panel"><PanelHeading eyebrow="Audience" title="Top languages" action={<Icon name="globe" size={17} />} /><div className="language-list">{data.breakdowns.languages.map((language) => <div className="language-row" key={language.name}><div className="language-label"><span>{language.name}</span><b>{formatNumber(language.users)}</b></div><div className="language-bar"><i style={{ width: `${(language.users / maxLanguageUsers) * 100}%` }} /></div></div>)}{data.breakdowns.languages.length === 0 && <EmptyState text="No user language data yet." />}</div></section></div><div className="admin-two-column lower-grid"><section className="admin-panel"><PanelHeading eyebrow="Users" title="New arrivals" action={<button className="panel-link" onClick={() => setSection("users")}>View all <Icon name="arrow" size={13} /></button>} /><UserTable users={data.recentUsers.slice(0, 5)} /></section><section className="admin-panel quick-panel"><PanelHeading eyebrow="Product pulse" title="At a glance" /><div className="pulse-grid"><div><span><Icon name="message" size={14} /> Messages this month</span><strong>{formatNumber(data.metrics.messagesThisMonth)}</strong></div><div><span><Icon name="grid" size={14} /> Conversations</span><strong>{formatNumber(data.metrics.totalConversations)}</strong></div><div><span><Icon name="mic" size={14} /> Translations</span><strong>{formatNumber(data.metrics.totalTranslations)}</strong></div><div><span><Icon name="wallet" size={14} /> Settled revenue</span><strong>{formatMoney(data.metrics.settledRevenue)}</strong></div><div><span><Icon name="chat" size={14} /> User feedback</span><strong>{formatNumber(data.metrics.totalFeedback || data.feedback?.length || 0)}</strong></div><div><span><Icon name="users" size={14} /> Early access</span><strong>{formatNumber(data.metrics.waitlistCount)}</strong></div></div></section></div><RecentFeedbackPanel entries={(data.feedback ?? []).slice(0, 5)} onViewAll={() => setSection("feedback")} onSelectTicket={(ticketId) => { onSelectFeedbackTicket?.(ticketId); }} /><WaitlistPanel entries={data.waitlist} /></>;
+}
+
+function RecentFeedbackPanel({ entries, onViewAll, onSelectTicket }: { entries: FeedbackItem[]; onViewAll: () => void; onSelectTicket: (ticketId: string) => void }) {
+  return (
+    <section className="admin-panel full-panel feedback-overview-panel">
+      <PanelHeading
+        eyebrow="Community voice"
+        title="Recent feedback & inquiries"
+        action={
+          <button className="panel-link" onClick={onViewAll}>
+            View all ({entries.length}) <Icon name="arrow" size={13} />
+          </button>
+        }
+      />
+      {entries.length === 0 ? (
+        <EmptyState text="No user feedback or support queries submitted yet." />
+      ) : (
+        <div className="feedback-overview-list">
+          {entries.map((item) => {
+            const status = (item.status || "new").toLowerCase();
+            return (
+              <div
+                className="feedback-overview-row"
+                key={item.id || item.ticketId}
+                onClick={() => onSelectTicket(item.ticketId || item.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onSelectTicket(item.ticketId || item.id);
+                  }
+                }}
+              >
+                <div className="feedback-overview-left">
+                  <span className={`table-avatar feedback-avatar ${status}`}>
+                    {(item.name || item.email || "F").slice(0, 1).toUpperCase()}
+                  </span>
+                  <div className="feedback-overview-texts">
+                    <strong>{item.subject}</strong>
+                    <small>
+                      {item.name || "Anonymous"} · <code>{item.ticketId}</code> · {item.message.slice(0, 80)}{item.message.length > 80 ? "…" : ""}
+                    </small>
+                  </div>
+                </div>
+                <div className="feedback-overview-right">
+                  <span className="feedback-category-badge">{item.category || "General"}</span>
+                  <span className={`feedback-status-pill ${status}`}>
+                    <i className="status-dot" />
+                    {status === "in_progress" ? "In progress" : status === "resolved" ? "Resolved" : "New"}
+                  </span>
+                  <time className="feedback-date-cell">{formatDate(item.createdAt)}</time>
+                  <Icon name="arrow" size={13} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
 }
 
 function UsersSection({ data, activeTrend, period, setPeriod, onAccountAction, onBulkAccountAction, onAddPoints, initialSelectedUserId }: { data: DashboardData; activeTrend: TrendPoint[]; period: "daily" | "monthly"; setPeriod: (period: "daily" | "monthly") => void; onAccountAction: (userId: string, action: "suspend" | "restore" | "delete", confirmation?: string) => Promise<void>; onBulkAccountAction: (userIds: string[], action: "suspend" | "restore" | "delete", confirmation?: string) => Promise<{ requested?: number; succeeded?: number; failed?: number }>; onAddPoints: (userId: string, points: number, reason?: string) => Promise<unknown>; initialSelectedUserId?: string | null }) {
@@ -648,3 +787,460 @@ function WaitlistPanel({ entries }: { entries: WaitlistEntry[] }) {
 }
 
 function EmptyState({ text }: { text: string }) { return <div className="empty-state">{text}</div>; }
+
+function FeedbackSection({
+  data,
+  onFeedbackAction,
+  initialSelectedTicketId,
+  onOpenUserProfile,
+}: {
+  data: DashboardData;
+  onFeedbackAction: (ticketId: string, action: "status" | "delete", status?: string) => Promise<void>;
+  initialSelectedTicketId?: string | null;
+  onOpenUserProfile?: (userId: string) => void;
+}) {
+  const allFeedback = data.feedback ?? [];
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "new" | "in_progress" | "resolved">("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(initialSelectedTicketId ?? null);
+  const [actionFeedback, setActionFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const categories = Array.from(new Set(allFeedback.map((f) => f.category).filter(Boolean))).sort();
+
+  const filtered = allFeedback.filter((item) => {
+    const query = search.toLowerCase();
+    const matchesSearch =
+      !search ||
+      `${item.ticketId} ${item.subject} ${item.name} ${item.email} ${item.message} ${item.category}`
+        .toLowerCase()
+        .includes(query);
+    const normalizedStatus = (item.status || "new").toLowerCase();
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "new" ? normalizedStatus === "new" || !item.status : normalizedStatus === statusFilter);
+    const matchesCategory = categoryFilter === "all" || item.category === categoryFilter;
+    return matchesSearch && matchesStatus && matchesCategory;
+  });
+
+  const selectedFeedback = allFeedback.find((f) => f.ticketId === selectedTicketId || f.id === selectedTicketId) ?? null;
+
+  return (
+    <>
+      <div className="stat-grid">
+        <StatCard
+          label="Total queries & feedback"
+          value={formatNumber(data.metrics.totalFeedback || allFeedback.length)}
+          change="All time submissions"
+          icon="chat"
+        />
+        <StatCard
+          label="Needs attention"
+          value={formatNumber(data.metrics.newFeedbackCount || allFeedback.filter((f) => f.status === "new" || !f.status).length)}
+          change="Pending review"
+          icon="bell"
+          tone="yellow"
+        />
+        <StatCard
+          label="In progress"
+          value={formatNumber(data.metrics.inProgressFeedbackCount || allFeedback.filter((f) => f.status === "in_progress").length)}
+          change="Being handled"
+          icon="trend"
+          tone="violet"
+        />
+        <StatCard
+          label="Resolved"
+          value={formatNumber(data.metrics.resolvedFeedbackCount || allFeedback.filter((f) => f.status === "resolved").length)}
+          change="Completed"
+          icon="check"
+          tone="green"
+        />
+      </div>
+
+      <section className="admin-panel full-panel">
+        <PanelHeading
+          eyebrow="Desk"
+          title="All feedback & inquiries"
+          action={
+            <div className="directory-actions">
+              <button
+                className="panel-link"
+                onClick={() =>
+                  downloadCsv(
+                    "gabvia-feedback.csv",
+                    ["Ticket ID", "Subject", "Category", "Status", "Name", "Email", "User ID", "Date", "Message"],
+                    filtered.map((item) => [
+                      item.ticketId,
+                      item.subject,
+                      item.category,
+                      item.status,
+                      item.name,
+                      item.email,
+                      item.userId,
+                      formatDate(item.createdAt),
+                      item.message,
+                    ])
+                  )
+                }
+              >
+                <Icon name="download" size={13} /> Export
+              </button>
+              <select
+                className="directory-status-filter"
+                aria-label="Filter feedback by status"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value as "all" | "new" | "in_progress" | "resolved")}
+              >
+                <option value="all">All statuses</option>
+                <option value="new">New / Pending</option>
+                <option value="in_progress">In progress</option>
+                <option value="resolved">Resolved</option>
+              </select>
+              {categories.length > 0 && (
+                <select
+                  className="directory-status-filter"
+                  aria-label="Filter feedback by category"
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                >
+                  <option value="all">All categories</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <span className="directory-count">{formatNumber(filtered.length)} shown</span>
+            </div>
+          }
+        />
+
+        <div className="user-search">
+          <Icon name="search" size={14} />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by ticket ID, subject, message, sender name or email"
+          />
+        </div>
+
+        {actionFeedback && (
+          <div className={`bulk-action-feedback ${actionFeedback.type}`} role="status">
+            {actionFeedback.text}
+          </div>
+        )}
+
+        <FeedbackTable
+          items={filtered}
+          onSelect={(item) => setSelectedTicketId(item.ticketId || item.id)}
+          selectedTicketId={selectedTicketId ?? undefined}
+        />
+      </section>
+
+      {selectedFeedback && (
+        <FeedbackDetailsModal
+          item={selectedFeedback}
+          onClose={() => setSelectedTicketId(null)}
+          onStatusChange={async (status) => {
+            try {
+              await onFeedbackAction(selectedFeedback.ticketId || selectedFeedback.id, "status", status);
+              setActionFeedback({ type: "success", text: `Ticket ${selectedFeedback.ticketId} marked as ${status.replace("_", " ")}.` });
+            } catch (err) {
+              setActionFeedback({ type: "error", text: err instanceof Error ? err.message : "Failed to update status." });
+            }
+          }}
+          onDelete={async () => {
+            try {
+              await onFeedbackAction(selectedFeedback.ticketId || selectedFeedback.id, "delete");
+              setSelectedTicketId(null);
+              setActionFeedback({ type: "success", text: `Ticket ${selectedFeedback.ticketId} deleted successfully.` });
+            } catch (err) {
+              setActionFeedback({ type: "error", text: err instanceof Error ? err.message : "Failed to delete ticket." });
+            }
+          }}
+          onOpenUserProfile={onOpenUserProfile}
+        />
+      )}
+    </>
+  );
+}
+
+function FeedbackTable({
+  items,
+  onSelect,
+  selectedTicketId,
+}: {
+  items: FeedbackItem[];
+  onSelect: (item: FeedbackItem) => void;
+  selectedTicketId?: string;
+}) {
+  if (items.length === 0) return <EmptyState text="No feedback or support queries found." />;
+
+  return (
+    <div className="feedback-table">
+      <div className="feedback-table-header">
+        <span>Ticket / Sender</span>
+        <span>Category</span>
+        <span>Subject & Message</span>
+        <span>Status</span>
+        <span>Received</span>
+      </div>
+      {items.map((item) => {
+        const isSelected = selectedTicketId === item.ticketId || selectedTicketId === item.id;
+        const normalizedStatus = (item.status || "new").toLowerCase();
+        return (
+          <div
+            key={item.id || item.ticketId}
+            className={`feedback-table-row ${isSelected ? "selected" : ""} status-${normalizedStatus}`}
+            onClick={() => onSelect(item)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelect(item);
+              }
+            }}
+          >
+            <div className="feedback-sender-cell">
+              <span className={`table-avatar feedback-avatar ${normalizedStatus}`}>
+                {(item.name || item.email || "F").slice(0, 1).toUpperCase()}
+              </span>
+              <div>
+                <strong>{item.name || "Anonymous user"}</strong>
+                <small className="feedback-sender-sub">
+                  <code>{item.ticketId}</code>
+                  {item.email && item.email !== "unspecified" && <span> · {item.email}</span>}
+                </small>
+              </div>
+            </div>
+
+            <div className="feedback-category-cell">
+              <span className="feedback-category-badge">{item.category || "General"}</span>
+            </div>
+
+            <div className="feedback-content-cell">
+              <strong className="feedback-subject">{item.subject}</strong>
+              <p className="feedback-snippet">{item.message}</p>
+            </div>
+
+            <div className="feedback-status-cell">
+              <span className={`feedback-status-pill ${normalizedStatus}`}>
+                <i className="status-dot" />
+                {normalizedStatus === "in_progress" ? "In progress" : normalizedStatus === "resolved" ? "Resolved" : "New"}
+              </span>
+            </div>
+
+            <div className="feedback-date-cell">
+              <time>{formatDate(item.createdAt)}</time>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function FeedbackDetailsModal({
+  item,
+  onClose,
+  onStatusChange,
+  onDelete,
+  onOpenUserProfile,
+}: {
+  item: FeedbackItem;
+  onClose: () => void;
+  onStatusChange: (status: "new" | "in_progress" | "resolved") => Promise<void>;
+  onDelete: () => Promise<void>;
+  onOpenUserProfile?: (userId: string) => void;
+}) {
+  const [updating, setUpdating] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const normalizedStatus = (item.status || "new").toLowerCase();
+
+  const handleCopyEmail = () => {
+    if (!item.email || item.email === "unspecified") return;
+    navigator.clipboard.writeText(item.email);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSetStatus = async (status: "new" | "in_progress" | "resolved") => {
+    setUpdating(true);
+    try {
+      await onStatusChange(status);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setUpdating(true);
+    try {
+      await onDelete();
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  return (
+    <div
+      className="admin-detail-overlay"
+      role="presentation"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget && !updating) onClose();
+      }}
+    >
+      <section className="user-details-modal feedback-details-modal" role="dialog" aria-modal="true" aria-labelledby="feedback-detail-title">
+        <button className="admin-modal-close" onClick={onClose} aria-label="Close modal" disabled={updating}>
+          <Icon name="close" size={17} />
+        </button>
+
+        <div className="user-detail-top">
+          <span className={`user-detail-avatar feedback-modal-avatar ${normalizedStatus}`}>
+            {(item.name || item.email || "F").slice(0, 1).toUpperCase()}
+          </span>
+          <div>
+            <div className="feedback-modal-kicker-row">
+              <span className="detail-kicker">SUPPORT TICKET</span>
+              <span className={`feedback-status-pill ${normalizedStatus}`}>
+                <i className="status-dot" />
+                {normalizedStatus === "in_progress" ? "In progress" : normalizedStatus === "resolved" ? "Resolved" : "New"}
+              </span>
+            </div>
+            <h2 id="feedback-detail-title">{item.subject}</h2>
+            <p>Ticket ID: <code>{item.ticketId}</code></p>
+          </div>
+        </div>
+
+        <div className="detail-section">
+          <span className="detail-kicker">Submitter details</span>
+          <DetailRow label="Name" value={item.name || "Anonymous user"} />
+          <div className="detail-row">
+            <span>Email</span>
+            <div className="feedback-email-actions">
+              <b>{item.email || "unspecified"}</b>
+              {item.email && item.email !== "unspecified" && (
+                <>
+                  <button type="button" className="feedback-mini-btn" onClick={handleCopyEmail}>
+                    {copied ? "Copied" : "Copy"}
+                  </button>
+                  <a
+                    href={`mailto:${encodeURIComponent(item.email)}?subject=${encodeURIComponent(
+                      `Re: [${item.ticketId}] ${item.subject}`
+                    )}`}
+                    className="feedback-mini-btn mail-btn"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Reply email <Icon name="arrow" size={11} />
+                  </a>
+                </>
+              )}
+            </div>
+          </div>
+          <DetailRow label="Category" value={item.category || "General"} />
+          <DetailRow label="Submitted at" value={formatDateTime(item.createdAt)} />
+          {item.userId && item.userId !== "guest" && (
+            <div className="detail-row">
+              <span>Account</span>
+              <div className="feedback-email-actions">
+                <code>{item.userId}</code>
+                {onOpenUserProfile && (
+                  <button
+                    type="button"
+                    className="feedback-mini-btn"
+                    onClick={() => {
+                      onClose();
+                      onOpenUserProfile(item.userId);
+                    }}
+                  >
+                    View profile
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="detail-section">
+          <span className="detail-kicker">Full query / feedback description</span>
+          <div className="feedback-full-message">
+            {item.message}
+          </div>
+        </div>
+
+        <div className="feedback-modal-actions">
+          <div className="feedback-status-btn-group">
+            <span className="feedback-btn-group-label">Update status:</span>
+            {normalizedStatus !== "in_progress" && (
+              <button
+                type="button"
+                className="feedback-action-btn btn-in-progress"
+                onClick={() => handleSetStatus("in_progress")}
+                disabled={updating}
+              >
+                Mark as In Progress
+              </button>
+            )}
+            {normalizedStatus !== "resolved" && (
+              <button
+                type="button"
+                className="feedback-action-btn btn-resolved"
+                onClick={() => handleSetStatus("resolved")}
+                disabled={updating}
+              >
+                Mark as Resolved
+              </button>
+            )}
+            {normalizedStatus !== "new" && (
+              <button
+                type="button"
+                className="feedback-action-btn btn-reopen"
+                onClick={() => handleSetStatus("new")}
+                disabled={updating}
+              >
+                Reopen (Mark as New)
+              </button>
+            )}
+          </div>
+
+          <div className="feedback-delete-wrapper">
+            {!confirmDelete ? (
+              <button
+                type="button"
+                className="account-delete-button"
+                onClick={() => setConfirmDelete(true)}
+                disabled={updating}
+              >
+                Delete ticket
+              </button>
+            ) : (
+              <div className="feedback-confirm-delete-box">
+                <span>Delete permanently?</span>
+                <button
+                  type="button"
+                  className="confirm-danger"
+                  onClick={handleDelete}
+                  disabled={updating}
+                >
+                  {updating ? "Deleting…" : "Yes, delete"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={updating}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+

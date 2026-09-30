@@ -418,6 +418,13 @@ export async function GET(request: NextRequest) {
     const reportsResult = await Promise.allSettled([runFirestoreCollection("reports", false, adminToken)]);
     let reportRecords = reportsResult[0].status === "fulfilled" ? reportsResult[0].value : [];
 
+    const [supportQueriesResult, directFeedbackResult] = await Promise.all([
+      Promise.allSettled([runFirestoreCollection("support_queries", false, adminToken)]),
+      Promise.allSettled([runFirestoreCollection("feedback", false, adminToken)]),
+    ]);
+    const supportRecords = supportQueriesResult[0]?.status === "fulfilled" ? supportQueriesResult[0].value : [];
+    const directFeedbackRecords = directFeedbackResult[0]?.status === "fulfilled" ? directFeedbackResult[0].value : [];
+
     const ledgerTransactions: PaymentLedgerTransaction[] = paymentRecords
       .filter((record) => isSuccessfulStatus(record.status))
       .map((record) => {
@@ -643,6 +650,47 @@ export async function GET(request: NextRequest) {
       .sort((left, right) => (right.createdAt ?? "").localeCompare(left.createdAt ?? ""))
       .slice(0, 30);
 
+    const rawFeedbackItems = [...supportRecords, ...directFeedbackRecords];
+    const seenFeedbackKeys = new Set<string>();
+    const feedbackList = [];
+    for (const record of rawFeedbackItems) {
+      const id = String(record.__id ?? "");
+      const ticketId = String(record.ticket_id || record.ticketId || id || "—");
+      const key = `${id}:${ticketId}`;
+      if (seenFeedbackKeys.has(key)) continue;
+      seenFeedbackKeys.add(key);
+
+      const message = String(record.query || record.feedback || record.message || record.description || "—");
+      const subject = String(record.subject || record.title || "Support Query / Feedback");
+      const email = String(record.email || "unspecified");
+      const name = String(record.name || record.username || "Anonymous");
+      const userId = String(record.user_id || record.userId || "");
+      const category = String(record.category || "General");
+      const status = String(record.status || "new").toLowerCase();
+      const createdAt = parseDate(record.created_at || record.createdAt, record.__createTime)?.toISOString() ?? null;
+
+      feedbackList.push({
+        id: id || ticketId,
+        ticketId,
+        subject,
+        message,
+        category,
+        status: status || "new",
+        name,
+        email,
+        userId,
+        createdAt,
+        source: record.ticket_id ? "support_queries" : "feedback",
+      });
+    }
+
+    feedbackList.sort((a, b) => (parseDate(b.createdAt)?.getTime() ?? 0) - (parseDate(a.createdAt)?.getTime() ?? 0));
+
+    const totalFeedback = feedbackList.length;
+    const newFeedbackCount = feedbackList.filter((item) => item.status === "new" || !item.status).length;
+    const inProgressFeedbackCount = feedbackList.filter((item) => item.status === "in_progress").length;
+    const resolvedFeedbackCount = feedbackList.filter((item) => item.status === "resolved").length;
+
     return NextResponse.json({
       ok: true,
       adminEmail,
@@ -668,6 +716,10 @@ export async function GET(request: NextRequest) {
         settledRevenueByCurrency,
         paidTransactions: transactions.length,
         waitlistCount: waitlist.length,
+        totalFeedback,
+        newFeedbackCount,
+        inProgressFeedbackCount,
+        resolvedFeedbackCount,
       },
       insights: {
         retention,
@@ -700,6 +752,7 @@ export async function GET(request: NextRequest) {
       waitlist: waitlistEntries,
       paymentTransactions: transactions,
       auditLogs: auditLogEntries,
+      feedback: feedbackList,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Could not load admin analytics.";

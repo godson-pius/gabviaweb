@@ -109,5 +109,17 @@ service cloud.firestore {
       allow read: if isAuthenticated(); // Allow authenticated admins and users to read
       allow update, delete: if false;
     }
+
+    // Support queries and feedback collection
+    match /support_queries/{ticketId} {
+      allow create: if true; // Public support / feedback submissions
+      allow read, update, delete: if isAuthenticated(); // Authenticated admins and users can read/manage
+    }
+
+    match /feedback/{feedbackId} {
+      allow create: if true;
+      allow read, update, delete: if isAuthenticated();
+    }
   }
 }
+
