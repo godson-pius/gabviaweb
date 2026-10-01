@@ -27,6 +27,8 @@ import { auth, db } from "@/lib/firebase";
 import { Profile } from "@/types/chat";
 import {
   getOrGenerateKeyPair,
+  getStoredKeyPair,
+  deleteStoredKeyPair,
   encryptPrivateKeyForBackup,
   decryptPrivateKeyFromBackup,
   saveRecoveredPrivateKey,
@@ -155,25 +157,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let isMounted = true;
     async function initKeys() {
       try {
-        const { publicKeyBase64, privateKeyUint8, isNew } = await getOrGenerateKeyPair(user?.uid);
-        if (!isMounted) return;
-
-        setKeyPair({ publicKeyBase64, privateKeyUint8 });
-
         const hasValidBackup = Boolean(profile?.encrypted_private_key && profile.encrypted_private_key.includes(":"));
+        const stored = getStoredKeyPair(user!.uid);
 
-        // If it's a new browser device and there is a backup on server, prompt recovery
-        if (isNew && hasValidBackup) {
+        if (stored) {
+          // If profile has a public key, verify if stored key matches it
+          if (profile?.public_key && stored.publicKeyBase64 !== profile.public_key) {
+            console.warn("[E2EE Web] Stored local key does not match Firestore public_key.");
+            if (hasValidBackup) {
+              // We have a backup, so prompt recovery instead of using a mismatched/bogus key
+              if (!isMounted) return;
+              deleteStoredKeyPair(user!.uid);
+              setKeyPair(null);
+              setNeedsKeyRecovery(true);
+              return;
+            }
+          }
+
+          // Stored key is valid
+          if (!isMounted) return;
+          setKeyPair(stored);
+          setNeedsKeyRecovery(false);
+
+          // If Firestore is missing public_key, sync it
+          if (!profile?.public_key) {
+            await updateDoc(doc(db, "profiles", user!.uid), {
+              public_key: stored.publicKeyBase64,
+            });
+          }
+          return;
+        }
+
+        // No key stored on this device
+        if (hasValidBackup) {
+          // New device/browser and user has a backup on server: prompt for PIN recovery!
+          // DO NOT generate a random key! Keep keyPair null so we don't attempt bogus decryptions.
+          if (!isMounted) return;
+          setKeyPair(null);
           setNeedsKeyRecovery(true);
           return;
         }
 
+        // Truly fresh user without server backup: generate keypair and save
+        const newKeys = await getOrGenerateKeyPair(user!.uid);
+        if (!isMounted) return;
+        setKeyPair({ publicKeyBase64: newKeys.publicKeyBase64, privateKeyUint8: newKeys.privateKeyUint8 });
         setNeedsKeyRecovery(false);
 
-        // Ensure server has public key synced
-        if (!profile?.public_key || (!hasValidBackup && isNew)) {
+        if (!profile?.public_key) {
           await updateDoc(doc(db, "profiles", user!.uid), {
-            public_key: publicKeyBase64,
+            public_key: newKeys.publicKeyBase64,
           });
         }
       } catch (err) {
@@ -185,7 +218,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isMounted = false;
     };
-  }, [user, profile]);
+  }, [user?.uid, profile?.public_key, profile?.encrypted_private_key]);
 
   const signIn = async (identifier: string, pass: string) => {
     const attemptStatus = checkLoginAttempts();
@@ -349,6 +382,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setProfile(null);
     setKeyPair(null);
+    setNeedsKeyRecovery(false);
   };
 
   const resetPassword = async (email: string) => {
@@ -375,8 +409,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const decrypted = decryptPrivateKeyFromBackup(profile.encrypted_private_key, pin, user.uid);
     if (!decrypted) return false;
 
-    await saveRecoveredPrivateKey(decrypted, user.uid);
-    const { publicKeyBase64 } = await getOrGenerateKeyPair(user.uid);
+    const publicKeyBase64 = await saveRecoveredPrivateKey(decrypted, user.uid);
+    // Explicitly sync the confirmed public key to Firestore
+    await updateDoc(doc(db, "profiles", user.uid), {
+      public_key: publicKeyBase64,
+      updated_at: new Date().toISOString(),
+    });
     setKeyPair({ publicKeyBase64, privateKeyUint8: decrypted });
     setNeedsKeyRecovery(false);
     return true;

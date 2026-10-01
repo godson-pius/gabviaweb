@@ -17,39 +17,60 @@ function ensureNaclPrng() {
 
 ensureNaclPrng();
 
-const getStorageKey = (userId?: string) => userId ? `gabvia_e2ee_priv_${userId}` : 'gabvia_e2ee_private_key';
+export const getStorageKey = (userId?: string) => userId ? `gabvia_e2ee_priv_${userId}` : 'gabvia_e2ee_private_key';
+
+export function getStoredKeyPair(userId?: string): { publicKeyBase64: string; privateKeyUint8: Uint8Array } | null {
+  if (typeof window === 'undefined') return null;
+  const keyName = getStorageKey(userId);
+  let existingPrivKeyStr = window.localStorage.getItem(keyName);
+
+  // If userId is provided, do NOT fall back to unscoped legacy key unless it is explicitly migrated
+  if (!existingPrivKeyStr && !userId) {
+    existingPrivKeyStr = window.localStorage.getItem('gabvia_e2ee_private_key');
+  }
+
+  if (!existingPrivKeyStr) return null;
+
+  try {
+    const privateKeyUint8 = naclUtil.decodeBase64(existingPrivKeyStr);
+    const keyPair = nacl.box.keyPair.fromSecretKey(privateKeyUint8);
+    return {
+      publicKeyBase64: naclUtil.encodeBase64(keyPair.publicKey),
+      privateKeyUint8: keyPair.secretKey,
+    };
+  } catch (err) {
+    console.warn("[E2EE] Corrupted private key in storage:", err);
+    return null;
+  }
+}
+
+export function deleteStoredKeyPair(userId?: string): void {
+  if (typeof window === 'undefined') return;
+  const keyName = getStorageKey(userId);
+  window.localStorage.removeItem(keyName);
+  if (userId) {
+    window.localStorage.removeItem('gabvia_e2ee_private_key');
+  }
+}
 
 export async function getOrGenerateKeyPair(userId?: string): Promise<{ publicKeyBase64: string; privateKeyUint8: Uint8Array; isNew: boolean }> {
   ensureNaclPrng();
-  const keyName = getStorageKey(userId);
-  let existingPrivKeyStr: string | null = null;
-  if (typeof window !== 'undefined') {
-    existingPrivKeyStr = window.localStorage.getItem(keyName) || window.localStorage.getItem('gabvia_e2ee_private_key');
-  }
-
-  if (existingPrivKeyStr) {
-    try {
-      const privateKeyUint8 = naclUtil.decodeBase64(existingPrivKeyStr);
-      const keyPair = nacl.box.keyPair.fromSecretKey(privateKeyUint8);
-      // Migrate to user specific key if needed
-      if (typeof window !== 'undefined' && userId) {
-        window.localStorage.setItem(keyName, existingPrivKeyStr);
-      }
-      return {
-        publicKeyBase64: naclUtil.encodeBase64(keyPair.publicKey),
-        privateKeyUint8: keyPair.secretKey,
-        isNew: false,
-      };
-    } catch {
-      // If corrupted, generate fresh
-    }
+  const existing = getStoredKeyPair(userId);
+  if (existing) {
+    return {
+      ...existing,
+      isNew: false,
+    };
   }
 
   const keyPair = nacl.box.keyPair();
   const privStr = naclUtil.encodeBase64(keyPair.secretKey);
+  const keyName = getStorageKey(userId);
   if (typeof window !== 'undefined') {
     window.localStorage.setItem(keyName, privStr);
-    window.localStorage.setItem('gabvia_e2ee_private_key', privStr);
+    if (userId) {
+      window.localStorage.removeItem('gabvia_e2ee_private_key');
+    }
   }
   return {
     publicKeyBase64: naclUtil.encodeBase64(keyPair.publicKey),
@@ -104,7 +125,9 @@ export async function saveRecoveredPrivateKey(privateKey: Uint8Array, userId?: s
   const keyName = getStorageKey(userId);
   if (typeof window !== 'undefined') {
     window.localStorage.setItem(keyName, keyStr);
-    window.localStorage.setItem('gabvia_e2ee_private_key', keyStr);
+    if (userId) {
+      window.localStorage.removeItem('gabvia_e2ee_private_key');
+    }
   }
   const keyPair = nacl.box.keyPair.fromSecretKey(privateKey);
   return naclUtil.encodeBase64(keyPair.publicKey);

@@ -52,6 +52,7 @@ export interface Message {
   id: string;
   sender_id: string;
   content: string | null;
+  raw_content?: string | null;
   type: 'text' | 'voice' | 'event';
   audio_url?: string | null;
   duration?: number;

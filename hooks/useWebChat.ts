@@ -422,6 +422,83 @@ export function useWebChat() {
     });
   }, [profile?.native_language]);
 
+  const ensureProfileLoaded = useCallback(async (userId: string) => {
+    if (!userId || profileCache[userId] || participantProfilesRef.current[userId]) return;
+    try {
+      const snap = await getDoc(doc(db, "profiles", userId));
+      if (snap.exists()) {
+        const pData = { ...snap.data(), id: snap.id } as Profile;
+        profileCache[userId] = pData;
+        setActiveParticipantProfiles((prev) => ({ ...prev, [userId]: pData }));
+      }
+    } catch {}
+  }, []);
+
+  const decryptWebMessage = useCallback((
+    rawContent: string | null | undefined,
+    senderId: string,
+    currentUserId: string,
+    currentKeyPair: { publicKeyBase64: string; privateKeyUint8: Uint8Array } | null,
+    profilesMap: Record<string, Profile>
+  ): { plainContent: string; isE2EE: boolean; decryptionFailed: boolean } => {
+    if (!rawContent || !rawContent.startsWith("{")) {
+      return { plainContent: rawContent || "", isE2EE: false, decryptionFailed: false };
+    }
+
+    try {
+      const payload = JSON.parse(rawContent);
+      if (!payload.senderContent && !payload.recipientContent) {
+        return { plainContent: rawContent, isE2EE: false, decryptionFailed: false };
+      }
+
+      if (!currentKeyPair) {
+        return {
+          plainContent: "🔒 Encrypted Message (Restoring keys...)",
+          isE2EE: true,
+          decryptionFailed: true,
+        };
+      }
+
+      if (senderId === currentUserId) {
+        const decrypted = decryptMessage(
+          payload.senderContent,
+          payload.senderNonce,
+          currentKeyPair.publicKeyBase64,
+          currentKeyPair.privateKeyUint8
+        );
+        return {
+          plainContent: decrypted || "🔒 Decryption failed",
+          isE2EE: true,
+          decryptionFailed: !decrypted,
+        };
+      } else {
+        const senderProfile = profilesMap[senderId] || participantProfilesRef.current[senderId] || profileCache[senderId];
+        if (!senderProfile?.public_key) {
+          void ensureProfileLoaded(senderId);
+          return {
+            plainContent: "🔒 Encrypted Message (Loading sender key...)",
+            isE2EE: true,
+            decryptionFailed: true,
+          };
+        }
+
+        const decrypted = decryptMessage(
+          payload.recipientContent,
+          payload.recipientNonce,
+          senderProfile.public_key,
+          currentKeyPair.privateKeyUint8
+        );
+        return {
+          plainContent: decrypted || "🔒 Decryption failed",
+          isE2EE: true,
+          decryptionFailed: !decrypted,
+        };
+      }
+    } catch {
+      return { plainContent: rawContent, isE2EE: false, decryptionFailed: false };
+    }
+  }, []);
+
   useEffect(() => {
     if (!user || !activeConversationId) return;
 
@@ -483,51 +560,15 @@ export function useWebChat() {
           })
           .map((docSnap) => {
             const data = docSnap.data();
-            let plainContent = data.content;
-            let isE2EE = false;
-            let decryptionFailed = false;
+            const rawContent = data.content;
 
-            // Check for E2EE Direct Message Payload
-            if (data.type === "text" && plainContent && plainContent.startsWith("{")) {
-              try {
-                const payload = JSON.parse(plainContent);
-                if (payload.senderContent || payload.recipientContent) {
-                  isE2EE = true;
-                  if (keyPair) {
-                    if (data.sender_id === user.uid) {
-                      const decrypted = decryptMessage(
-                        payload.senderContent,
-                        payload.senderNonce,
-                        keyPair.publicKeyBase64,
-                        keyPair.privateKeyUint8
-                      );
-                      plainContent = decrypted || "🔒 Decryption failed";
-                      if (!decrypted) decryptionFailed = true;
-                    } else {
-                      const senderProfile = participantProfilesRef.current[data.sender_id] || profileCache[data.sender_id];
-                      if (senderProfile?.public_key) {
-                        const decrypted = decryptMessage(
-                          payload.recipientContent,
-                          payload.recipientNonce,
-                          senderProfile.public_key,
-                          keyPair.privateKeyUint8
-                        );
-                        plainContent = decrypted || "🔒 Decryption failed";
-                        if (!decrypted) decryptionFailed = true;
-                      } else {
-                        plainContent = "🔒 Encrypted Message (Keys missing)";
-                        decryptionFailed = true;
-                      }
-                    }
-                  } else {
-                    plainContent = "🔒 Encrypted Message (Keys not loaded)";
-                    decryptionFailed = true;
-                  }
-                }
-              } catch {
-                // Not JSON, display plain content
-              }
-            }
+            const { plainContent, isE2EE, decryptionFailed } = decryptWebMessage(
+              rawContent,
+              data.sender_id,
+              user.uid,
+              keyPair,
+              activeParticipantProfiles
+            );
 
             const createdAtStr = data.created_at?.toDate
               ? data.created_at.toDate().toISOString()
@@ -535,6 +576,7 @@ export function useWebChat() {
 
             const senderName =
               participantProfilesRef.current[data.sender_id]?.username ||
+              activeParticipantProfiles[data.sender_id]?.username ||
               profileCache[data.sender_id]?.username ||
               "User";
 
@@ -545,6 +587,7 @@ export function useWebChat() {
               id: docSnap.id,
               sender_id: data.sender_id,
               content: plainContent,
+              raw_content: rawContent,
               type: data.type || "text",
               audio_url: data.audio_url || null,
               duration: data.duration,
@@ -583,7 +626,41 @@ export function useWebChat() {
     );
 
     return () => unsubscribe();
-  }, [user, activeConversationId, keyPair]);
+  }, [user, activeConversationId, keyPair, decryptWebMessage, activeParticipantProfiles]);
+
+  // 4b. Re-decrypt messages when keyPair or activeParticipantProfiles updates
+  useEffect(() => {
+    if (!user || !messages.length) return;
+
+    setMessages((prev) => {
+      let changed = false;
+      const next = prev.map((msg) => {
+        if (!msg.is_e2ee || !msg.raw_content) return msg;
+        // If message is already successfully decrypted (doesn't start with lock icon and decryption hasn't failed), keep it
+        if (!msg.decryption_failed && !msg.content?.startsWith("🔒")) return msg;
+
+        const { plainContent, decryptionFailed } = decryptWebMessage(
+          msg.raw_content,
+          msg.sender_id,
+          user.uid,
+          keyPair,
+          activeParticipantProfiles
+        );
+
+        if (plainContent !== msg.content || decryptionFailed !== msg.decryption_failed) {
+          changed = true;
+          return {
+            ...msg,
+            content: plainContent,
+            decryption_failed: decryptionFailed,
+          };
+        }
+        return msg;
+      });
+
+      return changed ? next : prev;
+    });
+  }, [keyPair, activeParticipantProfiles, user?.uid, decryptWebMessage]);
 
   // Check if conversation participants speak a different language
   const checkRequiresCrossLanguageTranslation = async (): Promise<boolean> => {
@@ -641,7 +718,17 @@ export function useWebChat() {
     // Direct Chat E2EE Encryption
     if (isDirect && keyPair) {
       const otherId = activeConversation.participants.find((id) => id !== user.uid);
-      const otherProfile = otherId ? (participantProfilesRef.current[otherId] || profileCache[otherId]) : null;
+      let otherProfile = otherId ? (participantProfilesRef.current[otherId] || profileCache[otherId] || activeParticipantProfiles[otherId]) : null;
+      if (otherId && !otherProfile?.public_key) {
+        try {
+          const snap = await getDoc(doc(db, "profiles", otherId));
+          if (snap.exists()) {
+            otherProfile = { ...snap.data(), id: snap.id } as Profile;
+            profileCache[otherId] = otherProfile;
+            participantProfilesRef.current[otherId] = otherProfile;
+          }
+        } catch {}
+      }
 
       if (otherProfile?.public_key) {
         const recipientEncrypted = encryptMessage(content, otherProfile.public_key, keyPair.privateKeyUint8);
