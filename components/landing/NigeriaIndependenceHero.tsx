@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
+import { NigeriaHistoryModal } from "./NigeriaHistoryModal";
 
 const PLAY_STORE_URL =
   "https://play.google.com/store/apps/details?id=app.gabvia&pcampaignid=web_share";
@@ -118,6 +119,7 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
   const [showLyrics, setShowLyrics] = useState(false);
   const [cheersCount, setCheersCount] = useState(66);
   const [celebrationPops, setCelebrationPops] = useState<{ id: number; x: number; y: number; text: string }[]>([]);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -278,9 +280,8 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
 
   return (
     <section
-      className={`relative overflow-hidden border-b transition-colors pt-10 pb-20 lg:pt-16 lg:pb-28 ${
-        isDark ? "border-emerald-950/80 bg-[#060a08]" : "border-emerald-100 bg-[#f9fcfa]"
-      }`}
+      className={`relative overflow-hidden border-b transition-colors pt-10 pb-20 lg:pt-16 lg:pb-28 ${isDark ? "border-emerald-950/80 bg-[#060a08]" : "border-emerald-100 bg-[#f9fcfa]"
+        }`}
     >
       {/* Hidden HTML5 Audio Element for National Anthem */}
       <audio
@@ -311,20 +312,18 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
 
       {/* Atmospheric Radial Gradient Lighting */}
       <div
-        className={`absolute inset-0 pointer-events-none ${
-          isDark
-            ? "bg-[radial-gradient(ellipse_75%_50%_at_50%_0%,rgba(0,135,81,0.25),transparent_75%)]"
-            : "bg-[radial-gradient(ellipse_75%_50%_at_50%_0%,rgba(16,185,129,0.18),transparent_75%)]"
-        }`}
+        className={`absolute inset-0 pointer-events-none ${isDark
+          ? "bg-[radial-gradient(ellipse_75%_50%_at_50%_0%,rgba(0,135,81,0.25),transparent_75%)]"
+          : "bg-[radial-gradient(ellipse_75%_50%_at_50%_0%,rgba(16,185,129,0.18),transparent_75%)]"
+          }`}
       />
 
       {/* Subtle Architectural Grid Lines */}
       <div
-        className={`absolute inset-0 bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none ${
-          isDark
-            ? "bg-[linear-gradient(to_right,#08281a_1px,transparent_1px),linear-gradient(to_bottom,#08281a_1px,transparent_1px)] opacity-35"
-            : "bg-[linear-gradient(to_right,#e1f3ea_1px,transparent_1px),linear-gradient(to_bottom,#e1f3ea_1px,transparent_1px)] opacity-60"
-        }`}
+        className={`absolute inset-0 bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none ${isDark
+          ? "bg-[linear-gradient(to_right,#08281a_1px,transparent_1px),linear-gradient(to_bottom,#08281a_1px,transparent_1px)] opacity-35"
+          : "bg-[linear-gradient(to_right,#e1f3ea_1px,transparent_1px),linear-gradient(to_bottom,#e1f3ea_1px,transparent_1px)] opacity-60"
+          }`}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -334,11 +333,10 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
             {/* Independence Anniversary Badges */}
             <div className="flex flex-wrap items-center gap-2.5">
               <div
-                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border font-mono text-xs shadow-sm transition-all ${
-                  isDark
-                    ? "border-emerald-700/60 bg-emerald-950/80 text-emerald-200"
-                    : "border-emerald-300 bg-emerald-50/90 text-emerald-900"
-                }`}
+                className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border font-mono text-xs shadow-sm transition-all ${isDark
+                  ? "border-emerald-700/60 bg-emerald-950/80 text-emerald-200"
+                  : "border-emerald-300 bg-emerald-50/90 text-emerald-900"
+                  }`}
               >
                 <span className="text-base leading-none">🇳🇬</span>
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
@@ -352,11 +350,10 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
               </div>
 
               <div
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border font-mono text-[11px] ${
-                  isDark
-                    ? "border-amber-500/30 bg-amber-950/40 text-amber-300"
-                    : "border-amber-300 bg-amber-50 text-amber-800"
-                }`}
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border font-mono text-[11px] ${isDark
+                  ? "border-amber-500/30 bg-amber-950/40 text-amber-300"
+                  : "border-amber-300 bg-amber-50 text-amber-800"
+                  }`}
               >
                 <span>⭐</span>
                 <span>INDEPENDENCE DAY CELEBRATION</span>
@@ -366,9 +363,8 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
             {/* Main Headline */}
             <div className="space-y-4">
               <h1
-                className={`text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.08] ${
-                  isDark ? "text-white" : "text-zinc-950"
-                }`}
+                className={`text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.08] ${isDark ? "text-white" : "text-zinc-950"
+                  }`}
               >
                 Happy 66th Independence Day,{" "}
                 <span className="bg-gradient-to-r from-emerald-500 via-green-400 to-teal-300 bg-clip-text text-transparent inline-block">
@@ -376,9 +372,8 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
                 </span>
               </h1>
               <p
-                className={`text-base sm:text-lg max-w-2xl leading-relaxed ${
-                  isDark ? "text-emerald-100/80" : "text-zinc-700"
-                }`}
+                className={`text-base sm:text-lg max-w-2xl leading-relaxed ${isDark ? "text-emerald-100/80" : "text-zinc-700"
+                  }`}
               >
                 Celebrating 66 years of unity, strength, and cultural brilliance. From
                 Lagos to Abuja, Kano to Enugu, and across the worldwide Nigerian diaspora —
@@ -389,11 +384,10 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
 
             {/* Interactive Nigerian Language Greeting Card */}
             <div
-              className={`p-5 rounded-2xl border transition-all ${
-                isDark
-                  ? "border-emerald-900/60 bg-emerald-950/30 backdrop-blur-sm"
-                  : "border-emerald-200 bg-white shadow-sm"
-              }`}
+              className={`p-5 rounded-2xl border transition-all ${isDark
+                ? "border-emerald-900/60 bg-emerald-950/30 backdrop-blur-sm"
+                : "border-emerald-200 bg-white shadow-sm"
+                }`}
             >
               <div className="flex items-center justify-between gap-2 mb-3">
                 <div className="flex items-center gap-2">
@@ -406,15 +400,14 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
                       <button
                         key={item.language}
                         onClick={() => setSelectedLangIndex(idx)}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                          selectedLangIndex === idx
-                            ? isDark
-                              ? "bg-emerald-600 text-white shadow-sm"
-                              : "bg-emerald-700 text-white shadow-sm"
-                            : isDark
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${selectedLangIndex === idx
+                          ? isDark
+                            ? "bg-emerald-600 text-white shadow-sm"
+                            : "bg-emerald-700 text-white shadow-sm"
+                          : isDark
                             ? "bg-zinc-900/60 text-zinc-400 hover:text-white"
                             : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
-                        }`}
+                          }`}
                       >
                         {item.language}
                       </button>
@@ -423,11 +416,10 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
                 </div>
 
                 <span
-                  className={`text-[10px] font-mono px-2 py-0.5 rounded border hidden sm:inline-block ${
-                    isDark
-                      ? "border-emerald-800 text-emerald-400 bg-emerald-950/60"
-                      : "border-emerald-200 text-emerald-700 bg-emerald-50"
-                  }`}
+                  className={`text-[10px] font-mono px-2 py-0.5 rounded border hidden sm:inline-block ${isDark
+                    ? "border-emerald-800 text-emerald-400 bg-emerald-950/60"
+                    : "border-emerald-200 text-emerald-700 bg-emerald-50"
+                    }`}
                 >
                   AI Translation In-Flow
                 </span>
@@ -436,16 +428,14 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
               {/* Greeting quote display */}
               <div className="space-y-1.5">
                 <p
-                  className={`text-lg sm:text-xl font-bold italic ${
-                    isDark ? "text-emerald-200" : "text-emerald-950"
-                  }`}
+                  className={`text-lg sm:text-xl font-bold italic ${isDark ? "text-emerald-200" : "text-emerald-950"
+                    }`}
                 >
                   “{activeGreeting.greeting}”
                 </p>
                 <p
-                  className={`text-xs sm:text-sm font-mono flex items-center gap-1.5 ${
-                    isDark ? "text-zinc-400" : "text-zinc-600"
-                  }`}
+                  className={`text-xs sm:text-sm font-mono flex items-center gap-1.5 ${isDark ? "text-zinc-400" : "text-zinc-600"
+                    }`}
                 >
                   <span className="text-emerald-500 font-bold">EN:</span>
                   <span>{activeGreeting.translation}</span>
@@ -457,11 +447,10 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
             <div className="flex flex-wrap items-center gap-4 pt-2">
               <Link
                 href="/chat"
-                className={`inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full text-sm font-bold tracking-wide transition-all shadow-lg active:scale-[0.98] ${
-                  isDark
-                    ? "bg-gradient-to-r from-emerald-500 via-green-600 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-emerald-500/25"
-                    : "bg-gradient-to-r from-emerald-600 via-green-700 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-emerald-600/30"
-                }`}
+                className={`inline-flex items-center justify-center gap-2.5 px-7 py-3.5 rounded-full text-sm font-bold tracking-wide transition-all shadow-lg active:scale-[0.98] ${isDark
+                  ? "bg-gradient-to-r from-emerald-500 via-green-600 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-emerald-500/25"
+                  : "bg-gradient-to-r from-emerald-600 via-green-700 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-emerald-600/30"
+                  }`}
               >
                 <span>🎉 Celebrate &amp; Chat Free on Web</span>
                 <span className="font-mono text-xs">→</span>
@@ -470,26 +459,34 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
               {/* Quick Play Anthem Button */}
               <button
                 onClick={toggleAudio}
-                className={`inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full text-sm font-semibold tracking-wide transition-all border ${
-                  isPlayingAudio
-                    ? "border-emerald-500 bg-emerald-500/20 text-emerald-400 shadow-md"
-                    : isDark
+                className={`inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-full text-sm font-semibold tracking-wide transition-all border ${isPlayingAudio
+                  ? "border-emerald-500 bg-emerald-500/20 text-emerald-400 shadow-md"
+                  : isDark
                     ? "border-emerald-800/80 bg-zinc-900/90 hover:bg-zinc-800 text-emerald-300"
                     : "border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-900"
-                }`}
+                  }`}
               >
                 <span>{isPlayingAudio ? "❚❚ Pause Anthem" : "▶ Play National Anthem"}</span>
               </button>
+
+              {/* <button
+                onClick={() => setIsHistoryModalOpen(true)}
+                className={`inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full text-sm font-semibold tracking-wide transition-all border ${isDark
+                  ? "border-emerald-800/80 bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300"
+                  : "border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900"
+                  }`}
+              >
+                <span>📜 Country History</span>
+              </button> */}
 
               <a
                 href={PLAY_STORE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full text-sm font-semibold tracking-wide transition-all border ${
-                  isDark
-                    ? "border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300"
-                    : "border-zinc-200 bg-zinc-100 hover:bg-zinc-200 text-zinc-700"
-                }`}
+                className={`inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-full text-sm font-semibold tracking-wide transition-all border ${isDark
+                  ? "border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 text-zinc-300"
+                  : "border-zinc-200 bg-zinc-100 hover:bg-zinc-200 text-zinc-700"
+                  }`}
               >
                 <span>Get App</span>
               </a>
@@ -497,18 +494,14 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
 
             {/* Commemorative Value Points */}
             <div
-              className={`flex flex-wrap items-center gap-6 pt-2 text-xs font-mono ${
-                isDark ? "text-emerald-400/80" : "text-emerald-800"
-              }`}
+              className={`flex flex-wrap items-center gap-6 pt-2 text-xs font-mono ${isDark ? "text-emerald-400/80" : "text-emerald-800"
+                }`}
             >
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 Proudly Connecting Nigeria to the World
               </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                Zero App Installation Required
-              </span>
+
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 End-to-End Encrypted Voice &amp; Chat
@@ -519,11 +512,10 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
           {/* Right Column: 66th Independence 3D-styled Commemorative Plaque & Audio Visualizer */}
           <div className="lg:col-span-5">
             <div
-              className={`relative rounded-3xl border p-2 shadow-2xl transition-all ${
-                isDark
-                  ? "border-emerald-800/60 bg-zinc-950/90 shadow-emerald-950/60"
-                  : "border-emerald-200 bg-white shadow-emerald-100/80"
-              }`}
+              className={`relative rounded-3xl border p-2 shadow-2xl transition-all ${isDark
+                ? "border-emerald-800/60 bg-zinc-950/90 shadow-emerald-950/60"
+                : "border-emerald-200 bg-white shadow-emerald-100/80"
+                }`}
             >
               {/* SpaceFS Corner Crosshairs (+) in Nigeria Green */}
               <span className="absolute -top-2 -left-2 text-emerald-500 font-mono text-sm select-none">
@@ -541,11 +533,10 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
 
               {/* Card Header Telemetry */}
               <div
-                className={`flex items-center justify-between px-4 py-3 border-b font-mono text-[11px] ${
-                  isDark
-                    ? "border-emerald-900/60 text-emerald-400"
-                    : "border-emerald-100 text-emerald-700"
-                }`}
+                className={`flex items-center justify-between px-4 py-3 border-b font-mono text-[11px] ${isDark
+                  ? "border-emerald-900/60 text-emerald-400"
+                  : "border-emerald-100 text-emerald-700"
+                  }`}
               >
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -562,11 +553,10 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
 
               {/* Center Plaque Display */}
               <div
-                className={`p-6 sm:p-8 rounded-2xl flex flex-col items-center justify-center text-center relative overflow-hidden transition-colors ${
-                  isDark
-                    ? "bg-gradient-to-b from-[#091f14] via-[#06120b] to-[#040906]"
-                    : "bg-gradient-to-b from-[#ebfaf2] via-[#f4fcf7] to-[#ffffff]"
-                }`}
+                className={`p-6 sm:p-8 rounded-2xl flex flex-col items-center justify-center text-center relative overflow-hidden transition-colors ${isDark
+                  ? "bg-gradient-to-b from-[#091f14] via-[#06120b] to-[#040906]"
+                  : "bg-gradient-to-b from-[#ebfaf2] via-[#f4fcf7] to-[#ffffff]"
+                  }`}
               >
                 {/* Waving Tricolor Ribbon Bar (Green - White - Green) */}
                 <div className="w-full max-w-[240px] h-3 rounded-full flex overflow-hidden shadow-inner mb-6 border border-emerald-500/20">
@@ -587,16 +577,14 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
                 {/* Plaque Title */}
                 <div className="space-y-1 mb-5">
                   <span
-                    className={`block font-mono text-xs uppercase tracking-widest font-bold ${
-                      isDark ? "text-emerald-300" : "text-emerald-800"
-                    }`}
+                    className={`block font-mono text-xs uppercase tracking-widest font-bold ${isDark ? "text-emerald-300" : "text-emerald-800"
+                      }`}
                   >
                     YEARS OF INDEPENDENCE
                   </span>
                   <p
-                    className={`text-xs ${
-                      isDark ? "text-zinc-400" : "text-zinc-600"
-                    }`}
+                    className={`text-xs ${isDark ? "text-zinc-400" : "text-zinc-600"
+                      }`}
                   >
                     Unity &amp; Faith, Peace &amp; Progress
                   </p>
@@ -604,11 +592,10 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
 
                 {/* Real Nigeria National Anthem Audio Player */}
                 <div
-                  className={`w-full p-4 rounded-2xl border transition-all text-left space-y-3 ${
-                    isDark
-                      ? "border-emerald-800/60 bg-black/60 shadow-lg shadow-black/40"
-                      : "border-emerald-200 bg-emerald-50/80 shadow-sm"
-                  }`}
+                  className={`w-full p-4 rounded-2xl border transition-all text-left space-y-3 ${isDark
+                    ? "border-emerald-800/60 bg-black/60 shadow-lg shadow-black/40"
+                    : "border-emerald-200 bg-emerald-50/80 shadow-sm"
+                    }`}
                 >
                   {/* Anthem Selector Tabs */}
                   <div className="flex items-center justify-between gap-1 pb-1 border-b border-emerald-900/30">
@@ -618,25 +605,23 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleSelectAnthem("we-hail-thee")}
-                        className={`px-2 py-0.5 rounded text-[10px] font-mono transition-all ${
-                          activeAnthemKey === "we-hail-thee"
-                            ? "bg-emerald-600 text-white font-bold shadow-sm"
-                            : isDark
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono transition-all ${activeAnthemKey === "we-hail-thee"
+                          ? "bg-emerald-600 text-white font-bold shadow-sm"
+                          : isDark
                             ? "text-zinc-400 hover:text-white"
                             : "text-zinc-600 hover:text-zinc-900"
-                        }`}
+                          }`}
                       >
                         Nigeria, We Hail Thee
                       </button>
                       <button
                         onClick={() => handleSelectAnthem("arise")}
-                        className={`px-2 py-0.5 rounded text-[10px] font-mono transition-all ${
-                          activeAnthemKey === "arise"
-                            ? "bg-emerald-600 text-white font-bold shadow-sm"
-                            : isDark
+                        className={`px-2 py-0.5 rounded text-[10px] font-mono transition-all ${activeAnthemKey === "arise"
+                          ? "bg-emerald-600 text-white font-bold shadow-sm"
+                          : isDark
                             ? "text-zinc-400 hover:text-white"
                             : "text-zinc-600 hover:text-zinc-900"
-                        }`}
+                          }`}
                       >
                         Arise O Compatriots
                       </button>
@@ -648,13 +633,12 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
                     <div className="flex items-center gap-2.5">
                       <button
                         onClick={toggleAudio}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-md active:scale-95 ${
-                          isPlayingAudio
-                            ? "bg-emerald-500 text-white shadow-emerald-500/40 ring-4 ring-emerald-500/20"
-                            : isDark
+                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-md active:scale-95 ${isPlayingAudio
+                          ? "bg-emerald-500 text-white shadow-emerald-500/40 ring-4 ring-emerald-500/20"
+                          : isDark
                             ? "bg-emerald-900/90 text-emerald-300 hover:bg-emerald-800"
                             : "bg-emerald-600 text-white hover:bg-emerald-700"
-                        }`}
+                          }`}
                         title={isPlayingAudio ? "Pause Anthem" : "Play Nigerian National Anthem"}
                       >
                         {isPlayingAudio ? (
@@ -665,16 +649,14 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
                       </button>
                       <div>
                         <span
-                          className={`text-xs font-bold block leading-tight ${
-                            isDark ? "text-white" : "text-zinc-900"
-                          }`}
+                          className={`text-xs font-bold block leading-tight ${isDark ? "text-white" : "text-zinc-900"
+                            }`}
                         >
                           {activeAnthem.title}
                         </span>
                         <span
-                          className={`text-[10px] font-mono ${
-                            isDark ? "text-emerald-400" : "text-emerald-700"
-                          }`}
+                          className={`text-[10px] font-mono ${isDark ? "text-emerald-400" : "text-emerald-700"
+                            }`}
                         >
                           {isPlayingAudio ? "Playing official brass recording..." : activeAnthem.versionLabel}
                         </span>
@@ -687,9 +669,8 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
                       </span>
                       <button
                         onClick={() => setShowLyrics(!showLyrics)}
-                        className={`text-[10px] font-mono underline hover:text-emerald-400 transition-colors ${
-                          isDark ? "text-zinc-400" : "text-zinc-600"
-                        }`}
+                        className={`text-[10px] font-mono underline hover:text-emerald-400 transition-colors ${isDark ? "text-zinc-400" : "text-zinc-600"
+                          }`}
                       >
                         {showLyrics ? "Hide lyrics" : "View lyrics"}
                       </button>
@@ -707,13 +688,12 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
                         return (
                           <div
                             key={i}
-                            className={`flex-1 rounded-full transition-all duration-100 ${
-                              isPlayingAudio
-                                ? "bg-gradient-to-t from-emerald-500 via-green-400 to-amber-300"
-                                : isDark
+                            className={`flex-1 rounded-full transition-all duration-100 ${isPlayingAudio
+                              ? "bg-gradient-to-t from-emerald-500 via-green-400 to-amber-300"
+                              : isDark
                                 ? "bg-emerald-900/50"
                                 : "bg-emerald-300"
-                            }`}
+                              }`}
                             style={{
                               height: `${dynamicHeight}px`,
                             }}
@@ -739,11 +719,10 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
                   {/* Expandable Lyrics Box */}
                   {showLyrics && (
                     <div
-                      className={`mt-2 p-3 rounded-xl border text-xs leading-relaxed max-h-48 overflow-y-auto ${
-                        isDark
-                          ? "bg-zinc-950/80 border-emerald-900/60 text-emerald-100"
-                          : "bg-white border-emerald-200 text-zinc-800"
-                      }`}
+                      className={`mt-2 p-3 rounded-xl border text-xs leading-relaxed max-h-48 overflow-y-auto ${isDark
+                        ? "bg-zinc-950/80 border-emerald-900/60 text-emerald-100"
+                        : "bg-white border-emerald-200 text-zinc-800"
+                        }`}
                     >
                       <span className="font-mono text-[10px] text-emerald-500 font-bold block mb-1 uppercase">
                         {activeAnthem.title} — Lyrics
@@ -765,11 +744,10 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
                 <div className="relative mt-4 w-full">
                   <button
                     onClick={handleCelebrateClick}
-                    className={`w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all border flex items-center justify-center gap-2 active:scale-95 ${
-                      isDark
-                        ? "border-emerald-700/60 bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900/80"
-                        : "border-emerald-300 bg-white text-emerald-900 hover:bg-emerald-50 shadow-sm"
-                    }`}
+                    className={`w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold transition-all border flex items-center justify-center gap-2 active:scale-95 ${isDark
+                      ? "border-emerald-700/60 bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900/80"
+                      : "border-emerald-300 bg-white text-emerald-900 hover:bg-emerald-50 shadow-sm"
+                      }`}
                   >
                     <span>Tap to Celebrate 🇳🇬</span>
                     <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px]">
@@ -796,11 +774,10 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
 
               {/* Card Footer Telemetry */}
               <div
-                className={`grid grid-cols-3 border-t px-4 py-3 font-mono text-[10px] ${
-                  isDark
-                    ? "border-emerald-900/60 text-emerald-400/80"
-                    : "border-emerald-100 text-emerald-700"
-                }`}
+                className={`grid grid-cols-3 border-t px-4 py-3 font-mono text-[10px] ${isDark
+                  ? "border-emerald-900/60 text-emerald-400/80"
+                  : "border-emerald-100 text-emerald-700"
+                  }`}
               >
                 <div>
                   <span className={`block ${isDark ? "text-zinc-500" : "text-zinc-500"}`}>
@@ -835,6 +812,58 @@ export function NigeriaIndependenceHero({ isDark }: NigeriaIndependenceHeroProps
           </div>
         </div>
       </div>
+
+      {/* Floating Green-White-Green Button: Discover Nigeria's History */}
+      <aside aria-label="Nigeria Independence History" className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={() => setIsHistoryModalOpen(true)}
+          className={`group relative flex items-center gap-3 p-1.5 pr-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 border-2 ${isDark
+            ? "bg-[#06140b] border-emerald-500/80 text-white shadow-emerald-950/90"
+            : "bg-white border-emerald-500 text-emerald-950 shadow-emerald-700/30"
+            }`}
+          title="Learn the History of Nigeria (1960 — 2026)"
+        >
+          {/* Animated Green-White-Green Tricolor Circle Badge */}
+          <div className="w-10 h-10 rounded-full overflow-hidden flex shadow-md border border-emerald-600/50 flex-shrink-0 animate-pulse">
+            <div className="flex-1 bg-[#008751]" />
+            <div className="flex-1 bg-white flex items-center justify-center">
+              <span className="text-[10px] font-black text-emerald-950 select-none">66</span>
+            </div>
+            <div className="flex-1 bg-[#008751]" />
+          </div>
+
+          <div className="text-left flex flex-col">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs sm:text-sm font-bold tracking-tight leading-tight">
+                Nigeria History
+              </span>
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30 hidden sm:inline-block">
+                1960–2026
+              </span>
+            </div>
+            <span
+              className={`text-[10px] font-mono leading-none ${isDark ? "text-emerald-300/80" : "text-emerald-700"
+                }`}
+            >
+              Explore Country History 🇳🇬 →
+            </span>
+          </div>
+
+          {/* Shimmer light effect */}
+          <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
+            <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-white/25 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000" />
+          </div>
+        </button>
+      </aside>
+
+      {/* Nigeria 1960 - 2026 History Modal */}
+      <NigeriaHistoryModal
+        isOpen={isHistoryModalOpen}
+        onClose={() => setIsHistoryModalOpen(false)}
+        isDark={isDark}
+        isPlayingAudio={isPlayingAudio}
+        onToggleAudio={toggleAudio}
+      />
     </section>
   );
 }
