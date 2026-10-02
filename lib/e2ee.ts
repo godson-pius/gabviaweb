@@ -24,9 +24,12 @@ export function getStoredKeyPair(userId?: string): { publicKeyBase64: string; pr
   const keyName = getStorageKey(userId);
   let existingPrivKeyStr = window.localStorage.getItem(keyName);
 
-  // If userId is provided, do NOT fall back to unscoped legacy key unless it is explicitly migrated
-  if (!existingPrivKeyStr && !userId) {
+  // If not found in user-scoped key, check legacy key and migrate it
+  if (!existingPrivKeyStr) {
     existingPrivKeyStr = window.localStorage.getItem('gabvia_e2ee_private_key');
+    if (existingPrivKeyStr && keyName && keyName !== 'gabvia_e2ee_private_key') {
+      window.localStorage.setItem(keyName, existingPrivKeyStr);
+    }
   }
 
   if (!existingPrivKeyStr) return null;

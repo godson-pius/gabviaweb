@@ -236,7 +236,7 @@ export function useWebChat() {
     async function loadProfiles() {
       const map: Record<string, Profile> = {};
       for (const pId of activeConversation!.participants) {
-        if (profileCache[pId]) {
+        if (profileCache[pId]?.public_key) {
           map[pId] = profileCache[pId];
         } else {
           try {
@@ -423,12 +423,14 @@ export function useWebChat() {
   }, [profile?.native_language]);
 
   const ensureProfileLoaded = useCallback(async (userId: string) => {
-    if (!userId || profileCache[userId] || participantProfilesRef.current[userId]) return;
+    if (!userId) return;
+    if (profileCache[userId]?.public_key && participantProfilesRef.current[userId]?.public_key) return;
     try {
       const snap = await getDoc(doc(db, "profiles", userId));
       if (snap.exists()) {
         const pData = { ...snap.data(), id: snap.id } as Profile;
         profileCache[userId] = pData;
+        participantProfilesRef.current[userId] = pData;
         setActiveParticipantProfiles((prev) => ({ ...prev, [userId]: pData }));
       }
     } catch {}
@@ -862,7 +864,8 @@ export function useWebChat() {
     let finalContent = trimmed;
 
     // Encrypt if direct chat
-    if (activeConversation?.type === "direct" && keyPair) {
+    const isDirect = activeConversation?.type === "direct" || activeConversation?.type === "individual";
+    if (isDirect && keyPair) {
       const otherId = activeConversation.participants.find((id) => id !== user.uid);
       const otherProfile = otherId ? (participantProfilesRef.current[otherId] || profileCache[otherId]) : null;
       if (otherProfile?.public_key) {

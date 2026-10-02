@@ -161,26 +161,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const stored = getStoredKeyPair(user!.uid);
 
         if (stored) {
-          // If profile has a public key, verify if stored key matches it
-          if (profile?.public_key && stored.publicKeyBase64 !== profile.public_key) {
-            console.warn("[E2EE Web] Stored local key does not match Firestore public_key.");
-            if (hasValidBackup) {
-              // We have a backup, so prompt recovery instead of using a mismatched/bogus key
-              if (!isMounted) return;
-              deleteStoredKeyPair(user!.uid);
-              setKeyPair(null);
-              setNeedsKeyRecovery(true);
-              return;
-            }
-          }
-
-          // Stored key is valid
           if (!isMounted) return;
           setKeyPair(stored);
           setNeedsKeyRecovery(false);
 
-          // If Firestore is missing public_key, sync it
-          if (!profile?.public_key) {
+          // If Firestore is missing or mismatched with our active public_key, sync it
+          if (!profile?.public_key || profile.public_key !== stored.publicKeyBase64) {
             await updateDoc(doc(db, "profiles", user!.uid), {
               public_key: stored.publicKeyBase64,
             });
@@ -188,23 +174,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // No key stored on this device
-        if (hasValidBackup) {
-          // New device/browser and user has a backup on server: prompt for PIN recovery!
-          // DO NOT generate a random key! Keep keyPair null so we don't attempt bogus decryptions.
-          if (!isMounted) return;
-          setKeyPair(null);
-          setNeedsKeyRecovery(true);
-          return;
-        }
-
-        // Truly fresh user without server backup: generate keypair and save
+        // No key stored on this device: generate keypair and save so user is never keyless
         const newKeys = await getOrGenerateKeyPair(user!.uid);
         if (!isMounted) return;
         setKeyPair({ publicKeyBase64: newKeys.publicKeyBase64, privateKeyUint8: newKeys.privateKeyUint8 });
         setNeedsKeyRecovery(false);
 
-        if (!profile?.public_key) {
+        if (!profile?.public_key || profile.public_key !== newKeys.publicKeyBase64) {
           await updateDoc(doc(db, "profiles", user!.uid), {
             public_key: newKeys.publicKeyBase64,
           });
