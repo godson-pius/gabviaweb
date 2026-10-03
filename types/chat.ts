@@ -32,6 +32,7 @@ export interface Conversation {
   pending_participants?: string[];
   avatar_url?: string;
   last_message?: string;
+  last_message_id?: string;
   last_message_at: string;
   created_at?: string;
   unread_count?: Record<string, number>;

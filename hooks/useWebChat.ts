@@ -38,6 +38,8 @@ import {
 } from "@/lib/webNotifications";
 
 const profileCache: Record<string, Profile> = {};
+const profileInFlight = new Map<string, Promise<Profile | null>>();
+const profilesCheckedWithoutKey = new Set<string>();
 const globalTranslationCache: Record<string, string> = {};
 
 function saveTranslationToStorage(conversationId: string, language: string, messageId: string, content: string) {
@@ -129,6 +131,7 @@ export function useWebChat() {
                 pinned_event: data.pinned_event || null,
                 other_user: otherProfile,
                 last_message: data.last_message || "",
+                last_message_id: data.last_message_id || "",
                 last_message_at: lastMsgAt,
                 unread_count: data.unread_count || {},
               };
@@ -422,19 +425,7 @@ export function useWebChat() {
     });
   }, [profile?.native_language]);
 
-  const ensureProfileLoaded = useCallback(async (userId: string) => {
-    if (!userId) return;
-    if (profileCache[userId]?.public_key && participantProfilesRef.current[userId]?.public_key) return;
-    try {
-      const snap = await getDoc(doc(db, "profiles", userId));
-      if (snap.exists()) {
-        const pData = { ...snap.data(), id: snap.id } as Profile;
-        profileCache[userId] = pData;
-        participantProfilesRef.current[userId] = pData;
-        setActiveParticipantProfiles((prev) => ({ ...prev, [userId]: pData }));
-      }
-    } catch {}
-  }, []);
+  const ensureProfileLoadedRef = useRef<((userId: string) => Promise<Profile | null>) | null>(null);
 
   const decryptWebMessage = useCallback((
     rawContent: string | null | undefined,
@@ -476,7 +467,14 @@ export function useWebChat() {
       } else {
         const senderProfile = profilesMap[senderId] || participantProfilesRef.current[senderId] || profileCache[senderId];
         if (!senderProfile?.public_key) {
-          void ensureProfileLoaded(senderId);
+          if (profilesCheckedWithoutKey.has(senderId)) {
+            return {
+              plainContent: "🔒 Encrypted Message (Sender public key unavailable)",
+              isE2EE: true,
+              decryptionFailed: true,
+            };
+          }
+          void ensureProfileLoadedRef.current?.(senderId);
           return {
             plainContent: "🔒 Encrypted Message (Loading sender key...)",
             isE2EE: true,
@@ -500,6 +498,86 @@ export function useWebChat() {
       return { plainContent: rawContent, isE2EE: false, decryptionFailed: false };
     }
   }, []);
+
+  const ensureProfileLoaded = useCallback(async (userId: string): Promise<Profile | null> => {
+    if (!userId) return null;
+    if (participantProfilesRef.current[userId]?.public_key || profileCache[userId]?.public_key) {
+      return participantProfilesRef.current[userId] || profileCache[userId];
+    }
+    if (profilesCheckedWithoutKey.has(userId)) {
+      return profileCache[userId] || null;
+    }
+
+    if (profileInFlight.has(userId)) {
+      return profileInFlight.get(userId)!;
+    }
+
+    const fetchPromise = (async () => {
+      try {
+        const snap = await getDoc(doc(db, "profiles", userId));
+        if (snap.exists()) {
+          const pData = { ...snap.data(), id: snap.id } as Profile;
+          profileCache[userId] = pData;
+          participantProfilesRef.current[userId] = pData;
+          if (pData.public_key) {
+            profilesCheckedWithoutKey.delete(userId);
+          } else {
+            profilesCheckedWithoutKey.add(userId);
+          }
+          setActiveParticipantProfiles((prev) => ({ ...prev, [userId]: pData }));
+          return pData;
+        } else {
+          profilesCheckedWithoutKey.add(userId);
+          return null;
+        }
+      } catch (err) {
+        console.warn("Could not fetch profile for", userId, err);
+        return null;
+      } finally {
+        profileInFlight.delete(userId);
+      }
+    })();
+
+    profileInFlight.set(userId, fetchPromise);
+    const result = await fetchPromise;
+
+    // Immediately re-decrypt stuck messages in state when this sender's profile arrives
+    if (result?.public_key && user) {
+      setMessages((prev) => {
+        let changed = false;
+        const next = prev.map((msg) => {
+          if (msg.sender_id === userId && msg.is_e2ee && msg.raw_content && msg.raw_content.startsWith("{")) {
+            const currentKeyPair = keyPair;
+            if (currentKeyPair) {
+              const res = decryptWebMessage(
+                msg.raw_content,
+                msg.sender_id,
+                user.uid,
+                currentKeyPair,
+                { ...participantProfilesRef.current, [userId]: result }
+              );
+              if (res.plainContent !== msg.content || res.decryptionFailed !== msg.decryption_failed) {
+                changed = true;
+                return {
+                  ...msg,
+                  content: res.plainContent,
+                  decryption_failed: res.decryptionFailed,
+                };
+              }
+            }
+          }
+          return msg;
+        });
+        return changed ? next : prev;
+      });
+    }
+
+    return result;
+  }, [user, keyPair, decryptWebMessage]);
+
+  useEffect(() => {
+    ensureProfileLoadedRef.current = ensureProfileLoaded;
+  }, [ensureProfileLoaded]);
 
   useEffect(() => {
     if (!user || !activeConversationId) return;
@@ -564,13 +642,19 @@ export function useWebChat() {
             const data = docSnap.data();
             const rawContent = data.content;
 
-            const { plainContent, isE2EE, decryptionFailed } = decryptWebMessage(
+            let { plainContent, isE2EE, decryptionFailed } = decryptWebMessage(
               rawContent,
               data.sender_id,
               user.uid,
               keyPair,
-              activeParticipantProfiles
+              { ...profileCache, ...participantProfilesRef.current, ...activeParticipantProfiles }
             );
+
+            // Fallback to activeConversation.last_message if decryption failed but matches last message ID
+            if (decryptionFailed && docSnap.id === activeConversation?.last_message_id && activeConversation?.last_message && !activeConversation.last_message.startsWith("{")) {
+              plainContent = activeConversation.last_message;
+              decryptionFailed = false;
+            }
 
             const createdAtStr = data.created_at?.toDate
               ? data.created_at.toDate().toISOString()
@@ -628,7 +712,7 @@ export function useWebChat() {
     );
 
     return () => unsubscribe();
-  }, [user, activeConversationId, keyPair, decryptWebMessage, activeParticipantProfiles]);
+  }, [user?.uid, activeConversationId, keyPair, decryptWebMessage]);
 
   // 4b. Re-decrypt messages when keyPair or activeParticipantProfiles updates
   useEffect(() => {
@@ -641,13 +725,18 @@ export function useWebChat() {
         // If message is already successfully decrypted (doesn't start with lock icon and decryption hasn't failed), keep it
         if (!msg.decryption_failed && !msg.content?.startsWith("🔒")) return msg;
 
-        const { plainContent, decryptionFailed } = decryptWebMessage(
+        let { plainContent, decryptionFailed } = decryptWebMessage(
           msg.raw_content,
           msg.sender_id,
           user.uid,
           keyPair,
-          activeParticipantProfiles
+          { ...profileCache, ...participantProfilesRef.current, ...activeParticipantProfiles }
         );
+
+        if (decryptionFailed && msg.id === activeConversation?.last_message_id && activeConversation?.last_message && !activeConversation.last_message.startsWith("{")) {
+          plainContent = activeConversation.last_message;
+          decryptionFailed = false;
+        }
 
         if (plainContent !== msg.content || decryptionFailed !== msg.decryption_failed) {
           changed = true;
@@ -719,12 +808,17 @@ export function useWebChat() {
 
     // Direct Chat E2EE Encryption
     if (isDirect && keyPair) {
+      // Ensure sender's own public key is synced to Firestore so recipient can decrypt!
+      if (!profile?.public_key || profile.public_key !== keyPair.publicKeyBase64) {
+        setDoc(doc(db, "profiles", user.uid), { public_key: keyPair.publicKeyBase64 }, { merge: true }).catch(() => {});
+      }
+
       const otherId = activeConversation.participants.find((id) => id !== user.uid);
       let otherProfile = otherId ? (participantProfilesRef.current[otherId] || profileCache[otherId] || activeParticipantProfiles[otherId]) : null;
       if (otherId && !otherProfile?.public_key) {
         try {
           const snap = await getDoc(doc(db, "profiles", otherId));
-          if (snap.exists()) {
+          if (snap.exists() && snap.data().public_key) {
             otherProfile = { ...snap.data(), id: snap.id } as Profile;
             profileCache[otherId] = otherProfile;
             participantProfilesRef.current[otherId] = otherProfile;
