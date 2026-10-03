@@ -650,8 +650,12 @@ export function useWebChat() {
               { ...profileCache, ...participantProfilesRef.current, ...activeParticipantProfiles }
             );
 
-            // Fallback to activeConversation.last_message if decryption failed but matches last message ID
-            if (decryptionFailed && docSnap.id === activeConversation?.last_message_id && activeConversation?.last_message && !activeConversation.last_message.startsWith("{")) {
+            // Fallback to activeConversation.last_message if decryption failed but matches last message ID or is latest message
+            const isLatestMessage = activeConversation?.last_message_id
+              ? docSnap.id === activeConversation.last_message_id
+              : snapshot.docs[0]?.id === docSnap.id;
+
+            if (decryptionFailed && isLatestMessage && activeConversation?.last_message && !activeConversation.last_message.startsWith("{")) {
               plainContent = activeConversation.last_message;
               decryptionFailed = false;
             }
@@ -810,7 +814,7 @@ export function useWebChat() {
     if (isDirect && keyPair) {
       // Ensure sender's own public key is synced to Firestore so recipient can decrypt!
       if (!profile?.public_key || profile.public_key !== keyPair.publicKeyBase64) {
-        setDoc(doc(db, "profiles", user.uid), { public_key: keyPair.publicKeyBase64 }, { merge: true }).catch(() => {});
+        await setDoc(doc(db, "profiles", user.uid), { public_key: keyPair.publicKeyBase64 }, { merge: true }).catch(() => {});
       }
 
       const otherId = activeConversation.participants.find((id) => id !== user.uid);

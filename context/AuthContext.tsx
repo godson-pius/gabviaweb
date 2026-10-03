@@ -167,9 +167,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // If Firestore is missing or mismatched with our active public_key, sync it
           if (!profile?.public_key || profile.public_key !== stored.publicKeyBase64) {
-            await updateDoc(doc(db, "profiles", user!.uid), {
+            await setDoc(doc(db, "profiles", user!.uid), {
               public_key: stored.publicKeyBase64,
-            });
+            }, { merge: true });
           }
           return;
         }
@@ -181,9 +181,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setNeedsKeyRecovery(false);
 
         if (!profile?.public_key || profile.public_key !== newKeys.publicKeyBase64) {
-          await updateDoc(doc(db, "profiles", user!.uid), {
+          await setDoc(doc(db, "profiles", user!.uid), {
             public_key: newKeys.publicKeyBase64,
-          });
+          }, { merge: true });
         }
       } catch (err) {
         console.error("E2EE Init error:", err);
@@ -371,11 +371,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { privateKeyUint8, publicKeyBase64 } = await getOrGenerateKeyPair(user.uid);
     const encrypted = encryptPrivateKeyForBackup(privateKeyUint8, pin, user.uid);
 
-    await updateDoc(doc(db, "profiles", user.uid), {
+    await setDoc(doc(db, "profiles", user.uid), {
       encrypted_private_key: encrypted,
       public_key: publicKeyBase64,
       updated_at: new Date().toISOString(),
-    });
+    }, { merge: true });
     setHasBackup(true);
     await awardMilestonePoints(user.uid, "backup_pin");
   };
@@ -387,10 +387,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const publicKeyBase64 = await saveRecoveredPrivateKey(decrypted, user.uid);
     // Explicitly sync the confirmed public key to Firestore
-    await updateDoc(doc(db, "profiles", user.uid), {
+    await setDoc(doc(db, "profiles", user.uid), {
       public_key: publicKeyBase64,
       updated_at: new Date().toISOString(),
-    });
+    }, { merge: true });
     setKeyPair({ publicKeyBase64, privateKeyUint8: decrypted });
     setNeedsKeyRecovery(false);
     return true;
