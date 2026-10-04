@@ -1,6 +1,5 @@
 "use client";
 
-import { LesothoIndependenceHero } from "@/components/landing/LesothoIndependenceHero";
 import { AppWorkflow3D } from "@/components/landing/AppWorkflow3D";
 // import { UgandaIndependenceHero } from "@/components/landing/UgandaIndependenceHero"; // Ready for October 9, 2026
 import { SpaceGlobe } from "@/components/landing/SpaceGlobe";
@@ -491,15 +490,11 @@ export default function Home() {
       {/* ========================================================================= */}
       {/* CANONICAL GABVIA HERO SECTION                                             */}
       {/* ========================================================================= */}
-      {/* ===== LESOTHO 60TH INDEPENDENCE HERO (4 OCTOBER 2026) ===== */}
-      <LesothoIndependenceHero isDark={isDark} theme={theme} />
-
-      {/* CANONICAL GABVIA HERO (commented out for Lesotho Independence Day — restore after celebration)
       <section
         className={`relative overflow-hidden border-b transition-colors pt-12 pb-20 lg:pt-20 lg:pb-28 ${isDark ? "border-zinc-800/80 bg-zinc-950" : "border-zinc-200/80 bg-white"
           }`}
       >
-        {/  Architectural Grid Lines  /}
+        {/*  Architectural Grid Lines  */}
         <div
           className={`absolute inset-0 bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none ${isDark
             ? "bg-[linear-gradient(to_right,#18181b_1px,transparent_1px),linear-gradient(to_bottom,#18181b_1px,transparent_1px)] opacity-40"
@@ -509,9 +504,9 @@ export default function Home() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-            {/  Left Column: Announcement & Value Proposition  /}
+            {/*  Left Column: Announcement & Value Proposition  */}
             <div className="lg:col-span-7 space-y-8">
-              {/  Badge  /}
+              {/*  Badge  */}
               <div
                 className={`inline-flex items-center gap-2 px-3 py-1 rounded-full border font-mono text-xs ${isDark
                   ? "border-zinc-800 bg-zinc-900/70 text-zinc-300"
@@ -524,7 +519,7 @@ export default function Home() {
                 <span className={isDark ? "text-zinc-400" : "text-zinc-600"}>GLOBAL WEB CHAT PLATFORM OPEN</span>
               </div>
 
-              {/  Headline  /}
+              {/*  Headline  */}
               <div className="space-y-4">
                 <h1
                   className={`text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] ${isDark ? "text-white" : "text-zinc-950"
@@ -540,7 +535,7 @@ export default function Home() {
                 </p>
               </div>
 
-              {/  Hero Action Buttons  /}
+              {/*  Hero Action Buttons  */}
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <Link
                   href="/chat"
@@ -568,7 +563,7 @@ export default function Home() {
                 </a>
               </div>
 
-              {/  Minimal Value Points  /}
+              {/*  Minimal Value Points  */}
               <div className={`flex flex-wrap items-center gap-6 pt-2 text-xs font-mono ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
                 <span className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
@@ -585,19 +580,19 @@ export default function Home() {
               </div>
             </div>
 
-            {/  Right Column: SpaceFS Interactive 3D Canvas  /}
+            {/*  Right Column: SpaceFS Interactive 3D Canvas  */}
             <div className="lg:col-span-5">
               <div
                 className={`relative rounded-3xl border p-2 shadow-sm transition-colors ${isDark ? "border-zinc-800 bg-zinc-900/50" : "border-zinc-200 bg-white"
                   }`}
               >
-                {/  SpaceFS Corner Crosshairs (+)  /}
+                {/*  SpaceFS Corner Crosshairs (+)  */}
                 <span className="absolute -top-2 -left-2 text-zinc-500 font-mono text-sm select-none">+</span>
                 <span className="absolute -top-2 -right-2 text-zinc-500 font-mono text-sm select-none">+</span>
                 <span className="absolute -bottom-2 -left-2 text-zinc-500 font-mono text-sm select-none">+</span>
                 <span className="absolute -bottom-2 -right-2 text-zinc-500 font-mono text-sm select-none">+</span>
 
-                {/  Card Header  /}
+                {/*  Card Header  */}
                 <div
                   className={`flex items-center justify-between px-4 py-3 border-b font-mono text-[11px] ${isDark ? "border-zinc-800 text-zinc-400" : "border-zinc-200 text-zinc-600"
                     }`}
@@ -611,7 +606,7 @@ export default function Home() {
                   <span>INTERACTIVE 3D</span>
                 </div>
 
-                {/  3D Canvas  /}
+                {/*  3D Canvas  */}
                 <div
                   className={`h-[400px] sm:h-[460px] w-full rounded-2xl flex items-center justify-center overflow-hidden transition-colors ${isDark ? "bg-[#0c0d12]" : "bg-[#fcfcfd]"
                     }`}
@@ -619,7 +614,7 @@ export default function Home() {
                   <SpaceGlobe theme={theme} />
                 </div>
 
-                {/  Card Footer Telemetry  /}
+                {/*  Card Footer Telemetry  */}
                 <div
                   className={`grid grid-cols-3 border-t px-4 py-3 font-mono text-[10px] ${isDark ? "border-zinc-800 text-zinc-400" : "border-zinc-200 text-zinc-600"
                     }`}
@@ -648,7 +643,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-      */}
 
       {/* 4. Features Section */}
       <section
