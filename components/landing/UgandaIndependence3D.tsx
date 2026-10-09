@@ -18,6 +18,8 @@ interface UgandaIndependence3DProps {
   className?: string;
   theme?: "light" | "dark";
   onOpenHistory?: () => void;
+  isPlayingAudio?: boolean;
+  onToggleAudio?: () => void;
 }
 
 // Landmark nodes around Uganda for the 3D scene
@@ -354,6 +356,8 @@ export function UgandaIndependence3D({
   className = "",
   theme = "dark",
   onOpenHistory,
+  isPlayingAudio,
+  onToggleAudio,
 }: UgandaIndependence3DProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const isDark = theme === "dark";
@@ -798,19 +802,19 @@ export function UgandaIndependence3D({
 
         {/* Right Controls: Auto-spin toggle & Anthem player */}
         <div className="flex items-center gap-2 pointer-events-auto">
-          {/* Anthem Synthesizer Button */}
+          {/* Anthem Button */}
           <button
-            onClick={toggleAnthem}
-            title={isPlayingAnthem ? "Mute National Anthem" : "Play 'Oh Uganda, Land of Beauty' (Kakoma, 1962)"}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold tracking-wide transition-all shadow-md active:scale-95 ${
-              isPlayingAnthem
+            onClick={onToggleAudio || toggleAnthem}
+            title={(isPlayingAudio ?? isPlayingAnthem) ? "Pause National Anthem" : "Play 'Oh Uganda, Land of Beauty' (Trumpet & Brass Band)"}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold tracking-wide transition-all shadow-md active:scale-95 cursor-pointer ${
+              (isPlayingAudio ?? isPlayingAnthem)
                 ? "bg-gradient-to-r from-amber-500 to-red-600 text-white border-transparent shadow-amber-500/30 animate-pulse"
                 : isDark
                 ? "border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white"
                 : "border-zinc-200 bg-white/90 hover:bg-zinc-100 text-zinc-700"
             }`}
           >
-            {isPlayingAnthem ? (
+            {(isPlayingAudio ?? isPlayingAnthem) ? (
               <>
                 <Volume2 className="w-3.5 h-3.5 text-white animate-bounce" />
                 <span className="text-[10px]">ANTHEM PLAYING</span>
@@ -839,7 +843,7 @@ export function UgandaIndependence3D({
       </div>
 
       {/* Floating Interactive Landmark Anchors */}
-      <div className="absolute left-3 bottom-14 hidden sm:flex flex-col gap-1.5 pointer-events-auto z-10">
+      <div className="absolute left-3 bottom-[145px] hidden sm:flex flex-col gap-1.5 pointer-events-auto z-10">
         <span className={`text-[10px] font-mono tracking-wider font-semibold ${isDark ? "text-amber-400" : "text-amber-700"}`}>
           HISTORICAL BEACONS:
         </span>
@@ -868,37 +872,6 @@ export function UgandaIndependence3D({
             <span className="font-bold text-amber-400 block">{UGANDA_LANDMARKS[activeLandmark].name}</span>
             <span className="text-zinc-400">{UGANDA_LANDMARKS[activeLandmark].desc}</span>
           </div>
-        )}
-      </div>
-
-      {/* Bottom Action Footer Bar */}
-      <div className={`border-t px-4 py-3 flex items-center justify-between font-mono text-[11px] backdrop-blur-sm z-10 ${
-        isDark ? "border-zinc-800/80 bg-zinc-950/70 text-zinc-400" : "border-zinc-200/80 bg-white/80 text-zinc-600"
-      }`}>
-        <div className="flex items-center gap-2">
-          <Shield className="w-3.5 h-3.5 text-amber-500" />
-          <span className={`font-semibold tracking-wide ${isDark ? "text-zinc-200" : "text-zinc-800"}`}>
-            9 OCTOBER 1962
-          </span>
-          <span className="hidden sm:inline text-zinc-500">|</span>
-          <span className="hidden sm:inline text-[10px] text-zinc-400">
-            KAMPALA 0.3476° N, 32.5825° E
-          </span>
-        </div>
-
-        {onOpenHistory && (
-          <button
-            onClick={onOpenHistory}
-            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide transition-all shadow-sm active:scale-95 ${
-              isDark
-                ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40"
-                : "bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300"
-            }`}
-          >
-            <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-            <span>1962 Archive</span>
-            <ExternalLink className="w-3 h-3 opacity-70" />
-          </button>
         )}
       </div>
     </div>

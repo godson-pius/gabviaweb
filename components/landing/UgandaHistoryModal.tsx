@@ -239,24 +239,24 @@ export function UgandaHistoryModal({
             {onToggleAudio && (
               <button
                 onClick={onToggleAudio}
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold font-mono border transition-all ${
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold font-mono border transition-all cursor-pointer ${
                   isPlayingAudio
                     ? "bg-amber-500/20 border-amber-500/40 text-amber-400 shadow-sm shadow-amber-500/20 animate-pulse"
                     : isDark
                     ? "border-zinc-800 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300"
                     : "border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700"
                 }`}
-                title={isPlayingAudio ? "Pause National Anthem" : "Play National Anthem"}
+                title={isPlayingAudio ? "Pause Trumpet National Anthem" : "Play Official Trumpet & Brass National Anthem"}
               >
                 {isPlayingAudio ? (
                   <>
                     <Volume2 className="w-3.5 h-3.5 text-amber-400" />
-                    <span className="hidden sm:inline">Playing Anthem</span>
+                    <span className="hidden sm:inline">🎺 Playing Trumpet Anthem</span>
                   </>
                 ) : (
                   <>
                     <VolumeX className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">Play Anthem</span>
+                    <span className="hidden sm:inline">🎺 Play Trumpet Anthem</span>
                   </>
                 )}
               </button>

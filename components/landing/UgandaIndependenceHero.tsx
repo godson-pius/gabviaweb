@@ -14,7 +14,9 @@ import {
   Music, 
   Shield, 
   ExternalLink,
-  RotateCcw
+  RotateCcw,
+  Play,
+  Pause
 } from "lucide-react";
 
 const PLAY_STORE_URL =
@@ -131,6 +133,8 @@ interface UgandaIndependenceHeroProps {
 export function UgandaIndependenceHero({ isDark }: UgandaIndependenceHeroProps) {
   const [selectedLangIndex, setSelectedLangIndex] = useState(0);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(43.62);
   const [showLyrics, setShowLyrics] = useState(false);
   const [lyricsLang, setLyricsLang] = useState<"english" | "luganda" | "swahili">("english");
   const [cheersCount, setCheersCount] = useState(1962);
@@ -138,8 +142,7 @@ export function UgandaIndependenceHero({ isDark }: UgandaIndependenceHeroProps) 
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Auto-cycle through Ugandan greetings every 5 seconds if anthem is not playing
   useEffect(() => {
@@ -218,102 +221,48 @@ export function UgandaIndependenceHero({ isDark }: UgandaIndependenceHeroProps) 
     };
   }, []);
 
-  // Web Audio Synthesizer for Uganda National Anthem ("Oh Uganda, Land of Beauty")
-  const stopAnthem = useCallback(() => {
-    timeoutsRef.current.forEach((t) => clearTimeout(t));
-    timeoutsRef.current = [];
-    if (audioCtxRef.current && audioCtxRef.current.state !== "closed") {
-      audioCtxRef.current.close().catch(() => {});
-      audioCtxRef.current = null;
+  // National Anthem Audio Controls (Brass & Trumpet / U.S. Navy Band Official Recording)
+  const toggleAnthem = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlayingAudio) {
+      audio.pause();
+    } else {
+      audio.play().catch((err) => {
+        console.warn("Audio playback error:", err);
+      });
     }
-    setIsPlayingAudio(false);
+  }, [isPlayingAudio]);
+
+  const restartAnthem = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
   }, []);
 
-  const toggleAnthem = useCallback(() => {
-    if (isPlayingAudio) {
-      stopAnthem();
-      return;
-    }
+  const handleSeek = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const time = parseFloat(e.target.value);
+    audio.currentTime = time;
+    setAudioCurrentTime(time);
+  }, []);
 
-    try {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      const ctx = new AudioCtx();
-      audioCtxRef.current = ctx;
-      setIsPlayingAudio(true);
-
-      // George Wilberforce Kakoma's 1962 Melody
-      const notes = [
-        { freq: 392.00, dur: 0.6, bass: 196.00 }, // Oh Uganda!
-        { freq: 493.88, dur: 0.6, bass: 196.00 },
-        { freq: 587.33, dur: 0.9, bass: 196.00 },
-        { freq: 523.25, dur: 0.45, bass: 261.63 }, // may God uphold thee
-        { freq: 493.88, dur: 0.45, bass: 196.00 },
-        { freq: 440.00, dur: 0.9, bass: 220.00 },
-        { freq: 440.00, dur: 0.45, bass: 220.00 }, // We lay our future
-        { freq: 493.88, dur: 0.45, bass: 246.94 },
-        { freq: 523.25, dur: 0.45, bass: 261.63 },
-        { freq: 587.33, dur: 0.45, bass: 293.66 },
-        { freq: 493.88, dur: 0.5, bass: 246.94 }, // in thy hand
-        { freq: 392.00, dur: 1.1, bass: 196.00 },
-        { freq: 587.33, dur: 0.6, bass: 293.66 }, // United, free
-        { freq: 659.25, dur: 0.6, bass: 329.63 },
-        { freq: 587.33, dur: 0.8, bass: 293.66 },
-        { freq: 523.25, dur: 0.45, bass: 261.63 }, // for liberty
-        { freq: 493.88, dur: 0.45, bass: 246.94 },
-        { freq: 440.00, dur: 0.8, bass: 220.00 },
-        { freq: 392.00, dur: 0.45, bass: 196.00 }, // Together we'll always stand
-        { freq: 440.00, dur: 0.45, bass: 220.00 },
-        { freq: 493.88, dur: 0.6, bass: 246.94 },
-        { freq: 440.00, dur: 0.6, bass: 220.00 },
-        { freq: 392.00, dur: 1.6, bass: 196.00 },
-      ];
-
-      let startTime = ctx.currentTime + 0.1;
-
-      notes.forEach((note) => {
-        const osc = ctx.createOscillator();
-        const oscSub = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(note.freq, startTime);
-
-        oscSub.type = "triangle";
-        oscSub.frequency.setValueAtTime(note.bass, startTime);
-
-        gain.gain.setValueAtTime(0, startTime);
-        gain.gain.linearRampToValueAtTime(0.24, startTime + 0.04);
-        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + note.dur);
-
-        osc.connect(gain);
-        oscSub.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.start(startTime);
-        oscSub.start(startTime);
-        osc.stop(startTime + note.dur);
-        oscSub.stop(startTime + note.dur);
-
-        startTime += note.dur + 0.08;
-      });
-
-      const totalDuration = (startTime - ctx.currentTime) * 1000;
-      const tId = setTimeout(() => {
-        setIsPlayingAudio(false);
-      }, totalDuration);
-      timeoutsRef.current.push(tId);
-
-    } catch (e) {
-      console.warn("Audio synthesizer error:", e);
-      setIsPlayingAudio(false);
-    }
-  }, [isPlayingAudio, stopAnthem]);
+  const formatTime = (secs: number) => {
+    if (isNaN(secs) || secs < 0) return "0:00";
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${m}:${s < 10 ? "0" : ""}${s}`;
+  };
 
   useEffect(() => {
     return () => {
-      stopAnthem();
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
     };
-  }, [stopAnthem]);
+  }, []);
 
   // Interactive Cheers Popper
   const handleCheer = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -439,61 +388,30 @@ export function UgandaIndependenceHero({ isDark }: UgandaIndependenceHeroProps) 
                   {currentGreeting.language}
                 </span>
               </div>
-            </div>
 
-            {/* Anthem Synthesizer Bar & Actions */}
-            <div
-              className={`p-3.5 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 ${
-                isDark ? "border-zinc-800 bg-zinc-900/70" : "border-zinc-200 bg-white"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={toggleAnthem}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shadow-md active:scale-95 ${
-                    isPlayingAudio
-                      ? "bg-gradient-to-r from-amber-500 to-red-600 text-white animate-pulse"
-                      : isDark
-                      ? "bg-amber-500 text-black hover:bg-amber-400"
-                      : "bg-amber-500 text-white hover:bg-amber-600"
-                  }`}
-                  title={isPlayingAudio ? "Pause National Anthem" : "Play 'Oh Uganda, Land of Beauty' (1962)"}
-                >
-                  {isPlayingAudio ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-                </button>
-                <div>
-                  <span className={`block text-xs font-bold ${isDark ? "text-zinc-100" : "text-zinc-900"}`}>
-                    &ldquo;Oh Uganda, Land of Beauty&rdquo;
-                  </span>
-                  <span className={`block text-[11px] font-mono ${isDark ? "text-zinc-400" : "text-zinc-600"}`}>
-                    George Wilberforce Kakoma (1962)
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
+              {/* Greetings Action Bar: Cheers Reaction & Anthem Sing-Along Lyrics trigger */}
+              <div className="mt-3.5 pt-2.5 border-t border-amber-500/20 flex flex-wrap items-center justify-between gap-2">
                 <button
                   type="button"
                   onClick={() => setShowLyrics((prev) => !prev)}
-                  className={`px-3 py-1.5 rounded-lg border font-mono text-xs font-semibold transition-all ${
+                  className={`px-3 py-1.5 rounded-lg border font-mono text-xs font-semibold transition-all cursor-pointer ${
                     showLyrics
                       ? "border-amber-400 bg-amber-400/20 text-amber-300"
                       : isDark
-                      ? "border-zinc-800 bg-zinc-800/60 text-zinc-300 hover:text-white"
-                      : "border-zinc-200 bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+                      ? "border-zinc-800 bg-zinc-850/80 text-zinc-300 hover:text-white"
+                      : "border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100"
                   }`}
                 >
-                  <Music className="w-3.5 h-3.5 inline mr-1" />
-                  {showLyrics ? "Hide Lyrics" : "View Lyrics"}
+                  <Music className="w-3.5 h-3.5 inline mr-1 text-amber-500" />
+                  {showLyrics ? "Hide Anthem Lyrics" : "Sing Along Lyrics (3 Stanzas)"}
                 </button>
 
-                {/* Cheers Button */}
+                {/* Interactive Cheers Button */}
                 <div className="relative">
                   <button
                     type="button"
                     onClick={handleCheer}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-mono text-xs font-semibold transition-all shadow-sm active:scale-95 ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border font-mono text-xs font-semibold transition-all shadow-sm active:scale-95 cursor-pointer ${
                       isDark
                         ? "border-red-500/40 bg-red-500/10 text-red-300 hover:bg-red-500/20"
                         : "border-red-300 bg-red-50 text-red-800 hover:bg-red-100"
@@ -633,16 +551,140 @@ export function UgandaIndependenceHero({ isDark }: UgandaIndependenceHeroProps) 
                 <span>CRESTED CRANE MEDALLION</span>
               </div>
 
-              {/* 3D Canvas */}
+              {/* 3D Canvas Viewport with Embedded Anthem Player Overlay (Lesotho & Nigeria Pattern) */}
               <div
-                className={`h-[420px] sm:h-[480px] w-full rounded-2xl flex items-center justify-center overflow-hidden transition-colors ${
+                className={`relative h-[500px] sm:h-[580px] w-full rounded-2xl overflow-hidden transition-colors ${
                   isDark ? "bg-[#07080c]" : "bg-[#fcfcfd]"
                 }`}
               >
                 <UgandaIndependence3D
                   theme={isDark ? "dark" : "light"}
                   onOpenHistory={() => setIsHistoryModalOpen(true)}
+                  isPlayingAudio={isPlayingAudio}
+                  onToggleAudio={toggleAnthem}
                 />
+
+                {/* Anthem player (glass overlay inside the 3D scene) */}
+                <div className="absolute inset-x-3 bottom-3 z-20 pointer-events-auto">
+                  <style>{`@keyframes ugandaEq{0%,100%{transform:scaleY(.25)}50%{transform:scaleY(1)}}`}</style>
+                  <div
+                    className={`relative overflow-hidden rounded-2xl border backdrop-blur-xl p-3 sm:p-3.5 shadow-2xl transition-all ${
+                      isDark
+                        ? "border-amber-500/25 bg-[#08090d]/85 shadow-black/70"
+                        : "border-amber-200/90 bg-white/85 shadow-amber-950/10"
+                    }`}
+                  >
+                    {/* Uganda 6-Stripe Tricolor Accent Bar (Black, Yellow, Red, Black, Yellow, Red) */}
+                    <div className="absolute inset-x-0 top-0 flex h-1" aria-hidden="true">
+                      <div className="flex-1 bg-black" />
+                      <div className="flex-1 bg-[#FCDC04]" />
+                      <div className="flex-1 bg-[#D90000]" />
+                      <div className="flex-1 bg-black" />
+                      <div className="flex-1 bg-[#FCDC04]" />
+                      <div className="flex-1 bg-[#D90000]" />
+                    </div>
+
+                    <div className="flex items-center gap-3 pt-1">
+                      {/* Play / Pause circular action */}
+                      <button
+                        type="button"
+                        onClick={toggleAnthem}
+                        aria-label={isPlayingAudio ? "Pause national anthem" : "Play national anthem"}
+                        className="relative shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white shadow-lg active:scale-95 hover:scale-105 transition-transform bg-gradient-to-br from-amber-500 via-yellow-500 to-red-600 ring-2 ring-amber-400/40 cursor-pointer"
+                      >
+                        {isPlayingAudio && (
+                          <span aria-hidden="true" className="absolute inset-0 rounded-full bg-amber-400/40 animate-ping" />
+                        )}
+                        {isPlayingAudio ? (
+                          <Pause className="w-5 h-5 fill-current" />
+                        ) : (
+                          <Play className="w-5 h-5 fill-current ml-0.5" />
+                        )}
+                      </button>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <span className={`block text-xs sm:text-sm font-bold truncate ${isDark ? "text-white" : "text-zinc-900"}`}>
+                              Oh Uganda, Land of Beauty
+                            </span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="text-[10px] font-mono uppercase tracking-wider text-amber-400 font-semibold truncate">
+                                {isPlayingAudio ? "Now Playing Fanfare" : "🎺 Trumpet & Brass Band"}
+                              </span>
+                              <span className="text-[10px] text-zinc-500 hidden sm:inline">•</span>
+                              <span className="text-[10px] font-mono text-zinc-400 truncate hidden sm:inline">
+                                U.S. Navy Band Official
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Dancing Equalizer Bars */}
+                          <div className="flex items-end gap-[3px] h-6 shrink-0" aria-hidden="true">
+                            {[0, 1, 2, 3, 4, 5].map((i) => (
+                              <span
+                                key={i}
+                                className={`w-[3px] h-full origin-bottom rounded-full ${
+                                  i % 3 === 0 ? "bg-amber-400" : i % 3 === 1 ? "bg-red-500" : "bg-yellow-300"
+                                }`}
+                                style={{
+                                  transform: "scaleY(.25)",
+                                  animation: isPlayingAudio
+                                    ? `ugandaEq ${0.65 + i * 0.12}s ease-in-out ${i * 0.07}s infinite`
+                                    : "none",
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Interactive Scrubber + Live Counter */}
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-[10px] font-mono text-amber-500 font-bold tabular-nums w-8 select-none">
+                            {formatTime(audioCurrentTime)}
+                          </span>
+                          <input
+                            type="range"
+                            aria-label="Anthem progress scrubber"
+                            min={0}
+                            max={audioDuration || 43.62}
+                            step={0.1}
+                            value={audioCurrentTime}
+                            onChange={handleSeek}
+                            className="flex-1 h-1.5 cursor-pointer accent-amber-500"
+                          />
+                          <span className="text-[10px] font-mono text-zinc-400 tabular-nums w-8 text-right select-none">
+                            {formatTime(audioDuration || 43.62)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer Row: Credits + Restart + Sing along lyrics toggle */}
+                    <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-zinc-500/15 text-[10px] font-mono">
+                      <span className="text-zinc-400 truncate">
+                        G.W. Kakoma (1962)
+                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={restartAnthem}
+                          title="Restart anthem from beginning"
+                          className="p-1 rounded hover:text-amber-400 transition-colors text-zinc-400 cursor-pointer"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowLyrics((prev) => !prev)}
+                          className="text-amber-400 hover:text-amber-300 font-semibold underline cursor-pointer"
+                        >
+                          {showLyrics ? "Hide lyrics" : "Sing along lyrics 📜"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Card Footer Telemetry */}
@@ -675,11 +717,87 @@ export function UgandaIndependenceHero({ isDark }: UgandaIndependenceHeroProps) 
         </div>
       </div>
 
+      {/* Floating Uganda Independence History Button */}
+      <aside aria-label="Uganda Independence History" className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={() => setIsHistoryModalOpen(true)}
+          className={`group relative flex items-center gap-3 p-1.5 pr-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 border-2 cursor-pointer ${
+            isDark
+              ? "bg-[#0b0c10]/95 border-amber-500/80 text-white shadow-amber-950/80 backdrop-blur-md"
+              : "bg-white/95 border-amber-500 text-amber-950 shadow-amber-600/30 backdrop-blur-md"
+          }`}
+          title="Learn the History of Uganda (1962 — 2026)"
+        >
+          {/* Animated 6-Stripe Uganda Flag Circle Badge */}
+          <div className="w-10 h-10 rounded-full overflow-hidden flex flex-col shadow-md border border-amber-400/60 flex-shrink-0 relative">
+            <div className="flex-1 bg-black" />
+            <div className="flex-1 bg-[#FCDC04]" />
+            <div className="flex-1 bg-[#D90000]" />
+            <div className="flex-1 bg-black" />
+            <div className="flex-1 bg-[#FCDC04]" />
+            <div className="flex-1 bg-[#D90000]" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-5 h-5 rounded-full bg-white flex items-center justify-center text-[10px] shadow-sm select-none">
+                🇺🇬
+              </div>
+            </div>
+          </div>
+
+          <div className="text-left flex flex-col">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs sm:text-sm font-bold tracking-tight leading-tight">
+                Uganda History
+              </span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-bold border border-amber-500/30 hidden sm:inline-block">
+                1962–2026
+              </span>
+            </div>
+            <span
+              className={`text-[10px] font-mono leading-none ${
+                isDark ? "text-amber-300/90" : "text-amber-700"
+              }`}
+            >
+              Explore Country History 🇺🇬 →
+            </span>
+          </div>
+
+          {/* Shimmer light effect */}
+          <div className="absolute inset-0 rounded-full overflow-hidden pointer-events-none">
+            <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000" />
+          </div>
+        </button>
+      </aside>
+
       {/* Embedded Historical Archive Modal */}
       <UgandaHistoryModal
         isOpen={isHistoryModalOpen}
         onClose={() => setIsHistoryModalOpen(false)}
         isDark={isDark}
+        isPlayingAudio={isPlayingAudio}
+        onToggleAudio={toggleAnthem}
+      />
+
+      {/* Official Trumpet & Brass National Anthem Audio Element (U.S. Navy Band) */}
+      <audio
+        ref={audioRef}
+        src="/uganda-national-anthem.mp3"
+        preload="metadata"
+        onPlay={() => setIsPlayingAudio(true)}
+        onPause={() => setIsPlayingAudio(false)}
+        onEnded={() => {
+          setIsPlayingAudio(false);
+          setAudioCurrentTime(0);
+        }}
+        onTimeUpdate={() => {
+          if (audioRef.current) {
+            setAudioCurrentTime(audioRef.current.currentTime);
+          }
+        }}
+        onLoadedMetadata={() => {
+          if (audioRef.current && audioRef.current.duration) {
+            setAudioDuration(audioRef.current.duration);
+          }
+        }}
       />
     </section>
   );
