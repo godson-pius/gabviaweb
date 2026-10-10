@@ -1,7 +1,7 @@
 "use client";
 
 import { AppWorkflow3D } from "@/components/landing/AppWorkflow3D";
-import { UgandaIndependenceHero } from "@/components/landing/UgandaIndependenceHero";
+// import { UgandaIndependenceHero } from "@/components/landing/UgandaIndependenceHero";
 import { GabviaHero } from "@/components/landing/GabviaHero";
 import { GooglePlayIcon, Icon, PLAY_STORE_URL } from "@/components/landing/shared";
 import { SupportFeedback3D } from "@/components/landing/SupportFeedback3D";
@@ -36,7 +36,6 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const [heroView, setHeroView] = useState<"uganda" | "standard">("uganda");
 
   useEffect(() => {
     const saved = localStorage.getItem("gabvia-theme");
@@ -65,38 +64,38 @@ export default function Home() {
       {/* 1. Top Announcement Bar */}
       <div
         className={`border-b sticky top-0 z-50 transition-colors backdrop-blur-md ${isDark
-          ? "border-amber-500/30 bg-zinc-950/90 text-amber-200"
-          : "border-amber-200/80 bg-amber-50/95 text-amber-950"
+          ? "border-zinc-800/80 bg-zinc-950/90 text-zinc-300"
+          : "border-zinc-200/80 bg-white/95 text-zinc-950"
           }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 text-xs font-mono">
           <div className="flex items-center gap-2 overflow-hidden text-ellipsis whitespace-nowrap">
             <span className="flex h-2 w-2 relative flex-shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
             <span
-              className={`font-semibold uppercase tracking-wider ${isDark ? "text-amber-300" : "text-amber-900"
+              className={`font-semibold uppercase tracking-wider ${isDark ? "text-zinc-100" : "text-zinc-950"
                 }`}
             >
-              🇺🇬 [ UGANDA INDEPENDENCE DAY • 9 OCTOBER 1962 ]
+              [ OFFICIAL ANNOUNCEMENT ]
             </span>
             <span className="text-zinc-500 hidden sm:inline">—</span>
-            <span className={`${isDark ? "text-zinc-300" : "text-zinc-700"} truncate`}>
-              Celebrating 64 Years of Sovereignty, Unity &amp; The Pearl of Africa • For God and My Country.
+            <span className={`${isDark ? "text-zinc-400" : "text-zinc-600"} truncate`}>
+              Gabvia Web Platform is now live · Direct in-browser multilingual communication.
             </span>
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={() => setHeroView((prev) => (prev === "uganda" ? "standard" : "uganda"))}
-              className={`px-2.5 py-0.5 rounded text-[11px] font-semibold border transition-colors cursor-pointer ${isDark
-                ? "bg-amber-950/50 text-amber-400 border-amber-800/60 hover:bg-amber-900/60"
-                : "bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200"
+            <Link
+              href="/chat"
+              className={`px-2.5 py-0.5 rounded text-[11px] font-semibold border transition-colors ${isDark
+                ? "bg-emerald-950/50 text-emerald-400 border-emerald-800/60 hover:bg-emerald-900/60"
+                : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
                 }`}
             >
-              {heroView === "uganda" ? "VIEW STANDARD HERO →" : "UGANDA CELEBRATION 🇺🇬 →"}
-            </button>
+              WEB CHAT LIVE →
+            </Link>
           </div>
         </div>
       </div>
@@ -332,13 +331,9 @@ export default function Home() {
       </header>
 
       {/* ========================================================================= */}
-      {/* 3. HERO SECTION (UGANDA INDEPENDENCE CELEBRATION ACTIVE FOR 9 OCTOBER 1962) */}
+      {/* CANONICAL GABVIA HERO SECTION                                             */}
       {/* ========================================================================= */}
-      {heroView === "uganda" ? (
-        <UgandaIndependenceHero isDark={isDark} theme={theme} />
-      ) : (
-        <GabviaHero isDark={isDark} theme={theme} />
-      )}
+      <GabviaHero isDark={isDark} theme={theme} />
 
       {/* 4. Features Section */}
       <section
