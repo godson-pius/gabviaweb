@@ -10,6 +10,51 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_RECIPIENTS = 5000;
 const RESEND_BATCH_SIZE = 100;
 
+// Domains that cannot receive email or are rejected by Resend / RFC 2606
+const INVALID_DOMAINS = new Set([
+  "example.com",
+  "example.org",
+  "example.net",
+  "example.edu",
+  "test.com",
+  "test.org",
+  "test.net",
+  "sample.com",
+  "dummy.com",
+  "localhost",
+  "invalid",
+  "phone.gabvia.app", // Shadow phone authentication accounts
+]);
+
+export function isDeliverableEmail(rawEmail: unknown): boolean {
+  if (typeof rawEmail !== "string") return false;
+  const email = rawEmail.trim().toLowerCase();
+  if (!email || !EMAIL_PATTERN.test(email)) return false;
+
+  const parts = email.split("@");
+  if (parts.length !== 2) return false;
+  const domain = parts[1].trim();
+
+  // Filter out known testing and shadow domains
+  if (INVALID_DOMAINS.has(domain)) return false;
+  if (
+    domain.endsWith(".example") ||
+    domain.endsWith(".test") ||
+    domain.endsWith(".invalid") ||
+    domain.endsWith(".localhost")
+  ) {
+    return false;
+  }
+
+  // Domain must contain a valid dot and TLD of at least 2 chars
+  const domainParts = domain.split(".");
+  if (domainParts.length < 2 || domainParts[domainParts.length - 1].length < 2) {
+    return false;
+  }
+
+  return true;
+}
+
 function encodeBase64Url(value: string | Buffer) {
   return Buffer.from(value).toString("base64url");
 }
@@ -88,7 +133,7 @@ async function getAuthEmails(projectId: string, accessToken: string) {
     if (!response.ok) throw new Error(payload?.error?.message ?? "Could not retrieve registered user emails from Firebase Auth.");
     for (const user of payload?.users ?? []) {
       const email = user.email?.trim().toLowerCase() ?? "";
-      if (!user.disabled && EMAIL_PATTERN.test(email)) emails.push(email);
+      if (!user.disabled && isDeliverableEmail(email)) emails.push(email);
     }
     nextPageToken = payload?.nextPageToken ?? "";
     pageCount += 1;
@@ -115,7 +160,7 @@ async function getProfileEmails(projectId: string, apiKey: string, authToken?: s
 
   return payload.flatMap((row) => {
     const email = String(decodeFirestoreFields(row.document?.fields).email ?? "").trim().toLowerCase();
-    return EMAIL_PATTERN.test(email) ? [email] : [];
+    return isDeliverableEmail(email) ? [email] : [];
   });
 }
 
@@ -138,7 +183,7 @@ async function getWaitlistEmails(projectId: string, apiKey: string, authToken?: 
   if (!Array.isArray(payload)) return [];
   return payload.flatMap((row) => {
     const email = String(decodeFirestoreFields(row.document?.fields).email ?? "").trim().toLowerCase();
-    return EMAIL_PATTERN.test(email) ? [email] : [];
+    return isDeliverableEmail(email) ? [email] : [];
   });
 }
 
@@ -231,25 +276,87 @@ function makeEmailHtml(subject: string, message: string) {
 </html>`;
 }
 
-async function sendBatch(apiKey: string, from: string, subject: string, message: string, recipients: string[], batchNumber: number) {
-  const response = await fetch("https://api.resend.com/emails/batch", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "Idempotency-Key": `gabvia-admin-email-${batchNumber}-${randomUUID()}`,
-    },
-    body: JSON.stringify(recipients.map((recipient) => ({
-      from,
-      to: [recipient],
-      subject,
-      text: message,
-      html: makeEmailHtml(subject, message),
-    }))),
-    cache: "no-store",
-  });
-  const payload = await response.json().catch(() => null) as { message?: string; error?: { message?: string } } | null;
-  if (!response.ok) throw new Error(payload?.message ?? payload?.error?.message ?? `Resend returned HTTP ${response.status}.`);
+async function sendBatch(
+  apiKey: string,
+  from: string,
+  subject: string,
+  message: string,
+  recipients: string[],
+  batchNumber: number
+): Promise<number> {
+  if (!recipients.length) return 0;
+
+  try {
+    const response = await fetch("https://api.resend.com/emails/batch", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "Idempotency-Key": `gabvia-admin-email-${batchNumber}-${randomUUID()}`,
+      },
+      body: JSON.stringify(
+        recipients.map((recipient) => ({
+          from,
+          to: [recipient],
+          subject,
+          text: message,
+          html: makeEmailHtml(subject, message),
+        }))
+      ),
+      cache: "no-store",
+    });
+
+    const payload = (await response.json().catch(() => null)) as {
+      message?: string;
+      error?: { message?: string };
+    } | null;
+
+    if (response.ok) {
+      return recipients.length;
+    }
+
+    console.warn(
+      `[Admin Email] Batch ${batchNumber} failed (${payload?.message || payload?.error?.message}). Falling back to individual sends...`
+    );
+  } catch (batchErr) {
+    console.warn(`[Admin Email] Batch fetch error, falling back to individual sends:`, batchErr);
+  }
+
+  // Graceful fallback: Send individually so one bad recipient address cannot fail the remaining users
+  let successCount = 0;
+  for (const recipient of recipients) {
+    try {
+      const singleResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from,
+          to: [recipient],
+          subject,
+          text: message,
+          html: makeEmailHtml(subject, message),
+        }),
+        cache: "no-store",
+      });
+
+      if (singleResponse.ok) {
+        successCount += 1;
+      } else {
+        const errPayload = await singleResponse.json().catch(() => null);
+        console.warn(
+          `[Admin Email] Skipped recipient ${recipient}:`,
+          errPayload?.message || errPayload?.error?.message || singleResponse.status
+        );
+      }
+    } catch (singleErr) {
+      console.warn(`[Admin Email] Failed sending to ${recipient}:`, singleErr);
+    }
+  }
+
+  return successCount;
 }
 
 async function writeAuditLog(projectId: string, accessToken: string, entry: { adminEmail: string; target: EmailTarget; sent: number }) {
@@ -303,15 +410,37 @@ export async function POST(request: NextRequest) {
       target === "waitlist" ? Promise.resolve([]) : resolveRegisteredUserEmails(projectId, firebaseApiKey, accessToken, firestoreToken),
       target === "users" ? Promise.resolve([]) : resolveWaitlistEmails(projectId, firebaseApiKey, firestoreToken, target === "waitlist"),
     ]);
-    const recipients = Array.from(new Set([...userEmails, ...waitlistEmails]));
-    if (!recipients.length) return NextResponse.json({ ok: false, error: "No valid email recipients were found for that group." }, { status: 404 });
-    if (recipients.length > MAX_RECIPIENTS) return NextResponse.json({ ok: false, error: `This campaign has ${recipients.length.toLocaleString()} recipients. Limit a campaign to ${MAX_RECIPIENTS.toLocaleString()} recipients.` }, { status: 400 });
+
+    // Deduplicate and filter out any invalid/testing/shadow domains
+    const recipients = Array.from(new Set([...userEmails, ...waitlistEmails])).filter(isDeliverableEmail);
+
+    if (!recipients.length) {
+      return NextResponse.json({
+        ok: false,
+        error: "No deliverable email recipients were found for that group (all accounts are either phone-only or test domains)."
+      }, { status: 404 });
+    }
+
+    if (recipients.length > MAX_RECIPIENTS) {
+      return NextResponse.json({
+        ok: false,
+        error: `This campaign has ${recipients.length.toLocaleString()} recipients. Limit a campaign to ${MAX_RECIPIENTS.toLocaleString()} recipients.`
+      }, { status: 400 });
+    }
 
     for (let index = 0; index < recipients.length; index += RESEND_BATCH_SIZE) {
       const batch = recipients.slice(index, index + RESEND_BATCH_SIZE);
-      await sendBatch(resendApiKey, from, subject, message, batch, Math.floor(index / RESEND_BATCH_SIZE));
-      sent += batch.length;
+      const batchSent = await sendBatch(resendApiKey, from, subject, message, batch, Math.floor(index / RESEND_BATCH_SIZE));
+      sent += batchSent;
     }
+
+    if (sent === 0) {
+      return NextResponse.json({
+        ok: false,
+        error: "Could not deliver emails to the selected recipients. Please verify that your sender domain has active sending reputation in Resend."
+      }, { status: 502 });
+    }
+
     const auditToken = accessToken || idToken;
     if (auditToken) {
       try { await writeAuditLog(projectId, auditToken, { adminEmail, target, sent }); } catch { /* Email delivery remains successful if audit logging is unavailable. */ }
