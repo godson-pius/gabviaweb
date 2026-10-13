@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Hanken_Grotesk } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
@@ -240,6 +241,26 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className={`${hankenGrotesk.className} ${hankenGrotesk.variable} bg-[#09090b] text-[#f4f4f5]`}>
         <AuthProvider>{children}</AuthProvider>
+
+        {/* Brevo Conversations Chat Widget */}
+        <Script
+          id="brevo-conversations"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(d, w, c) {
+                w.BrevoConversationsID = '6ace4f9e409bb929bd07422b';
+                w[c] = w[c] || function() {
+                  (w[c].q = w[c].q || []).push(arguments);
+                };
+                var s = d.createElement('script');
+                s.async = true;
+                s.src = 'https://conversations-widget.brevo.com/brevo-conversations.js';
+                if (d.head) d.head.appendChild(s);
+              })(document, window, 'BrevoConversations');
+            `,
+          }}
+        />
       </body>
     </html>
   );
