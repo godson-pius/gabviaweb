@@ -2,7 +2,7 @@
 
 import { AppWorkflow3D } from "@/components/landing/AppWorkflow3D";
 // import { UgandaIndependenceHero } from "@/components/landing/UgandaIndependenceHero";
-import { ZambiaIndependenceHero } from "@/components/landing/ZambiaIndependenceHero";
+// import { ZambiaIndependenceHero } from "@/components/landing/ZambiaIndependenceHero";
 import { GabviaHero } from "@/components/landing/GabviaHero";
 import { GooglePlayIcon, Icon, PLAY_STORE_URL } from "@/components/landing/shared";
 import { SupportFeedback3D } from "@/components/landing/SupportFeedback3D";
@@ -37,7 +37,6 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">("dark");
-  const [heroView, setHeroView] = useState<"zambia" | "standard">("zambia");
 
   useEffect(() => {
     const saved = localStorage.getItem("gabvia-theme");
@@ -66,8 +65,8 @@ export default function Home() {
       {/* 1. Top Announcement Bar */}
       <div
         className={`border-b sticky top-0 z-50 transition-colors backdrop-blur-md ${isDark
-          ? "border-emerald-500/30 bg-zinc-950/90 text-emerald-200"
-          : "border-emerald-200/80 bg-emerald-50/95 text-emerald-950"
+          ? "border-zinc-800/80 bg-zinc-950/90 text-zinc-300"
+          : "border-zinc-200/80 bg-white/95 text-zinc-950"
           }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4 text-xs font-mono">
@@ -77,27 +76,27 @@ export default function Home() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
             <span
-              className={`font-semibold uppercase tracking-wider ${isDark ? "text-emerald-300" : "text-emerald-900"
+              className={`font-semibold uppercase tracking-wider ${isDark ? "text-zinc-100" : "text-zinc-950"
                 }`}
             >
-              🇿🇲 [ ZAMBIA INDEPENDENCE DAY • 24 OCTOBER 1964 ]
+              [ OFFICIAL ANNOUNCEMENT ]
             </span>
             <span className="text-zinc-500 hidden sm:inline">—</span>
-            <span className={`${isDark ? "text-zinc-300" : "text-zinc-700"} truncate`}>
-              Celebrating 62 Years of Sovereignty, Unity &amp; Freedom • One Zambia, One Nation.
+            <span className={`${isDark ? "text-zinc-400" : "text-zinc-600"} truncate`}>
+              Gabvia Web Platform is now live · Direct in-browser multilingual communication.
             </span>
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={() => setHeroView((prev) => (prev === "zambia" ? "standard" : "zambia"))}
-              className={`px-2.5 py-0.5 rounded text-[11px] font-semibold border transition-colors cursor-pointer ${isDark
+            <Link
+              href="/chat"
+              className={`px-2.5 py-0.5 rounded text-[11px] font-semibold border transition-colors ${isDark
                 ? "bg-emerald-950/50 text-emerald-400 border-emerald-800/60 hover:bg-emerald-900/60"
-                : "bg-emerald-100 text-emerald-900 border-emerald-300 hover:bg-emerald-200"
+                : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100"
                 }`}
             >
-              {heroView === "zambia" ? "VIEW STANDARD HERO →" : "ZAMBIA CELEBRATION 🇿🇲 →"}
-            </button>
+              WEB CHAT LIVE →
+            </Link>
           </div>
         </div>
       </div>
@@ -333,13 +332,9 @@ export default function Home() {
       </header>
 
       {/* ========================================================================= */}
-      {/* 3. HERO SECTION (ZAMBIA INDEPENDENCE CELEBRATION ACTIVE FOR 24 OCTOBER 1964) */}
+      {/* CANONICAL GABVIA HERO SECTION                                             */}
       {/* ========================================================================= */}
-      {heroView === "zambia" ? (
-        <ZambiaIndependenceHero isDark={isDark} theme={theme} />
-      ) : (
-        <GabviaHero isDark={isDark} theme={theme} />
-      )}
+      <GabviaHero isDark={isDark} theme={theme} />
 
       {/* 4. Features Section */}
       <section
