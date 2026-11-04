@@ -1,20 +1,43 @@
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gabvia.app";
+  const baseUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://gabvia.app").replace(/\/+$/, "");
 
   return {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/translator", "/privacy", "/terms"],
-        disallow: ["/admin", "/admin/*", "/api/*"],
+        allow: ["/", "/translator", "/support", "/privacy", "/terms", "/delete-account"],
+        disallow: [
+          "/admin",
+          "/admin/*",
+          "/api/*",
+          "/chat",
+          "/login",
+          "/register",
+          "/forgot-password",
+        ],
       },
-      // Explicitly allow modern AI Search & Retrieval Crawlers for AI Citation indexing
+      // Explicitly allow leading AI search engines and search retrieval crawlers
       {
-        userAgent: ["GPTBot", "ClaudeBot", "PerplexityBot", "Applebot", "Google-Extended", "Bingbot"],
-        allow: ["/", "/translator"],
-        disallow: ["/admin", "/api/*"],
+        userAgent: [
+          "Google-Extended",
+          "GPTBot",
+          "ClaudeBot",
+          "PerplexityBot",
+          "Applebot",
+          "Bingbot",
+        ],
+        allow: ["/", "/translator", "/support", "/privacy", "/terms"],
+        disallow: [
+          "/admin",
+          "/admin/*",
+          "/api/*",
+          "/chat",
+          "/login",
+          "/register",
+          "/forgot-password",
+        ],
       },
     ],
     sitemap: `${baseUrl}/sitemap.xml`,

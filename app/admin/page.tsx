@@ -4,6 +4,10 @@ import AdminDashboard from "./AdminDashboard";
 export const metadata: Metadata = {
   title: "Admin analytics — Gabvia",
   description: "Private Gabvia product, engagement, and revenue analytics.",
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export const dynamic = "force-dynamic";

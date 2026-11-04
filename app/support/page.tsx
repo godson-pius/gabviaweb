@@ -209,7 +209,7 @@ function SupportForm() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-            Send Us a Query or Feedback
+            Gabvia Support &amp; Feedback
           </h1>
           <p className="mt-3 text-base text-zinc-400 max-w-xl mx-auto leading-relaxed">
             Have a question, encountered an issue, or want to share feedback? Send us a message and our team will get right back to you.

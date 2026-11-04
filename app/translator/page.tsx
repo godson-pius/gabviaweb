@@ -527,7 +527,7 @@ export default function TranslatorPage() {
         <div className="text-center md:text-left flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center justify-center md:justify-start gap-2.5">
-              <span>Instant Multilingual Translator</span>
+              <span>Gabvia Instant Multilingual Translator</span>
               <span className="inline-flex p-1.5 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
                 <Sparkles className="w-5 h-5 text-sky-400" />
               </span>

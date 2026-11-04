@@ -18,7 +18,7 @@ const hankenGrotesk = Hanken_Grotesk({
   variable: "--font-hanken-grotesk",
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gabvia.app";
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://gabvia.app").replace(/\/+$/, "");
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -27,8 +27,14 @@ export const metadata: Metadata = {
     template: "%s | Gabvia",
   },
   description:
-    "Gabvia is the leading real-time multilingual communication platform. Message, call, and send voice notes with instant AI translation across 40+ languages. Fully private and end-to-end encrypted on Web and Android.",
+    "Gabvia is the real-time multilingual communication platform. Message, send voice notes, and translate instantly across 40+ languages with end-to-end encryption on Web & Android.",
   keywords: [
+    "gabvia",
+    "gabvia web",
+    "gabvia app",
+    "gabvia official",
+    "gabvia chat",
+    "gabvia translator",
     "multilingual communication platform",
     "multilingual chat app",
     "real-time language translator",
@@ -46,10 +52,6 @@ export const metadata: Metadata = {
     "end-to-end encrypted multilingual chat",
     "voice note translator",
     "translate messages in real time",
-    "chat in different languages",
-    "multilingual messaging platform",
-    "gabvia",
-    "gabvia web",
   ],
   applicationName: "Gabvia",
   authors: [{ name: "Gabvia Technologies Inc.", url: SITE_URL }],
@@ -59,27 +61,16 @@ export const metadata: Metadata = {
   classification: "Multilingual Communication & Translation Platform",
   manifest: "/manifest.json",
   alternates: {
-    canonical: "/",
-    languages: {
-      "en-US": "/",
-      "fr-FR": "/",
-      "sw-KE": "/",
-      "rw-RW": "/",
-      "es-ES": "/",
-      "pt-BR": "/",
-      "ar-SA": "/",
-      "de-DE": "/",
-    },
+    canonical: SITE_URL,
   },
   openGraph: {
     title: "Gabvia — Real-Time Multilingual Communication Platform",
     description:
       "Communicate naturally across 40+ languages with the real-time multilingual communication platform featuring in-flow AI translation and end-to-end encryption.",
-    url: "/",
+    url: SITE_URL,
     siteName: "Gabvia",
     type: "website",
     locale: "en_US",
-    alternateLocale: ["fr_FR", "sw_KE", "rw_RW", "es_ES", "pt_BR", "ar_SA", "de_DE", "zh_CN", "ja_JP"],
     images: [
       {
         url: "/logo.png",
@@ -96,6 +87,9 @@ export const metadata: Metadata = {
     description:
       "Connect seamlessly in any language with the real-time multilingual communication platform featuring AI translation and end-to-end encryption.",
     images: ["/logo.png"],
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
   },
   robots: {
     index: true,
@@ -126,6 +120,7 @@ const jsonLdData = {
       "@type": "Organization",
       "@id": `${SITE_URL}/#organization`,
       name: "Gabvia",
+      alternateName: ["Gabvia Web", "Gabvia App", "Gabvia Technologies Inc."],
       url: SITE_URL,
       logo: {
         "@type": "ImageObject",
@@ -135,9 +130,17 @@ const jsonLdData = {
       },
       sameAs: [
         "https://play.google.com/store/apps/details?id=app.gabvia",
+        "https://github.com/godson-pius/gabviaweb",
       ],
       description:
         "Gabvia provides real-time multilingual communication infrastructure connecting people across 40+ languages with AI translation and end-to-end encryption.",
+      knowsAbout: [
+        "Multilingual Communication",
+        "Machine Translation",
+        "Voice Translation",
+        "Speech-to-Text",
+        "End-to-End Encryption",
+      ],
     },
     // 2. WebSite Schema with SearchAction
     {
@@ -145,30 +148,26 @@ const jsonLdData = {
       "@id": `${SITE_URL}/#website`,
       url: SITE_URL,
       name: "Gabvia",
+      alternateName: "Gabvia Web",
       publisher: { "@id": `${SITE_URL}/#organization` },
       description: "Real-time multilingual chat and AI voice translation app.",
-      inLanguage: ["en", "fr", "sw", "rw", "es", "pt", "ar", "de"],
+      inLanguage: "en-US",
     },
     // 3. WebApplication / SoftwareApplication Schema
     {
       "@type": ["WebApplication", "SoftwareApplication"],
       "@id": `${SITE_URL}/#application`,
       name: "Gabvia",
+      alternateName: "Gabvia Web",
       url: SITE_URL,
       applicationCategory: "CommunicationApplication",
       operatingSystem: "Web, Android, iOS, Windows, macOS, Linux",
-      browserRequirements: "Requires modern web browser: Google Chrome, Apple Safari, Mozilla Firefox, Microsoft Edge",
+      browserRequirements:
+        "Requires modern web browser: Google Chrome, Apple Safari, Mozilla Firefox, Microsoft Edge",
       offers: {
         "@type": "Offer",
         price: "0",
         priceCurrency: "USD",
-      },
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "4.9",
-        ratingCount: "1280",
-        bestRating: "5",
-        worstRating: "1",
       },
       featureList: [
         "Real-time multilingual text translation in 40+ languages",
@@ -177,6 +176,7 @@ const jsonLdData = {
         "Zero-installation browser web client",
         "Cross-platform synchronization with Android",
       ],
+      installUrl: "https://play.google.com/store/apps/details?id=app.gabvia",
       downloadUrl: "https://play.google.com/store/apps/details?id=app.gabvia",
     },
     // 4. FAQPage Schema for SERP Dropdown Rich Snippets
@@ -184,6 +184,14 @@ const jsonLdData = {
       "@type": "FAQPage",
       "@id": `${SITE_URL}/#faq`,
       mainEntity: [
+        {
+          "@type": "Question",
+          name: "What is Gabvia?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Gabvia is a real-time multilingual communication platform that lets people chat, send voice notes, and make calls across 40+ languages with instant AI translation and end-to-end encryption.",
+          },
+        },
         {
           "@type": "Question",
           name: "When does Gabvia Web officially open?",
@@ -202,10 +210,10 @@ const jsonLdData = {
         },
         {
           "@type": "Question",
-          name: "Are my messages and voice notes private?",
+          name: "Are my messages and voice notes private on Gabvia?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Yes. All conversations are protected by end-to-end encryption so only you and the recipient can read messages or listen to audio.",
+            text: "Yes. All conversations on Gabvia are protected by end-to-end encryption so only you and the recipient can read messages or listen to audio.",
           },
         },
         {

@@ -48,7 +48,8 @@ export function GabviaHero({ isDark, theme }: GabviaHeroProps) {
                     className={`text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] ${isDark ? "text-white" : "text-zinc-950"
                       }`}
                   >
-                    The multilingual communication platform. <br />
+                    Gabvia. <br className="hidden sm:inline" />
+                    The multilingual communication platform.
                   </h1>
                   <p
                     className={`text-base sm:text-lg max-w-2xl leading-relaxed ${isDark ? "text-zinc-400" : "text-zinc-600"
