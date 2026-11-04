@@ -163,6 +163,19 @@ export default function Home() {
               FAQ
             </a>
             <Link
+              href="/blog"
+              className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"
+                } transition-colors flex items-center gap-1.5`}
+            >
+              <span>Blog</span>
+              <span
+                className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${isDark ? "bg-zinc-900 text-zinc-400 border-zinc-800" : "bg-zinc-100 text-zinc-600 border-zinc-200"
+                  }`}
+              >
+                NEW
+              </span>
+            </Link>
+            <Link
               href="/translator"
               className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"
                 } transition-colors flex items-center gap-1.5`}
@@ -288,6 +301,13 @@ export default function Home() {
             >
               FAQ
             </a>
+            <Link
+              href="/blog"
+              onClick={() => setMenuOpen(false)}
+              className={`block text-sm font-medium ${isDark ? "text-zinc-300" : "text-zinc-700"}`}
+            >
+              Blog &amp; News
+            </Link>
             <Link
               href="/translator"
               onClick={() => setMenuOpen(false)}
@@ -636,6 +656,12 @@ export default function Home() {
             </div>
 
             <div className="flex items-center gap-6 text-xs font-mono">
+              <Link
+                href="/blog"
+                className={`${isDark ? "text-sky-400 hover:text-sky-300" : "text-blue-600 hover:text-blue-700"} font-semibold transition-colors`}
+              >
+                Blog
+              </Link>
               <Link
                 href="/privacy"
                 className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"} transition-colors`}

@@ -507,6 +507,9 @@ function SupportForm() {
             © {new Date().getFullYear()} Gabvia Technologies Inc. Different languages. One conversation.
           </div>
           <div className="flex items-center gap-4">
+            <Link href="/blog" className="text-cyan-400 font-semibold hover:text-cyan-300 transition-colors">
+              Blog
+            </Link>
             <Link href="/privacy" className="hover:text-zinc-300 transition-colors">
               Privacy
             </Link>

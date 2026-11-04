@@ -26,7 +26,7 @@ const INVALID_DOMAINS = new Set([
   "phone.gabvia.app", // Shadow phone authentication accounts
 ]);
 
-export function isDeliverableEmail(rawEmail: unknown): boolean {
+function isDeliverableEmail(rawEmail: unknown): boolean {
   if (typeof rawEmail !== "string") return false;
   const email = rawEmail.trim().toLowerCase();
   if (!email || !EMAIL_PATTERN.test(email)) return false;

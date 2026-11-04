@@ -452,6 +452,12 @@ export function LegalPageShell({
 
             <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-mono">
               <Link
+                href="/blog"
+                className={`${isDark ? "text-sky-400 hover:text-sky-300 font-semibold" : "text-blue-600 hover:text-blue-700 font-semibold"} transition-colors`}
+              >
+                Blog
+              </Link>
+              <Link
                 href="/privacy"
                 className={`${isDark ? "text-zinc-400 hover:text-white" : "text-zinc-600 hover:text-zinc-950"} transition-colors`}
               >
