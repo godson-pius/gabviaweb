@@ -1,8 +1,8 @@
-import type { Metadata, Viewport } from "next";
-import Script from "next/script";
-import { Hanken_Grotesk } from "next/font/google";
-import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import type { Metadata, Viewport } from "next";
+import { Hanken_Grotesk } from "next/font/google";
+import Script from "next/script";
+import "./globals.css";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -246,6 +246,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdData) }}
         />
+        <meta name="google-site-verification" content="diTKZWNC_6GJx0PNLsJx7A-FclemV7OtvpNzjB9s5A4" />
       </head>
       <body className={`${hankenGrotesk.className} ${hankenGrotesk.variable} bg-[#09090b] text-[#f4f4f5]`}>
         <AuthProvider>{children}</AuthProvider>
