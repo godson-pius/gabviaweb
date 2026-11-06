@@ -1,0 +1,56 @@
+export interface CountryCode {
+  name: string;
+  dialCode: string;
+  code: string;
+  flag: string;
+}
+
+export const COUNTRY_CODES: CountryCode[] = [
+  { name: 'Nigeria', dialCode: '+234', code: 'NG', flag: '🇳🇬' },
+  { name: 'United States', dialCode: '+1', code: 'US', flag: '🇺🇸' },
+  { name: 'United Kingdom', dialCode: '+44', code: 'GB', flag: '🇬🇧' },
+  { name: 'Canada', dialCode: '+1', code: 'CA', flag: '🇨🇦' },
+  { name: 'Ghana', dialCode: '+233', code: 'GH', flag: '🇬🇭' },
+  { name: 'Kenya', dialCode: '+254', code: 'KE', flag: '🇰🇪' },
+  { name: 'South Africa', dialCode: '+27', code: 'ZA', flag: '🇿🇦' },
+  { name: 'Rwanda', dialCode: '+250', code: 'RW', flag: '🇷🇼' },
+  { name: 'Uganda', dialCode: '+256', code: 'UG', flag: '🇺🇬' },
+  { name: 'Tanzania', dialCode: '+255', code: 'TZ', flag: '🇹🇿' },
+  { name: 'India', dialCode: '+91', code: 'IN', flag: '🇮🇳' },
+  { name: 'Germany', dialCode: '+49', code: 'DE', flag: '🇩🇪' },
+  { name: 'France', dialCode: '+33', code: 'FR', flag: '🇫🇷' },
+  { name: 'Spain', dialCode: '+34', code: 'ES', flag: '🇪🇸' },
+  { name: 'Italy', dialCode: '+39', code: 'IT', flag: '🇮🇹' },
+  { name: 'Brazil', dialCode: '+55', code: 'BR', flag: '🇧🇷' },
+  { name: 'Mexico', dialCode: '+52', code: 'MX', flag: '🇲🇽' },
+  { name: 'Australia', dialCode: '+61', code: 'AU', flag: '🇦🇺' },
+  { name: 'United Arab Emirates', dialCode: '+971', code: 'AE', flag: '🇦🇪' },
+  { name: 'Saudi Arabia', dialCode: '+966', code: 'SA', flag: '🇸🇦' },
+  { name: 'China', dialCode: '+86', code: 'CN', flag: '🇨🇳' },
+  { name: 'Japan', dialCode: '+81', code: 'JP', flag: '🇯🇵' },
+  { name: 'South Korea', dialCode: '+82', code: 'KR', flag: '🇰🇷' },
+  { name: 'Netherlands', dialCode: '+31', code: 'NL', flag: '🇳🇱' },
+  { name: 'Sweden', dialCode: '+46', code: 'SE', flag: '🇸🇪' },
+  { name: 'Switzerland', dialCode: '+41', code: 'CH', flag: '🇨🇭' },
+  { name: 'Poland', dialCode: '+48', code: 'PL', flag: '🇵🇱' },
+  { name: 'Portugal', dialCode: '+351', code: 'PT', flag: '🇵🇹' },
+  { name: 'Turkey', dialCode: '+90', code: 'TR', flag: '🇹🇷' },
+  { name: 'Egypt', dialCode: '+20', code: 'EG', flag: '🇪🇬' },
+  { name: 'Cameroon', dialCode: '+237', code: 'CM', flag: '🇨🇲' },
+  { name: 'Ivory Coast', dialCode: '+225', code: 'CI', flag: '🇨🇮' },
+  { name: 'Senegal', dialCode: '+221', code: 'SN', flag: '🇸🇳' },
+  { name: 'Philippines', dialCode: '+63', code: 'PH', flag: '🇵🇭' },
+  { name: 'Pakistan', dialCode: '+92', code: 'PK', flag: '🇵🇰' },
+  { name: 'Indonesia', dialCode: '+62', code: 'ID', flag: '🇮🇩' },
+  { name: 'Malaysia', dialCode: '+60', code: 'MY', flag: 'MY' },
+  { name: 'Singapore', dialCode: '+65', code: 'SG', flag: '🇸🇬' },
+  { name: 'Ireland', dialCode: '+353', code: 'IE', flag: '🇮🇪' },
+  { name: 'New Zealand', dialCode: '+64', code: 'NZ', flag: '🇳🇿' },
+  { name: 'Argentina', dialCode: '+54', code: 'AR', flag: '🇦🇷' },
+  { name: 'Colombia', dialCode: '+57', code: 'CO', flag: '🇨🇴' },
+  { name: 'Chile', dialCode: '+56', code: 'CL', flag: '🇨🇱' },
+  { name: 'Ukraine', dialCode: '+380', code: 'UA', flag: '🇺🇦' },
+  { name: 'Vietnam', dialCode: '+84', code: 'VN', flag: '🇻🇳' },
+  { name: 'Thailand', dialCode: '+66', code: 'TH', flag: '🇹🇭' },
+];
+

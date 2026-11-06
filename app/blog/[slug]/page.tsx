@@ -1,38 +1,32 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
-import Script from "next/script";
+import { ArticleShareBar } from "@/components/blog/ArticleShareBar";
+import { BlogFooter } from "@/components/blog/BlogFooter";
+import { BlogHeader } from "@/components/blog/BlogHeader";
+import { TableOfContents } from "@/components/blog/TableOfContents";
+import { GooglePlayIcon, PLAY_STORE_URL } from "@/components/landing/shared";
 import {
+  BlogPost,
   getAllBlogPosts,
   getBlogPostBySlug,
   getRelatedPosts,
-  BlogPost,
 } from "@/lib/blog-data";
-import { BlogHeader } from "@/components/blog/BlogHeader";
-import { BlogFooter } from "@/components/blog/BlogFooter";
-import { ArticleShareBar } from "@/components/blog/ArticleShareBar";
-import { TableOfContents } from "@/components/blog/TableOfContents";
-import { PLAY_STORE_URL, GooglePlayIcon } from "@/components/landing/shared";
 import {
-  ArrowLeft,
-  Calendar,
-  Clock,
-  Sparkles,
-  ChevronRight,
-  Tag,
   AlertCircle,
-  Lightbulb,
-  HeartHandshake,
-  CheckCircle2,
-  XCircle,
-  Quote,
-  TrendingUp,
-  Cpu,
-  Newspaper,
-  Shield,
   ArrowRight,
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
+  Clock,
+  HeartHandshake,
+  Lightbulb,
+  Quote,
+  Sparkles,
+  Tag,
+  XCircle
 } from "lucide-react";
+import type { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://gabvia.app").replace(/\/+$/, "");
 
@@ -247,7 +241,7 @@ export default async function BlogPostPage({ params }: Props) {
               <span className="text-sky-400 font-semibold">{post.category}</span>
             </nav>
 
-            <div className="max-w-4xl space-y-6">
+            <div className="max-w-5xl xl:max-w-6xl space-y-6">
               {/* Category & Read Time meta */}
               <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
                 <span className="px-3 py-1 rounded-full border border-sky-800/60 bg-sky-950/60 text-sky-300 font-semibold uppercase">
@@ -266,17 +260,17 @@ export default async function BlogPostPage({ params }: Props) {
               </div>
 
               {/* Title */}
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-[1.12]">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-[1.22] lg:leading-[1.18]">
                 {post.title}
               </h1>
 
               {/* Subtitle / Lead */}
-              <p className="text-base sm:text-xl text-zinc-300 font-normal leading-relaxed">
+              <p className="text-base sm:text-lg lg:text-xl text-zinc-300 font-normal leading-relaxed max-w-4xl lg:max-w-5xl">
                 {post.subtitle}
               </p>
 
               {/* Author & Share Bar */}
-              <div className="pt-4 border-t border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="pt-6 border-t border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center p-1">
                     <Image src="/logo.png" alt="Gabvia" width={26} height={26} className="object-contain" />
