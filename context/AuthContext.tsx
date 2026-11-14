@@ -174,6 +174,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
+        // If user already has a PIN backup on the server, prompt them to restore it
+        // so all devices share the same key instead of generating conflicting keys!
+        if (hasValidBackup) {
+          if (!isMounted) return;
+          setNeedsKeyRecovery(true);
+          return;
+        }
+
         // No key stored on this device: generate keypair and save so user is never keyless
         const newKeys = await getOrGenerateKeyPair(user!.uid);
         if (!isMounted) return;

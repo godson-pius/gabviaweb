@@ -25,7 +25,7 @@ import {
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { ConversationWithDetails, Message, Profile } from "@/types/chat";
-import { encryptMessage, decryptMessage } from "@/lib/e2ee";
+import { encryptMessage, decryptMessage, getPreviousPrivateKeys } from "@/lib/e2ee";
 import { validateMessage } from "@/lib/security";
 import { translateText, isSameLanguageOrIdentical } from "@/lib/translation";
 import { sendPushNotifications, PushNotificationItem } from "@/lib/notifications";
@@ -452,12 +452,16 @@ export function useWebChat() {
         };
       }
 
+      const fallbackKeys = currentUserId ? getPreviousPrivateKeys(currentUserId) : [];
+
       if (senderId === currentUserId) {
+        const senderPubKey = payload.senderPublicKey || currentKeyPair.publicKeyBase64;
         const decrypted = decryptMessage(
           payload.senderContent,
           payload.senderNonce,
-          currentKeyPair.publicKeyBase64,
-          currentKeyPair.privateKeyUint8
+          senderPubKey,
+          currentKeyPair.privateKeyUint8,
+          fallbackKeys
         );
         return {
           plainContent: decrypted || "🔒 Decryption failed",
@@ -466,7 +470,8 @@ export function useWebChat() {
         };
       } else {
         const senderProfile = profilesMap[senderId] || participantProfilesRef.current[senderId] || profileCache[senderId];
-        if (!senderProfile?.public_key) {
+        const senderPubKey = payload.senderPublicKey || senderProfile?.public_key;
+        if (!senderPubKey) {
           if (profilesCheckedWithoutKey.has(senderId)) {
             return {
               plainContent: "🔒 Encrypted Message (Sender public key unavailable)",
@@ -485,8 +490,9 @@ export function useWebChat() {
         const decrypted = decryptMessage(
           payload.recipientContent,
           payload.recipientNonce,
-          senderProfile.public_key,
-          currentKeyPair.privateKeyUint8
+          senderPubKey,
+          currentKeyPair.privateKeyUint8,
+          fallbackKeys
         );
         return {
           plainContent: decrypted || "🔒 Decryption failed",
@@ -835,6 +841,7 @@ export function useWebChat() {
         const senderEncrypted = encryptMessage(content, keyPair.publicKeyBase64, keyPair.privateKeyUint8);
 
         finalContent = JSON.stringify({
+          senderPublicKey: keyPair.publicKeyBase64,
           senderContent: senderEncrypted.cipherText,
           senderNonce: senderEncrypted.nonce,
           recipientContent: recipientEncrypted.cipherText,
@@ -971,6 +978,7 @@ export function useWebChat() {
         const senderEncrypted = encryptMessage(trimmed, keyPair.publicKeyBase64, keyPair.privateKeyUint8);
 
         finalContent = JSON.stringify({
+          senderPublicKey: keyPair.publicKeyBase64,
           senderContent: senderEncrypted.cipherText,
           senderNonce: senderEncrypted.nonce,
           recipientContent: recipientEncrypted.cipherText,

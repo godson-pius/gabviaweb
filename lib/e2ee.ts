@@ -121,12 +121,41 @@ export function decryptPrivateKeyFromBackup(encryptedData: string, pin: string, 
 }
 
 /**
+ * Retrieves historical private keys for this user to allow seamless decryption
+ * of messages sent prior to a key recovery or rotation.
+ */
+export function getPreviousPrivateKeys(userId?: string): Uint8Array[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const histKey = `gabvia_e2ee_prev_keys_${userId || 'default'}`;
+    const raw = window.localStorage.getItem(histKey);
+    if (!raw) return [];
+    const history: string[] = JSON.parse(raw);
+    return history.map(s => naclUtil.decodeBase64(s)).filter(k => k && k.length === 32);
+  } catch {
+    return [];
+  }
+}
+
+/**
  * Saves a recovered private key to local storage.
  */
 export async function saveRecoveredPrivateKey(privateKey: Uint8Array, userId?: string): Promise<string> {
   const keyStr = naclUtil.encodeBase64(privateKey);
   const keyName = getStorageKey(userId);
   if (typeof window !== 'undefined') {
+    const prevKeyStr = window.localStorage.getItem(keyName);
+    if (prevKeyStr && prevKeyStr !== keyStr) {
+      const histKey = `gabvia_e2ee_prev_keys_${userId || 'default'}`;
+      try {
+        const raw = window.localStorage.getItem(histKey);
+        const history: string[] = raw ? JSON.parse(raw) : [];
+        if (!history.includes(prevKeyStr)) {
+          history.push(prevKeyStr);
+          window.localStorage.setItem(histKey, JSON.stringify(history));
+        }
+      } catch {}
+    }
     window.localStorage.setItem(keyName, keyStr);
     if (userId) {
       window.localStorage.removeItem('gabvia_e2ee_private_key');
@@ -163,19 +192,34 @@ export function decryptMessage(
   cipherTextBase64: string,
   nonceBase64: string,
   senderPublicKeyBase64: string,
-  recipientPrivateKeyUint8: Uint8Array
+  recipientPrivateKeyUint8: Uint8Array,
+  fallbackPrivateKeys?: Uint8Array[]
 ): string | null {
   try {
     const encryptedMessage = naclUtil.decodeBase64(cipherTextBase64);
     const nonce = naclUtil.decodeBase64(nonceBase64);
     const senderPubKeyUint8 = naclUtil.decodeBase64(senderPublicKeyBase64);
 
-    const decryptedMessage = nacl.box.open(
+    let decryptedMessage = nacl.box.open(
       encryptedMessage,
       nonce,
       senderPubKeyUint8,
       recipientPrivateKeyUint8
     );
+
+    if (!decryptedMessage && fallbackPrivateKeys && fallbackPrivateKeys.length > 0) {
+      for (const fallbackKey of fallbackPrivateKeys) {
+        try {
+          decryptedMessage = nacl.box.open(
+            encryptedMessage,
+            nonce,
+            senderPubKeyUint8,
+            fallbackKey
+          );
+          if (decryptedMessage) break;
+        } catch {}
+      }
+    }
 
     if (!decryptedMessage) return null;
     return naclUtil.encodeUTF8(decryptedMessage);
