@@ -3,9 +3,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import * as THREE from "three";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
 import {
   MessageSquare,
-  Sparkles,
   ArrowRight,
   ShieldCheck,
   CheckCircle2,

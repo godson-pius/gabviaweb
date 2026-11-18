@@ -8,6 +8,14 @@ export type TranslationOptions = {
   };
 };
 
+export const areLanguagesSame = (
+  lang1?: string | null,
+  lang2?: string | null
+): boolean => {
+  if (!lang1 || !lang2) return false;
+  return lang1.trim().toLowerCase() === lang2.trim().toLowerCase();
+};
+
 export const isSameLanguageOrIdentical = (
   text1?: string | null,
   text2?: string | null
@@ -41,6 +49,9 @@ export async function translateText(
   options: TranslationOptions = {}
 ): Promise<string | null> {
   if (!text || !text.trim() || !targetLanguage) return null;
+  if (options.sourceLanguage && areLanguagesSame(options.sourceLanguage, targetLanguage)) {
+    return null;
+  }
 
   // 1. Try our Next.js backend API route first
   try {

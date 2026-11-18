@@ -4,8 +4,8 @@ import Link from "next/link";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { ZambiaHistoryModal } from "./ZambiaHistoryModal";
 import { ZambiaIndependence3D } from "./ZambiaIndependence3D";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
 import {
-  Sparkles,
   ArrowRight,
   BookOpen,
   Volume2,

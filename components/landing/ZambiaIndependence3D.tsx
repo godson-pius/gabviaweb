@@ -2,12 +2,12 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import * as THREE from "three";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
 import {
   Volume2,
   VolumeX,
   RotateCcw,
   BookOpen,
-  Sparkles,
   Compass,
   Shield,
   MapPin,

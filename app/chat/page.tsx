@@ -54,7 +54,6 @@ import {
   Settings,
   Shield,
   ShieldCheck,
-  Sparkles,
   Sun,
   Trash2,
   User,
@@ -65,6 +64,7 @@ import {
   VolumeX,
   X,
 } from "lucide-react";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

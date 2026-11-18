@@ -4,8 +4,8 @@ import Link from "next/link";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { UgandaHistoryModal } from "./UgandaHistoryModal";
 import { UgandaIndependence3D } from "./UgandaIndependence3D";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
 import { 
-  Sparkles, 
   ArrowRight, 
   BookOpen, 
   Volume2, 

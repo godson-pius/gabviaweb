@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
 import {
-  Sparkles,
   FileText,
   CheckCircle2,
   ListChecks,

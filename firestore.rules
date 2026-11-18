@@ -120,6 +120,31 @@ service cloud.firestore {
       allow create: if true;
       allow read, update, delete: if isAuthenticated();
     }
+
+    // Voice Calls Collection & Transcripts
+    match /calls/{callId} {
+      allow read, update: if isAuthenticated() && (
+        resource.data.caller_id == request.auth.uid ||
+        resource.data.callee_id == request.auth.uid
+      );
+      allow create: if isAuthenticated() && request.resource.data.caller_id == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.caller_id == request.auth.uid;
+
+      match /transcripts/{transcriptId} {
+        allow read, create, update: if isAuthenticated();
+      }
+    }
+
+    // 24-Hour Status Updates Collection
+    match /statuses/{statusId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.user_id == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.user_id == request.auth.uid ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewed_by', 'reactions', 'translations'])
+      );
+      allow delete: if isAuthenticated() && resource.data.user_id == request.auth.uid;
+    }
   }
 }
 

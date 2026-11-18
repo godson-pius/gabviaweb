@@ -4,12 +4,12 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { PLAY_STORE_URL, GooglePlayIcon, Icon } from "@/components/landing/shared";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
 import {
   Menu,
   X,
   Sun,
   Moon,
-  Sparkles,
   BookOpen,
   ChevronDown,
   Layers,

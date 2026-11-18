@@ -9,6 +9,7 @@ import {
   getBlogPostBySlug,
   getRelatedPosts,
 } from "@/lib/blog-data";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
 import {
   AlertCircle,
   ArrowRight,
@@ -19,7 +20,6 @@ import {
   HeartHandshake,
   Lightbulb,
   Quote,
-  Sparkles,
   Tag,
   XCircle
 } from "lucide-react";

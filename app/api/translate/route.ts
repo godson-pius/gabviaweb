@@ -45,6 +45,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (
+      typeof sourceLanguage === "string" &&
+      sourceLanguage.trim() &&
+      sourceLanguage.trim().toLowerCase() === targetLanguage.trim().toLowerCase()
+    ) {
+      return NextResponse.json({ ok: true, translatedText: null, skipped: true });
+    }
+
     if (!GEMINI_API_KEY) {
       return NextResponse.json(
         { ok: false, error: "GEMINI_API_KEY not configured on server." },

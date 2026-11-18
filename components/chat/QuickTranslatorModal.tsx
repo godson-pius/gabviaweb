@@ -10,6 +10,7 @@ import {
 } from "@/lib/constants";
 import { translateText, transcribeAudio } from "@/lib/translation";
 import { useAuth } from "@/context/AuthContext";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
 import {
   X,
   Languages,
@@ -20,7 +21,6 @@ import {
   VolumeX,
   Copy,
   Check,
-  Sparkles,
   Coins,
   Send,
   Loader2,

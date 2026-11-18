@@ -126,15 +126,48 @@ export function decryptPrivateKeyFromBackup(encryptedData: string, pin: string, 
  */
 export function getPreviousPrivateKeys(userId?: string): Uint8Array[] {
   if (typeof window === 'undefined') return [];
+  const keys: Uint8Array[] = [];
+  const addKey = (str: string | null | undefined) => {
+    if (!str || typeof str !== 'string') return;
+    try {
+      const k = naclUtil.decodeBase64(str);
+      if (k && k.length === 32 && !keys.some(existing => naclUtil.encodeBase64(existing) === str)) {
+        keys.push(k);
+      }
+    } catch {}
+  };
+
   try {
     const histKey = `gabvia_e2ee_prev_keys_${userId || 'default'}`;
     const raw = window.localStorage.getItem(histKey);
-    if (!raw) return [];
-    const history: string[] = JSON.parse(raw);
-    return history.map(s => naclUtil.decodeBase64(s)).filter(k => k && k.length === 32);
-  } catch {
-    return [];
-  }
+    if (raw) {
+      try {
+        const history: string[] = JSON.parse(raw);
+        history.forEach(addKey);
+      } catch {}
+    }
+
+    const defaultHist = window.localStorage.getItem('gabvia_e2ee_prev_keys_default');
+    if (defaultHist) {
+      try {
+        const history: string[] = JSON.parse(defaultHist);
+        history.forEach(addKey);
+      } catch {}
+    }
+
+    // Also check legacy storage key
+    const legacy = window.localStorage.getItem('gabvia_e2ee_private_key');
+    addKey(legacy);
+
+    // Check all localStorage items for any base64 32-byte private keys
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const kName = window.localStorage.key(i);
+      if (kName && (kName.includes('e2ee') || kName.includes('priv'))) {
+        addKey(window.localStorage.getItem(kName));
+      }
+    }
+  } catch {}
+  return keys;
 }
 
 /**
@@ -207,13 +240,39 @@ export function decryptMessage(
       recipientPrivateKeyUint8
     );
 
+    // If direct decryption failed, test if message was self-encrypted (senderContent)
+    if (!decryptedMessage) {
+      try {
+        const selfPubKey = nacl.box.keyPair.fromSecretKey(recipientPrivateKeyUint8).publicKey;
+        decryptedMessage = nacl.box.open(
+          encryptedMessage,
+          nonce,
+          selfPubKey,
+          recipientPrivateKeyUint8
+        );
+      } catch {}
+    }
+
     if (!decryptedMessage && fallbackPrivateKeys && fallbackPrivateKeys.length > 0) {
       for (const fallbackKey of fallbackPrivateKeys) {
+        // Try 1: with provided sender public key
         try {
           decryptedMessage = nacl.box.open(
             encryptedMessage,
             nonce,
             senderPubKeyUint8,
+            fallbackKey
+          );
+          if (decryptedMessage) break;
+        } catch {}
+
+        // Try 2: with fallbackKey's own public key (self-encrypted)
+        try {
+          const fallbackPub = nacl.box.keyPair.fromSecretKey(fallbackKey).publicKey;
+          decryptedMessage = nacl.box.open(
+            encryptedMessage,
+            nonce,
+            fallbackPub,
             fallbackKey
           );
           if (decryptedMessage) break;

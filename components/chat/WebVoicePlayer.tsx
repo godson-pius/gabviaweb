@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { Play, Pause, Loader2, Volume2, Sparkles, AlertCircle } from "lucide-react";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
+import { Play, Pause, Loader2, Volume2, AlertCircle } from "lucide-react";
 
 interface WebVoicePlayerProps {
   uri: string;

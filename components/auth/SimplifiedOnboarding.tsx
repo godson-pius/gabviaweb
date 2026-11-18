@@ -41,12 +41,12 @@ import {
   Mail,
   Phone,
   Search,
-  Sparkles,
   ShieldCheck,
   User as UserIcon,
   AlertCircle,
   X,
 } from "lucide-react";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
 
 type OnboardingStep = "input" | "otp" | "language";
 type AuthMethod = "phone" | "email";

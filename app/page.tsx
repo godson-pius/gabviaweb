@@ -9,9 +9,9 @@ import { SupportFeedback3D } from "@/components/landing/SupportFeedback3D";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState, useRef } from "react";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
 import {
   ChevronDown,
-  Sparkles,
   Layers,
   HelpCircle,
   Activity,

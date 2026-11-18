@@ -27,7 +27,7 @@ import { useAuth } from "@/context/AuthContext";
 import { ConversationWithDetails, Message, Profile } from "@/types/chat";
 import { encryptMessage, decryptMessage, getPreviousPrivateKeys } from "@/lib/e2ee";
 import { validateMessage } from "@/lib/security";
-import { translateText, isSameLanguageOrIdentical } from "@/lib/translation";
+import { translateText, isSameLanguageOrIdentical, areLanguagesSame } from "@/lib/translation";
 import { sendPushNotifications, PushNotificationItem } from "@/lib/notifications";
 import { awardMilestonePoints } from "@/lib/rewards";
 import {
@@ -282,6 +282,34 @@ export function useWebChat() {
     if (!msg.content || !msg.content.trim() || msg.sender_id === user?.uid) return;
     if (msg.decryption_failed) return;
 
+    let senderProfile =
+      participantProfilesRef.current[msg.sender_id] ||
+      activeParticipantProfiles[msg.sender_id] ||
+      profileCache[msg.sender_id];
+    if (!senderProfile?.native_language) {
+      try {
+        const snap = await getDoc(doc(db, "profiles", msg.sender_id));
+        if (snap.exists()) {
+          senderProfile = { ...snap.data(), id: snap.id } as Profile;
+          profileCache[msg.sender_id] = senderProfile;
+          participantProfilesRef.current[msg.sender_id] = senderProfile;
+        }
+      } catch {
+        // ignore profile lookup failure
+      }
+    }
+
+    if (areLanguagesSame(senderProfile?.native_language, myLang)) {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === msg.id && (m.is_translated || m.translated_content || m.is_translation_loading)
+            ? { ...m, translated_content: undefined, is_translated: false, is_translation_loading: false }
+            : m
+        )
+      );
+      return;
+    }
+
     const tKey = `${conversationId}:${msg.id}:${myLang}`;
     if (globalTranslationCache[tKey]) {
       setMessages((prev) =>
@@ -325,7 +353,6 @@ export function useWebChat() {
       );
 
       // Call translation
-      const senderProfile = participantProfilesRef.current[msg.sender_id] || profileCache[msg.sender_id];
       const translated = await translateText(msg.content, myLang, {
         sourceLanguage: senderProfile?.native_language,
         conversationType: activeConversation?.type === "group" ? "group" : "direct",
@@ -403,6 +430,13 @@ export function useWebChat() {
         Object.assign(globalTranslationCache, parsed);
         setMessages((prev) =>
           prev.map((m) => {
+            const senderProfile =
+              participantProfilesRef.current[m.sender_id] ||
+              activeParticipantProfiles[m.sender_id] ||
+              profileCache[m.sender_id];
+            if (areLanguagesSame(senderProfile?.native_language, myLang)) {
+              return m;
+            }
             const cached = parsed[m.id];
             if (cached && !m.translated_content) {
               return { ...m, translated_content: cached, is_translated: true, is_translation_loading: false };
@@ -418,6 +452,18 @@ export function useWebChat() {
   useEffect(() => {
     if (!activeConversationId || !user) return;
     const myLang = profile?.native_language || "English";
+    setMessages((prev) =>
+      prev.map((m) => {
+        const senderProfile =
+          participantProfilesRef.current[m.sender_id] ||
+          activeParticipantProfiles[m.sender_id] ||
+          profileCache[m.sender_id];
+        if (areLanguagesSame(senderProfile?.native_language, myLang)) {
+          return { ...m, translated_content: undefined, is_translated: false, is_translation_loading: false };
+        }
+        return m;
+      })
+    );
     messages.forEach((m) => {
       if (m.sender_id !== user.uid && m.content) {
         hydrateTranslationForMessage(m, activeConversationId, myLang);
@@ -456,13 +502,29 @@ export function useWebChat() {
 
       if (senderId === currentUserId) {
         const senderPubKey = payload.senderPublicKey || currentKeyPair.publicKeyBase64;
-        const decrypted = decryptMessage(
+        let decrypted = decryptMessage(
           payload.senderContent,
           payload.senderNonce,
           senderPubKey,
           currentKeyPair.privateKeyUint8,
           fallbackKeys
         );
+
+        // Dual-channel fallback: If senderContent failed, try recipientContent using recipient's public key
+        if (!decrypted && payload.recipientContent && payload.recipientNonce) {
+          const otherId = activeConversation?.participants?.find((id) => id !== currentUserId);
+          const otherProfile = otherId ? (profilesMap[otherId] || participantProfilesRef.current[otherId] || profileCache[otherId]) : null;
+          if (otherProfile?.public_key) {
+            decrypted = decryptMessage(
+              payload.recipientContent,
+              payload.recipientNonce,
+              otherProfile.public_key,
+              currentKeyPair.privateKeyUint8,
+              fallbackKeys
+            );
+          }
+        }
+
         return {
           plainContent: decrypted || "🔒 Decryption failed",
           isE2EE: true,
@@ -487,13 +549,25 @@ export function useWebChat() {
           };
         }
 
-        const decrypted = decryptMessage(
+        let decrypted = decryptMessage(
           payload.recipientContent,
           payload.recipientNonce,
           senderPubKey,
           currentKeyPair.privateKeyUint8,
           fallbackKeys
         );
+
+        // Dual-channel fallback: If recipientContent failed, try senderContent
+        if (!decrypted && payload.senderContent && payload.senderNonce) {
+          decrypted = decryptMessage(
+            payload.senderContent,
+            payload.senderNonce,
+            senderPubKey,
+            currentKeyPair.privateKeyUint8,
+            fallbackKeys
+          );
+        }
+
         return {
           plainContent: decrypted || "🔒 Decryption failed",
           isE2EE: true,
@@ -670,14 +744,15 @@ export function useWebChat() {
               ? data.created_at.toDate().toISOString()
               : (data.created_at || new Date().toISOString());
 
-            const senderName =
-              participantProfilesRef.current[data.sender_id]?.username ||
-              activeParticipantProfiles[data.sender_id]?.username ||
-              profileCache[data.sender_id]?.username ||
-              "User";
+            const senderProfile =
+              participantProfilesRef.current[data.sender_id] ||
+              activeParticipantProfiles[data.sender_id] ||
+              profileCache[data.sender_id];
+            const senderName = senderProfile?.username || "User";
+            const isSameLanguage = areLanguagesSame(senderProfile?.native_language, myLang);
 
             const tKey = `${activeConversationId}:${docSnap.id}:${myLang}`;
-            const cachedTranslation = globalTranslationCache[tKey] || data.translated_content;
+            const cachedTranslation = !isSameLanguage ? (globalTranslationCache[tKey] || data.translated_content) : undefined;
 
             return {
               id: docSnap.id,
@@ -711,7 +786,13 @@ export function useWebChat() {
         // Automatically hydrate cross-language translations in background
         chronological.forEach((m) => {
           if (!m.translated_content && m.sender_id !== user.uid && m.content) {
-            hydrateTranslationForMessage(m, activeConversationId, myLang);
+            const senderProfile =
+              participantProfilesRef.current[m.sender_id] ||
+              activeParticipantProfiles[m.sender_id] ||
+              profileCache[m.sender_id];
+            if (!areLanguagesSame(senderProfile?.native_language, myLang)) {
+              hydrateTranslationForMessage(m, activeConversationId, myLang);
+            }
           }
         });
       },
@@ -786,7 +867,7 @@ export function useWebChat() {
           // ignore profile lookup failure
         }
       }
-      if (otherProfile?.native_language && otherProfile.native_language !== myLang) {
+      if (otherProfile?.native_language && !areLanguagesSame(otherProfile.native_language, myLang)) {
         return true;
       }
     }

@@ -10,13 +10,13 @@ import {
   BLOG_CATEGORIES,
   BlogPost,
 } from "@/lib/blog-data";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
 import {
   Search,
   BookOpen,
   ArrowRight,
   Clock,
   Calendar,
-  Sparkles,
   Tag,
   Shield,
   HeartHandshake,

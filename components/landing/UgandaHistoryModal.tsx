@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
 import {
   X,
   Volume2,
   VolumeX,
   Calendar,
-  Sparkles,
   Award,
   Globe2,
   BookOpen,

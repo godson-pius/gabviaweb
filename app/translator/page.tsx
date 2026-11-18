@@ -13,6 +13,7 @@ import {
   MAX_MESSAGE_LENGTH,
 } from "@/lib/constants";
 import { translateText, transcribeAudio } from "@/lib/translation";
+import { Sparkles } from "@/components/ui/GabviaSparkIcon";
 import {
   Globe,
   ArrowLeftRight,
@@ -25,7 +26,6 @@ import {
   Trash2,
   X,
   Search,
-  Sparkles,
   Coins,
   MessageSquare,
   ArrowLeft,
